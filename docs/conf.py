@@ -111,7 +111,11 @@ todo_include_todos = False
 # a list of builtin themes.
 #html_theme = 'alabaster'
 if not on_rtd:  # only import and set the theme if we're building docs locally
-    import sphinx_rtd_theme
+    try:
+        import sphinx_rtd_theme
+    except ImportError:
+        print('Please do pip install sphinx-rtd-theme first.', file=sys.stderr)
+        sys.exit(1)
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
