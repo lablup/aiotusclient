@@ -1,10 +1,10 @@
-.. Sorna Client Library documentation master file, created by
+.. Sorna API Library documentation master file, created by
    sphinx-quickstart on Tue Mar  1 21:26:20 2016.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Sorna Client Library
-====================
+Sorna API Library
+=================
 
 Sorna is an online code execution service that runs arbitrary user codes
 safely in resource-constrained environments, using Docker and our own sandbox
@@ -26,7 +26,10 @@ problem solving and plotting.
    :maxdepth: 2
    :caption: API Reference
 
-   api/index
+   api/auth
+   api/kernels
+   api/exec
+   api/stream
 
 
 Indices and tables

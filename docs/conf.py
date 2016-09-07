@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Sorna Client Library documentation build configuration file, created by
+# Sorna API Library documentation build configuration file, created by
 # sphinx-quickstart on Tue Mar  1 21:26:20 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -47,7 +47,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Sorna Client Library'
+project = 'Sorna API Library'
 copyright = '2016, Joongi Kim'
 author = 'Joongi Kim'
 
@@ -210,7 +210,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'SornaClientLibrarydoc'
+htmlhelp_basename = 'SornaAPILibrarydoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -232,7 +232,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'SornaClientLibrary.tex', 'Sorna Client Library Documentation',
+    (master_doc, 'SornaAPILibrary.tex', 'Sorna API Library Documentation',
      'Joongi Kim', 'manual'),
 ]
 
@@ -262,7 +262,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'sornaclientlibrary', 'Sorna Client Library Documentation',
+    (master_doc, 'sornaclientlibrary', 'Sorna API Library Documentation',
      [author], 1)
 ]
 
@@ -276,8 +276,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'SornaClientLibrary', 'Sorna Client Library Documentation',
-     author, 'SornaClientLibrary', 'One line description of project.',
+    (master_doc, 'SornaAPILibrary', 'Sorna API Library Documentation',
+     author, 'SornaAPILibrary', 'One line description of project.',
      'Miscellaneous'),
 ]
 
@@ -292,3 +292,6 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+def setup(app):
+    app.add_stylesheet('custom.css')
