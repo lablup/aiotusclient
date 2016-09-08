@@ -48,7 +48,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Sorna API Library'
-copyright = '2016, Joongi Kim'
+copyright = '2016, Lablup Inc.'
 author = 'Joongi Kim'
 
 # The version info for the project you're documenting, acts as replacement for

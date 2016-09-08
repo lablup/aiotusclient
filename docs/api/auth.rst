@@ -176,6 +176,7 @@ Success example for checking the latest API version
    HTTP/1.1 200 OK
    Content-Type: application/json
    Content-Language: en
+   Content-Length: 31
    X-RateLimit-Limit: 2000
    X-RateLimit-Remaining: 1999
    X-RateLimit-Reset: 897065
@@ -198,16 +199,18 @@ Failure example with a missing authorization header
 
 .. code-block:: text
 
-   HTTP/1.1 403 Forbidden
+   HTTP/1.1 401 Unauthorized
    Content-Type: application/problem+json
    Content-Language: en
+   Content-Length: 139
    X-RateLimit-Limit: 2000
    X-RateLimit-Remaining: 1998
    X-RateLimit-Reset: 834821
 
    {
       "type": "https://sorna.io/problems/unauthorized",
-      "title": "Missing authorization parameters.",
+      "title": "Unauthorized access",
+      "detail": "Authorization header is missing."
    }
 
 
