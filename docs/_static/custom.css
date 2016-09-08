@@ -9,9 +9,9 @@
     overflow: visible;
 }
 
-code, pre, .code, .pre, tt {
+code, .code, .pre, tt {
     font-family: Menlo, Monaco, Consolas, "DejaVu Sans Mono", "Roboto Mono", "Bitstream Vera Sans Mono", monospace !important;
-    font-size: 92% !important;
+    font-size: 13px !important;
 }
 
 .docutils.literal {
@@ -19,4 +19,9 @@ code, pre, .code, .pre, tt {
     background: none;
     border: 0px none;
     padding: 0;
+}
+
+.highlight pre {
+    font-family: Menlo, Monaco, Consolas, "DejaVu Sans Mono", "Roboto Mono", "Bitstream Vera Sans Mono", monospace !important;
+    font-size: 12px !important;
 }
