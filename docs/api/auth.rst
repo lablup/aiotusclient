@@ -57,16 +57,10 @@ Common Structure of API Responses
      - ``application/json`` and its variants (e.g., ``application/problem+json`` for errors)
    * - ``Link``
      - Web link headers specified as in `RFC 5988 <https://tools.ietf.org/html/rfc5988>`_. Only optionally used when returning a collection of objects.
-   * - ``X-RateLimit-Limit``
-     - The maximum allowed number of requests per each rate-limit windows (15-minutes).
-   * - ``X-RateLimit-Remaining``
-     - The number of requests left for the time window. If zero, the client should wait for the time specified by ``X-RateLimit-Reset``. Otherwise it will get HTTP 429 "Too Many Requests".
-   * - ``X-RateLimit-Reset``
-     - The time to wait until the current rate limit window resets, in milli-seconds.
+   * - ``X-RateLimit-*``
+     - The rate-limiting information (see :doc:`/api/ratelimit`).
    * - Body
      - JSON-encoded results
-
-We use `RFC 7807 <https://tools.ietf.org/html/rfc7807>`_-style problem detail description returned in JSON of the response body.
 
 
 Signing API Requests

@@ -1,10 +1,6 @@
 Kernel Management
 =================
 
-All JSON responses described here are only for successful returns (HTTP status 2xx).
-For failures (HTTP status 4xx/5xx), the JSON response is an object that contains at least two keys: ``type`` which uniquely identifies the failure reason as an URI and ``title`` for human-readable error messages.
-Some failures may return extra structured information as additional key-value pairs.
-
 Creating a kernel session
 -------------------------
 
@@ -50,8 +46,8 @@ Response
    :widths: 20 80
    :header-rows: 1
 
-   * - Parameter
-     - Description
+   * - Fields
+     - Values
    * - ``kernelId``
      - The kernel ID used for later API calls.
 
@@ -61,8 +57,9 @@ Example:
 .. code-block:: json
 
    {
-     "kernelId": "aaaaa"
+     "kernelId": "TSSJT2Z4SnmQhxjWMnJljg"
    }
+
 
 Getting kernel information
 --------------------------
@@ -71,6 +68,7 @@ Getting kernel information
 * Method: ``GET``
 
 Retrieves information about a kernel session.
+For performance reasons, the returned information may not be real-time; usually they are updated every a few seconds in the server-side.
 
 Parameters
 """"""""""
@@ -81,17 +79,8 @@ Parameters
 
    * - Parameter
      - Description
-   * - ``kernelId``
+   * - ``:id``
      - The kernel ID.
-
-Example:
-
-.. code-block:: json
-
-   {
-     "kernelId": "aaaaa"
-   }
-
 
 Response
 """"""""
@@ -111,8 +100,8 @@ Response
    :widths: 20 80
    :header-rows: 1
 
-   * - Parameter
-     - Description
+   * - Fields
+     - Values
    * - ``lang``
      - The kernel type.
    * - ``age``
@@ -152,6 +141,7 @@ Example:
      "cpuCreditUsed": 102
    }
 
+
 Destroying a kernel session
 ---------------------------
 
@@ -169,17 +159,8 @@ Parameters
 
    * - Parameter
      - Description
-   * - ``kernelId``
+   * - ``:id``
      - The kernel ID.
-
-Example:
-
-.. code-block:: json
-
-   {
-     "kernelId": "aaaaa"
-   }
-
 
 Response
 """"""""
@@ -194,6 +175,7 @@ Response
      - The kernel is successfully destroyed.
    * - 404 Not Found
      - There is no such kernel.
+
 
 Restarting a kernel session
 ---------------------------
@@ -213,16 +195,8 @@ Parameters
 
    * - Parameter
      - Description
-   * - ``kernelId``
+   * - ``:id``
      - The kernel ID.
-
-Example:
-
-.. code-block:: json
-
-   {
-     "kernelId": "aaaaa"
-   }
 
 Response
 """"""""

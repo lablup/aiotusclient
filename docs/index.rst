@@ -26,7 +26,9 @@ problem solving and plotting.
    :maxdepth: 2
    :caption: API Reference
 
+   api/convention
    api/auth
+   api/ratelimit
    api/kernels
    api/exec
    api/stream
