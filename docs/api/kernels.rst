@@ -185,6 +185,7 @@ Restarting a kernel session
 
 Restarts a kernel session.
 The idle time of the kernel will be reset, but other properties such as the age and CPU credit will continue to accumulate.
+All global states such as global variables and modules imports are also reset.
 
 Parameters
 """"""""""
@@ -208,6 +209,6 @@ Response
    * - HTTP Status Code
      - Description
    * - 204 No Content
-     - The kernel is successfully destroyed.
+     - The kernel is successfully restarted.
    * - 404 Not Found
      - There is no such kernel.
