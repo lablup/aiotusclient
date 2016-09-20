@@ -37,8 +37,10 @@ class Request:
         if you have further content changes of request.data.
         '''
         if self._body is None:
-            assert self.data, 'request.data should NOT be empty.'
-            self._body = json.dumps(self.data, ensure_ascii=False).encode()
+            if not self.data:  # for empty data
+                self._body = b''
+            else:
+                self._body = json.dumps(self.data, ensure_ascii=False).encode()
             self.headers['Content-Length'] = len(self._body)
         return self._body
 
