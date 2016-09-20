@@ -1,0 +1,4 @@
+aiohttp>=1.0
+namedlist>=1.6
+python-dateutil>=2.5
+simplejson
