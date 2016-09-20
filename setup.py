@@ -18,8 +18,7 @@ setup(
     author_email='joongi@lablup.com',
     license='LGPL/BSD',
 
-    packages=['sorna.client'],
-    namespace_packages=['sorna'],
+    packages=['sorna'],
 
     install_requires=['aiohttp', 'namedlist', 'python-dateutil', 'simplejson'],
     extras_require={
