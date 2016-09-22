@@ -19,14 +19,34 @@ Parameters
    * - Parameter
      - Description
    * - ``lang``
-     - The kernel type, usually a name of our supported programming languages.
+     - The kernel type, usually the name of one of our supported programming languages.
+   * - ``resourceLimits``
+     - An optional argument to specify resource requirements.
+       Additional charges may apply on the public API service.
+       If the requested limits exceeds our internal hard-limits,
+       the API may return HTTP 406 "Not acceptable".
+
+       .. list-table::
+          :widths: 20 80
+          :header-rows: 1
+
+          * - Fields
+            - Values
+          * - ``maxMem``
+            - Maximum memory to use in KBytes.
+          * - ``timeout``
+            - Maximum execution timeout in milliseconds.
 
 Example:
 
 .. code-block:: json
 
    {
-     "lang": "python3"
+     "lang": "python3",
+     "resourceLimits": {
+       "maxMem": 51240,
+       "timeout": 5000
+     }
    }
 
 
@@ -41,6 +61,8 @@ Response
      - Description
    * - 201 Created
      - The kernel is successfully created.
+   * - 406 Not acceptable
+     - The requested resource limits exceed the server's own limits.
 
 .. list-table::
    :widths: 20 80
