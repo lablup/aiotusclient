@@ -16,7 +16,20 @@ setup(
     url='https://github.com/lablup/sorna-client',
     author='Lablup Inc.',
     author_email='joongi@lablup.com',
-    license='LGPL/BSD',
+    license='LGPLv3',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
+        'Intended Audience :: Developers',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Operating System :: POSIX',
+        'Operating System :: MacOS :: MacOS X',
+        'Environment :: No Input/Output (Daemon)',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Software Development',
+    ],
 
     packages=['sorna'],
 
