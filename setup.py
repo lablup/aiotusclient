@@ -36,7 +36,7 @@ setup(
     install_requires=['aiohttp', 'namedlist', 'python-dateutil', 'simplejson'],
     extras_require={
         'dev': [],
-        'test': ['pytest', 'pytest-mock'],
+        'test': ['pytest', 'pytest-mock', 'pytest-asyncio'],
     },
     data_files=[],
 )

@@ -1,6 +1,7 @@
 .env
 .idea/
 .*.swp
+*.egg-info/
 
 __pycache__
 *.py[ocd]

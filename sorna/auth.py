@@ -3,6 +3,8 @@ import hmac
 import io
 from urllib.parse import urlsplit
 
+from .request import Request
+
 
 def sign(request):
     '''
@@ -34,3 +36,11 @@ def sign(request):
         request.config.access_key,
         signature
     )
+
+
+def authorize(echo_str):
+    config = get_config()
+    req = Request('GET', '/authorize', {
+        'echo': echo_str,
+    })
+    return req.send()
