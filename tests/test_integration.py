@@ -3,6 +3,7 @@ import uuid
 import pytest
 
 from sorna.request import Request
+from sorna.kernel import create_kernel, destroy_kernel, get_kernel_info
 
 
 def test_connection(defconfig):
@@ -43,3 +44,9 @@ async def test_async_auth(defconfig):
     data = resp.json()
     assert data['authorized'] == 'yes'
     assert data['echo'] == random_msg
+
+
+def test_kernel_lifecycles(defconfig):
+    kernel_id = create_kernel('python3')
+    print(get_kernel_info(kernel_id))
+    destroy_kernel(kernel_id)
