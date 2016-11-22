@@ -13,7 +13,7 @@ def sign(request):
     '''
     hash_type = request.config.hash_type
     hostname = urlsplit(request.config.endpoint).netloc
-    body_hash = hashlib.new(hash_type, request.body).hexdigest()
+    body_hash = hashlib.new(hash_type, request.content).hexdigest()
     major_ver = request.config.version.split('.', 1)[0]
 
     sign_str = '{}\n/{}/{}\n{}\nhost:{}\ncontent-type:application/json\nx-sorna-version:{}\n{}'.format(

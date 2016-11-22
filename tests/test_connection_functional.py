@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 
 from sorna.request import Request
@@ -17,5 +19,14 @@ async def test_async_connection(defconfig):
     assert 'version' in resp.json()
 
 
-def test_auth():
-    pass
+def test_auth(defconfig):
+    random_msg = uuid.uuid4().hex
+    req = Request('GET', '/authorize', {
+        'echo': random_msg,
+    })
+    sign(req)
+    resp = req.send()
+    assert resp.status == 200
+    data = resp.json()
+    assert data['authorized'] == 'yes'
+    assert data['echo'] == random_msg

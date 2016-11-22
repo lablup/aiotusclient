@@ -11,15 +11,34 @@ import requests
 import simplejson as json
 
 from .config import APIConfig, get_config
+from .exceptions import SornaAPIError
 
-_shared_sess = None
+
+class _DummySession:
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        pass
+
+    async def __aenter__(self):
+        pass
+
+    async def __aexit__(self, exc_type, exc_value, exc_tb):
+        pass
 
 
 class Request:
 
-    __slots__ = ['config', 'method', 'path', 'data', 'date', 'headers', '_content']
+    __slots__ = ['config', 'method', 'path',
+                 'data', 'date', 'headers',
+                 '_content']
 
-    _allowed_methods = frozenset(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'])
+    _allowed_methods = frozenset([
+        'GET', 'HEAD', 'POST',
+        'PUT', 'PATCH', 'DELETE',
+        'OPTIONS'])
 
     def __init__(self, method: str='GET',
                  path: Optional[str]=None,
@@ -52,7 +71,7 @@ class Request:
                 self._content = b''
             else:
                 self._content = json.dumps(self.data, ensure_ascii=False).encode()
-            self.headers['Content-Length'] = len(self._content)
+            self.headers['Content-Length'] = str(len(self._content))
         return self._content
 
     @content.setter
@@ -63,30 +82,37 @@ class Request:
         '''
         if value is not None:
             assert not self.data, 'request.data should be empty to set request.content manually.'
-            self.headers['Content-Length'] = len(value)
+            self.headers['Content-Length'] = str(len(value))
         self._content = value
-
-    def json(self):
-        return json.loads(self._content)
-
-    def text(self):
-        if self._content is None:
-            return None
-        return self._content.decode()
 
     def build_url(self):
         major_ver = self.config.version.split('.', 1)[0]
         path = '/' + self.path if len(self.path) > 0 else ''
         return urljoin(self.config.endpoint, major_ver + path)
 
-    def send(self):
+    def send(self, sess=None):
         '''
         Sends the request to the server.
         '''
         assert self.method in self._allowed_methods
-        reqfunc = getattr(requests, self.method.lower())
-        resp = reqfunc(self.build_url(), json=self.data)
-        return Response(resp.text)
+        sess_created = False
+        if sess is None:
+            sess = requests.Session()
+            sess_created = True
+        else:
+            assert isinstance(sess, requests.Session)
+        with (sess if sess_created else _DummySession()):
+            reqfunc = getattr(sess, self.method.lower())
+            payload = json.dumps(self.data)
+            resp = reqfunc(self.build_url(),
+                           data=payload,
+                           headers=self.headers)
+            try:
+                return Response(resp.status_code, resp.reason, resp.text,
+                                resp.headers['content-type'],
+                                resp.headers['content-length'])
+            except requests.exceptions.RequestException as e:
+                raise SornaAPIError from e
 
     async def asend(self, sess=None, timeout=10.0):
         '''
@@ -94,24 +120,60 @@ class Request:
 
         This method is a coroutine.
         '''
-        global _shared_sess
-        if not sess:
-            if not _shared_sess:
-                sess = aiohttp.ClientSession()
-                _shared_sess = sess
-            else:
-                sess = _shared_sess
-        reqfunc = getattr(sess, self.method.lower())
-        with _timeout(timeout):
-            async with reqfunc(self.build_url()) as resp:
-                body = await resp.text()
-        return Response(body)
+        assert self.method in self._allowed_methods
+        sess_created = False
+        if sess is None:
+            sess = aiohttp.ClientSession()
+            sess_created = True
+        else:
+            assert isinstance(sess, aiohttp.ClientSession)
+        async with (sess if sess_created else _DummySession()):
+            reqfunc = getattr(sess, self.method.lower())
+            payload = json.dumps(self.data)
+            try:
+                with _timeout(timeout):
+                    resp = await reqfunc(self.build_url(),
+                                         data=payload,
+                                         headers=self.headers)
+                    async with resp:
+                        body = await resp.text()
+                        return Response(resp.status, resp.reason, body,
+                                        resp.content_type,
+                                        len(body))
+            except Exception as e:
+                raise SornaAPIError from e
 
 
 class Response:
 
-    def __init__(self, body):
+    __slots__ = ['_status', '_reason',
+                 '_content_type', '_content_length',
+                 '_body']
+
+    def __init__(self, status, reason, body,
+                 content_type='text/plain',
+                 content_length=None):
+        self._status = status
+        self._reason = reason
         self._body = body
+        self._content_type = content_type
+        self._content_length = content_length
+
+    @property
+    def status(self):
+        return self._status
+
+    @property
+    def reason(self):
+        return self._reason
+
+    @property
+    def content_type(self):
+        return self._content_type
+
+    @property
+    def content_length(self):
+        return self._content_length
 
     def text(self):
         return self._body

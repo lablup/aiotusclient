@@ -1,0 +1,2 @@
+class SornaAPIError(Exception):
+    pass
