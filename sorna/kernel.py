@@ -1,6 +1,5 @@
-
 from .config import get_config
-from .request import Request, Response
+from .request import Request
 
 
 def create_kernel(kernel_type, max_mem=0, timeout=0, config=None):
@@ -12,4 +11,5 @@ def create_kernel(kernel_type, max_mem=0, timeout=0, config=None):
             'timeout': timeout,
         }
     }, config=config)
-    resp = req.sync_query()
+    resp = req.send()
+    assert resp.status == 200

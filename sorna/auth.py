@@ -1,46 +1,39 @@
 import hashlib
 import hmac
-import io
 from urllib.parse import urlsplit
 
-from .request import Request
 
-
-def sign(request):
+def generate_signature(method, version, endpoint,
+                       date, request_path, content,
+                       access_key, secret_key, hash_type):
     '''
-    Calculates the signature of the given request and adds the Authorization HTTP header.
-    It should be called at the very end of request preparation and before sending the request to the server.
+    Generates the API request signature from the given parameters.
     '''
-    hash_type = request.config.hash_type
-    hostname = urlsplit(request.config.endpoint).netloc
-    body_hash = hashlib.new(hash_type, request.content).hexdigest()
-    major_ver = request.config.version.split('.', 1)[0]
+    hash_type = hash_type
+    hostname = urlsplit(endpoint).netloc
+    body_hash = hashlib.new(hash_type, content).hexdigest()
+    major_ver = version.split('.', 1)[0]
 
     sign_str = '{}\n/{}/{}\n{}\nhost:{}\ncontent-type:application/json\nx-sorna-version:{}\n{}'.format(
-        request.method.upper(),
-        major_ver, request.path,
-        request.date.isoformat(),
+        method.upper(),
+        major_ver, request_path,
+        date.isoformat(),
         hostname,
-        request.config.version,
+        version,
         body_hash
     )
     sign_bytes = sign_str.encode()
 
-    sign_key = hmac.new(request.config.secret_key.encode(),
-                        request.date.strftime('%Y%m%d').encode(), hash_type).digest()
+    sign_key = hmac.new(secret_key.encode(),
+                        date.strftime('%Y%m%d').encode(), hash_type).digest()
     sign_key = hmac.new(sign_key, hostname.encode(), hash_type).digest()
 
     signature = hmac.new(sign_key, sign_bytes, hash_type).hexdigest()
-    request.headers['Authorization'] = 'Sorna signMethod=HMAC-{}, credential={}:{}'.format(
-        request.config.hash_type.upper(),
-        request.config.access_key,
-        signature
-    )
-
-
-def authorize(echo_str):
-    config = get_config()
-    req = Request('GET', '/authorize', {
-        'echo': echo_str,
-    })
-    return req.send()
+    headers = {
+        'Authorization': 'Sorna signMethod=HMAC-{}, credential={}:{}'.format(
+            hash_type.upper(),
+            access_key,
+            signature
+        ),
+    }
+    return headers, signature

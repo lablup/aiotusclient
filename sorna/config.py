@@ -1,6 +1,8 @@
 import os
 from typing import Optional
 
+_config = None
+
 
 class APIConfig:
 
@@ -48,15 +50,13 @@ class APIConfig:
         return self._hash_type
 
 
-_config = None
-
 def get_config():
     global _config
     if _config is None:
         _config = APIConfig()
     return _config
 
+
 def set_config(conf: APIConfig):
     global _config
     _config = conf
-

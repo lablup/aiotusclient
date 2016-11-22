@@ -1,4 +1,3 @@
-import asyncio
 from collections import OrderedDict
 from datetime import datetime
 from typing import Mapping, Optional, Union
@@ -10,6 +9,7 @@ from dateutil.tz import tzutc
 import requests
 import simplejson as json
 
+from .auth import generate_signature
 from .config import APIConfig, get_config
 from .exceptions import SornaAPIError
 
@@ -85,6 +85,25 @@ class Request:
             self.headers['Content-Length'] = str(len(value))
         self._content = value
 
+    def sign(self, access_key=None, secret_key=None, hash_type=None):
+        '''
+        Calculates the signature of the given request and adds the
+        Authorization HTTP header.
+        It should be called at the very end of request preparation and before
+        sending the request to the server.
+        '''
+        if access_key is None:
+            access_key = self.config.access_key
+        if secret_key is None:
+            secret_key = self.config.secret_key
+        if hash_type is None:
+            hash_type = self.config.hash_type
+        hdrs, _ = generate_signature(
+            self.method, self.config.version, self.config.endpoint,
+            self.date, self.path, self.content,
+            access_key, secret_key, hash_type)
+        self.headers.update(hdrs)
+
     def build_url(self):
         major_ver = self.config.version.split('.', 1)[0]
         path = '/' + self.path if len(self.path) > 0 else ''
@@ -158,6 +177,8 @@ class Response:
         self._body = body
         self._content_type = content_type
         self._content_length = content_length
+
+        # TODO: include rate-limiting information from headers
 
     @property
     def status(self):
