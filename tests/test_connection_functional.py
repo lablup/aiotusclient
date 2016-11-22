@@ -6,25 +6,39 @@ from sorna.request import Request
 
 
 def test_connection(defconfig):
-    req = Request('GET', '/')
-    resp = req.send()
+    rqst = Request('GET', '/')
+    resp = rqst.send()
     assert 'version' in resp.json()
 
 
 @pytest.mark.asyncio
 async def test_async_connection(defconfig):
-    req = Request('GET', '/')
-    resp = await req.asend()
+    rqst = Request('GET', '/')
+    resp = await rqst.asend()
     assert 'version' in resp.json()
 
 
 def test_auth(defconfig):
     random_msg = uuid.uuid4().hex
-    req = Request('GET', '/authorize', {
+    rqst = Request('GET', '/authorize', {
         'echo': random_msg,
     })
-    req.sign()
-    resp = req.send()
+    rqst.sign()
+    resp = rqst.send()
+    assert resp.status == 200
+    data = resp.json()
+    assert data['authorized'] == 'yes'
+    assert data['echo'] == random_msg
+
+
+@pytest.mark.asyncio
+async def test_async_auth(defconfig):
+    random_msg = uuid.uuid4().hex
+    rqst = Request('GET', '/authorize', {
+        'echo': random_msg,
+    })
+    rqst.sign()
+    resp = await rqst.asend()
     assert resp.status == 200
     data = resp.json()
     assert data['authorized'] == 'yes'
