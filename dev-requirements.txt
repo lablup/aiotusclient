@@ -1,6 +1,7 @@
 aiohttp>=1.1
 namedlist>=1.6
 python-dateutil>=2.5
+requests>=2.12
 simplejson
 pytest
 pytest-mock
