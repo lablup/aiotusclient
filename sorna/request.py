@@ -109,6 +109,8 @@ class Request:
         path = '/' + self.path if len(self.path) > 0 else ''
         return urljoin(self.config.endpoint, major_ver + path)
 
+    # TODO: attach rate-limit information
+
     def send(self, sess=None):
         '''
         Sends the request to the server.

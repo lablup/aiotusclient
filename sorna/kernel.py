@@ -38,7 +38,19 @@ def get_kernel_info(kernel_id):
     request.sign()
     resp = request.send()
     if resp.status == 200:
-        print(resp.json())
         return resp.json()
+    else:
+        raise SornaAPIError(resp.status, resp.reason, resp.text())
+
+
+def execute_code(kernel_id, code_id, code):
+    request = Request('POST', '/kernel/{}'.format(kernel_id), {
+        'codeId': code_id,
+        'code': code,
+    })
+    request.sign()
+    resp = request.send()
+    if resp.status == 200:
+        return resp.json()['result']
     else:
         raise SornaAPIError(resp.status, resp.reason, resp.text())
