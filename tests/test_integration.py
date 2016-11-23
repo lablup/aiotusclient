@@ -4,6 +4,7 @@ import pytest
 
 from sorna.request import Request
 from sorna.kernel import create_kernel, destroy_kernel, get_kernel_info
+from sorna.exceptions import SornaAPIError
 
 
 def test_connection(defconfig):
@@ -48,5 +49,13 @@ async def test_async_auth(defconfig):
 
 def test_kernel_lifecycles(defconfig):
     kernel_id = create_kernel('python3')
-    print(get_kernel_info(kernel_id))
+    info = get_kernel_info(kernel_id)
+    assert info['lang'] == 'python3'
+    assert info['age'] > 0
+    assert info['numQueriesExecuted'] == 0
+    info = get_kernel_info(kernel_id)
+    assert info['numQueriesExecuted'] == 1
     destroy_kernel(kernel_id)
+    with pytest.raises(SornaAPIError) as e:
+        info = get_kernel_info(kernel_id)
+        assert e.status == 404
