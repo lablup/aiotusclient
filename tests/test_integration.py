@@ -69,16 +69,22 @@ def test_auth(defconfig):
 
 
 @pytest.mark.integration
-def test_auth_malformed(defconfig):
+def test_auth_missing_signature(defconfig):
     random_msg = uuid.uuid4().hex
+    request = Request('GET', '/authorize', {
+        'echo': random_msg,
+    })
+    resp = request.send()
+    assert resp.status == 401
+
+
+@pytest.mark.integration
+def test_auth_malformed(defconfig):
     request = Request('GET', '/authorize')
     request.content = b'<this is not json>'
     request.sign()
     resp = request.send()
-    assert resp.status == 200
-    data = resp.json()
-    assert data['authorized'] == 'yes'
-    assert data['echo'] == random_msg
+    assert resp.status == 400
 
 
 @pytest.mark.integration

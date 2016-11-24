@@ -124,9 +124,8 @@ class Request:
             assert isinstance(sess, requests.Session)
         with (sess if sess_created else _DummySession()):
             reqfunc = getattr(sess, self.method.lower())
-            payload = json.dumps(self.data) if self.data else b''
             resp = reqfunc(self.build_url(),
-                           data=payload,
+                           data=self.content,
                            headers=self.headers)
             try:
                 return Response(resp.status_code, resp.reason, resp.text,
@@ -150,11 +149,10 @@ class Request:
             assert isinstance(sess, aiohttp.ClientSession)
         async with (sess if sess_created else _DummySession()):
             reqfunc = getattr(sess, self.method.lower())
-            payload = json.dumps(self.data) if self.data else b''
             try:
                 with _timeout(timeout):
                     resp = await reqfunc(self.build_url(),
-                                         data=payload,
+                                         data=self.content,
                                          headers=self.headers)
                     async with resp:
                         body = await resp.text()

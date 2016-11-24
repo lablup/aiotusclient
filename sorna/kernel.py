@@ -1,6 +1,5 @@
 import uuid
 
-from .config import get_config
 from .exceptions import SornaAPIError
 from .request import Request
 
