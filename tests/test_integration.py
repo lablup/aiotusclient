@@ -34,7 +34,7 @@ import uuid
 import pytest
 
 from sorna.request import Request
-from sorna.kernel import create_kernel, destroy_kernel, \
+from sorna.kernel import create_kernel, destroy_kernel, restart_kernel, \
                          get_kernel_info, execute_code
 from sorna.exceptions import SornaAPIError
 
@@ -44,6 +44,16 @@ def test_connection(defconfig):
     request = Request('GET', '/')
     resp = request.send()
     assert 'version' in resp.json()
+
+
+@pytest.mark.integration
+def test_not_found(defconfig):
+    request = Request('GET', '/invalid-url-wow')
+    resp = request.send()
+    assert resp.status == 404
+    request = Request('GET', '/authorize/uh-oh')
+    resp = request.send()
+    assert resp.status == 404
 
 
 @pytest.mark.integration
@@ -88,6 +98,14 @@ def test_auth_malformed(defconfig):
 
 
 @pytest.mark.integration
+def test_auth_missing_body(defconfig):
+    request = Request('GET', '/authorize')
+    request.sign()
+    resp = request.send()
+    assert resp.status == 400
+
+
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_auth(defconfig):
     random_msg = uuid.uuid4().hex
@@ -117,9 +135,16 @@ def test_kernel_lifecycles(defconfig):
         assert e.status == 404
 
 
-@pytest.mark.integration
-def test_kernel_execution(defconfig):
+@pytest.yield_fixture
+def py3_kernel():
     kernel_id = create_kernel('python3')
+    yield kernel_id
+    destroy_kernel(kernel_id)
+
+
+@pytest.mark.integration
+def test_kernel_execution(defconfig, py3_kernel):
+    kernel_id = py3_kernel
     result = execute_code(kernel_id, 'code-001', 'print("hello world")')
     assert 'hello world' in result['stdout']
     assert result['stderr'] == ''
@@ -127,4 +152,21 @@ def test_kernel_execution(defconfig):
     assert len(result['exceptions']) == 0
     info = get_kernel_info(kernel_id)
     assert info['numQueriesExecuted'] == 1
-    destroy_kernel(kernel_id)
+
+
+@pytest.mark.integration
+def test_kernel_restart(defconfig, py3_kernel):
+    kernel_id = py3_kernel
+    result = execute_code(kernel_id, 'code-001', 'a = "first"; print(a)')
+    assert 'first' in result['stdout']
+    assert result['stderr'] == ''
+    assert len(result['media']) == 0
+    assert len(result['exceptions']) == 0
+    restart_kernel(kernel_id)
+    result = execute_code(kernel_id, 'code-002', 'print(a)')
+    assert result['stderr'] == ''
+    assert len(result['media']) == 0
+    assert len(result['exceptions']) == 1
+    assert result['exceptions'][0][0] == 'NameError'
+    info = get_kernel_info(kernel_id)
+    assert info['numQueriesExecuted'] == 3

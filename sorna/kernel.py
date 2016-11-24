@@ -32,6 +32,14 @@ def destroy_kernel(kernel_id):
         raise SornaAPIError(resp.status, resp.reason, resp.text())
 
 
+def restart_kernel(kernel_id):
+    request = Request('PATCH', '/kernel/{}'.format(kernel_id))
+    request.sign()
+    resp = request.send()
+    if resp.status != 204:
+        raise SornaAPIError(resp.status, resp.reason, resp.text())
+
+
 def get_kernel_info(kernel_id):
     request = Request('GET', '/kernel/{}'.format(kernel_id))
     request.sign()
