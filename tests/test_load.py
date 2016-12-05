@@ -5,12 +5,15 @@ as environment variables.
 '''
 
 import argparse
+import logging
 import multiprocessing
 from statistics import mean, median, stdev
 import sys
 import time
 
 from sorna.kernel import create_kernel, destroy_kernel, execute_code
+
+log = logging.getLogger('sorna.test.load')
 
 
 def print_stat(msg, times_taken):
@@ -21,8 +24,13 @@ def print_stat(msg, times_taken):
 
 def run_create_kernel(_idx):
     begin = time.monotonic()
-    kid = create_kernel('python3')
-    end = time.monotonic()
+    try:
+        kid = create_kernel('python3')
+    except:
+        log.exception('run_create_kernel')
+        kid = None
+    finally:
+        end = time.monotonic()
     t = end - begin
     return t, kid
 
@@ -51,11 +59,13 @@ print("hello world {}".format(uuid.uuid4()))
 '''
 
 def run_execute_code(kid):
-    begin = time.monotonic()
     # 2nd params is currently ignored.
-    execute_code(kid, 'code_id', sample_code)
-    end = time.monotonic()
-    return end - begin
+    if kid is not None:
+        begin = time.monotonic()
+        execute_code(kid, 'code_id', sample_code)
+        end = time.monotonic()
+        return end - begin
+    return None
 
 def execute_codes(kernel_ids, parallel=False):
     times_taken = []
@@ -64,21 +74,25 @@ def execute_codes(kernel_ids, parallel=False):
         pool = multiprocessing.Pool(len(kernel_ids))
         results = pool.map(run_execute_code, kernel_ids)
         for t in results:
-            times_taken.append(t)
+            if t is not None:
+                times_taken.append(t)
     else:
         for kid in kernel_ids:
             t = run_execute_code(kid)
-            times_taken.append(t)
+            if t is not None:
+                times_taken.append(t)
 
     print_stat('execute_code', times_taken)
 
 
 
 def run_destroy_kernel(kid):
-    begin = time.monotonic()
-    destroy_kernel(kid)
-    end = time.monotonic()
-    return end - begin
+    if kid is not None:
+        begin = time.monotonic()
+        destroy_kernel(kid)
+        end = time.monotonic()
+        return end - begin
+    return None
 
 def destroy_kernels(kernel_ids, parallel=False):
     times_taken = []
@@ -87,11 +101,13 @@ def destroy_kernels(kernel_ids, parallel=False):
         pool = multiprocessing.Pool(len(kernel_ids))
         results = pool.map(run_destroy_kernel, kernel_ids)
         for t in results:
-            times_taken.append(t)
+            if t is not None:
+                times_taken.append(t)
     else:
         for kid in kernel_ids:
             t = run_destroy_kernel(kid)
-            times_taken.append(t)
+            if t is not None:
+                times_taken.append(t)
 
     print_stat('destroy_kernel', times_taken)
 
