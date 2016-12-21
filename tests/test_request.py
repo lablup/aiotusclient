@@ -1,10 +1,12 @@
 from collections import OrderedDict
 from urllib.parse import urljoin
 
+import aiohttp
 import pytest
 import requests
 import simplejson as json
 
+from sorna.exceptions import SornaAPIError
 from sorna.request import Request, Response
 
 
@@ -33,6 +35,20 @@ def mock_sorna_resp(mocker):
     resp.configure_mock(**conf)
 
     return resp, conf
+
+
+@pytest.fixture
+async def mock_async_sorna_resp(mocker):
+    resp = mocker.Mock(spec=aiohttp.ClientResponse)
+    conf = {
+        'status': 900,
+        'reason': 'this is a test',
+        'body': b'{"test1": 1, "test2": 2}',
+        'content_type': 'application/json',
+    }
+    resp.configure_mock(**conf)
+
+    return resp
 
 
 def test_request_initialization(req_params):
@@ -144,8 +160,44 @@ def test_send_returns_appropriate_sorna_response(
         assert resp.json() == json.loads(conf['text'])
 
 
+@pytest.mark.asyncio
+async def test_asend_not_allowed_request_raises_error(req_params):
+    req_params['method'] = 'STRANGE'
+    req = Request(**req_params)
+
+    with pytest.raises(AssertionError):
+        await req.asend()
+
+
+@pytest.mark.asyncio
+async def test_asend_with_appropriate_method(
+        mocker, req_params, mock_async_sorna_resp):
+    req = Request(**req_params)
+    methods = Request._allowed_methods
+    for method in methods:
+        req.method = method
+
+        mock_reqfunc = mocker.patch.object(
+            aiohttp.ClientSession, method.lower(), autospec=True)
+        mock_reqfunc.return_value = mock_async_sorna_resp
+
+        assert mock_reqfunc.call_count == 0
+        try:
+            # TODO: Mocking the response of aiohttp request methods raises
+            # exception. Have to think about smarter way to circumvent
+            # this exception. However, it is not major concern for this unit
+            # test.
+            await req.asend()
+        except SornaAPIError:
+            pass
+        mock_reqfunc.assert_called_once_with(
+            mocker.ANY, req.build_url(), data=req.content, headers=req.headers)
+
+
+@pytest.mark.asyncio
 @pytest.mark.skip('not implemented yet')
-def test_asend_request():
+async def test_asend_returns_appropriate_sorna_response(
+        mocker, req_params, mock_sorna_resp):
     pass
 
 
