@@ -24,6 +24,7 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Operating System :: POSIX',
         'Operating System :: MacOS :: MacOS X',
         'Environment :: No Input/Output (Daemon)',
@@ -33,6 +34,7 @@ setup(
 
     packages=['sorna'],
 
+    python_requires='>=3.5',
     install_requires=[
         'aiohttp>=1.1',
         'namedlist',
