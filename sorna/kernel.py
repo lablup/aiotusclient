@@ -4,7 +4,7 @@ from .exceptions import SornaAPIError
 from .request import Request
 
 
-def create_kernel(kernel_type, client_token=None, max_mem=0, timeout=0):
+def create_kernel(kernel_type, client_token=None, max_mem=0, timeout=0, return_id_only=True):
     if client_token is not None:
         assert isinstance(client_token, str)
         assert len(client_token) > 8
@@ -19,7 +19,9 @@ def create_kernel(kernel_type, client_token=None, max_mem=0, timeout=0):
     request.sign()
     resp = request.send()
     if resp.status == 201:
-        return resp.json()['kernelId']
+        if return_id_only:
+            return resp.json()['kernelId']
+        return resp.json()
     else:
         raise SornaAPIError(resp.status, resp.reason, resp.text())
 
