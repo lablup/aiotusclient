@@ -32,7 +32,7 @@ setup(
         'Topic :: Software Development',
     ],
 
-    packages=['sorna'],
+    packages=['sorna', 'sorna.asyncio'],
 
     python_requires='>=3.5',
     install_requires=[
