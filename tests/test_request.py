@@ -1,7 +1,9 @@
 from collections import OrderedDict
+from unittest import mock
 from urllib.parse import urljoin
 
 import aiohttp
+import asynctest
 import pytest
 import requests
 import simplejson as json
@@ -21,8 +23,8 @@ def req_params(defconfig):
 
 
 @pytest.fixture
-def mock_sorna_resp(mocker):
-    resp = mocker.Mock(spec=requests.Response)
+def mock_sorna_resp():
+    resp = mock.Mock(spec=requests.Response)
     conf = {
         'status_code': 900,
         'reason': 'this is a test',
@@ -38,17 +40,48 @@ def mock_sorna_resp(mocker):
 
 
 @pytest.fixture
-async def mock_async_sorna_resp(mocker):
-    resp = mocker.Mock(spec=aiohttp.ClientResponse)
+def mock_sorna_aresp():
     conf = {
         'status': 900,
         'reason': 'this is a test',
-        'body': b'{"test1": 1, "test2": 2}',
+        'text': mock_coro(b'{"test1": 1, "test2": 2}'),
         'content_type': 'application/json',
     }
-    resp.configure_mock(**conf)
 
-    return resp
+    return MockAsyncContextManager(**conf), conf
+
+
+def mock_coro(return_value):
+    """
+    Return mock coroutine.
+    Python's default mock module does not support coroutines.
+    """
+    async def mock_coro(*args, **kargs):
+        return return_value
+    return mock.Mock(wraps=mock_coro)
+
+
+class MockAsyncContextManager:
+    """
+    Mock async context manager.
+    To get around `async with` statement for testing.
+    Attributes can be set by passing `kwargs`.
+    """
+    def __init__(self, *args, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        pass
+
+    async def __aenter__(self):
+        pass
+
+    async def __aexit__(self, exc_type, exc_value, exc_tb):
+        pass
 
 
 def test_request_initialization(req_params):
@@ -170,8 +203,7 @@ async def test_asend_not_allowed_request_raises_error(req_params):
 
 
 @pytest.mark.asyncio
-async def test_asend_with_appropriate_method(
-        mocker, req_params, mock_async_sorna_resp):
+async def test_asend_with_appropriate_method(mocker, req_params):
     req = Request(**req_params)
     methods = Request._allowed_methods
     for method in methods:
@@ -179,14 +211,11 @@ async def test_asend_with_appropriate_method(
 
         mock_reqfunc = mocker.patch.object(
             aiohttp.ClientSession, method.lower(), autospec=True)
-        mock_reqfunc.return_value = mock_async_sorna_resp
 
         assert mock_reqfunc.call_count == 0
         try:
-            # TODO: Mocking the response of aiohttp request methods raises
-            # exception. Have to think about smarter way to circumvent
-            # this exception. However, it is not major concern for this unit
-            # test.
+            # Ignore exceptions in `async with` statement. We're only
+            # interested in request call here.
             await req.asend()
         except SornaAPIError:
             pass
@@ -195,10 +224,29 @@ async def test_asend_with_appropriate_method(
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip('not implemented yet')
-async def test_asend_returns_appropriate_sorna_response(
-        mocker, req_params, mock_sorna_resp):
-    pass
+async def test_asend_returns_appropriate_sorna_response(mocker, req_params,
+                                                        mock_sorna_aresp):
+    req = Request(**req_params)
+    methods = Request._allowed_methods
+    for method in methods:
+        req.method = method
+
+        mock_reqfunc = mocker.patch.object(
+            aiohttp.ClientSession, method.lower(),
+            new_callable=asynctest.CoroutineMock
+        )
+        mock_reqfunc.return_value, conf = mock_sorna_aresp
+
+        resp = await req.asend()
+
+        assert isinstance(resp, Response)
+        assert resp.status == conf['status']
+        assert resp.reason == conf['reason']
+        assert resp.content_type == conf['content_type']
+        body = await conf['text']()
+        assert resp.content_length == len(body)
+        assert resp.text() == body
+        assert resp.json() == json.loads(body)
 
 
 def test_response_initialization(mock_sorna_resp):
