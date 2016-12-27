@@ -37,7 +37,7 @@ async def destroy_kernel(kernel_id):
 async def restart_kernel(kernel_id):
     request = Request('PATCH', '/kernel/{}'.format(kernel_id))
     request.sign()
-    resp = await request.send()
+    resp = await request.asend()
     if resp.status != 204:
         raise SornaAPIError(resp.status, resp.reason, resp.text())
 
