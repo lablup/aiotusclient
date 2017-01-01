@@ -3,7 +3,7 @@ from unittest import mock
 
 def mock_coro(return_value):
     """
-    Return mock coroutine.
+    Return mock coroutine function.
     Python's default mock module does not support coroutines.
     """
     async def mock_coro(*args, **kargs):
