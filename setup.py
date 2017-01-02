@@ -44,7 +44,7 @@ setup(
     ],
     extras_require={
         'dev': [],
-        'test': ['pytest', 'pytest-mock', 'pytest-asyncio'],
+        'test': ['pytest', 'pytest-mock', 'pytest-asyncio', 'asynctest'],
     },
     data_files=[],
 )
