@@ -6,9 +6,9 @@ environment:
     - PYTHON: "C:\\Python36"
     - PYTHON: "C:\\Python36-x64"
 install:
-  - 'build.cmd %PYTHON%\\python.exe -m pip install -U pip'
-  - 'build.cmd %PYTHON%\\python.exe -m pip install -U wheel setuptools'
-  - 'build.cmd %PYTHON%\\python.exe -m pip install -U -r requirements-dev.txt'
+  - '%PYTHON%\\python.exe -m pip install -U pip'
+  - '%PYTHON%\\python.exe -m pip install -U wheel setuptools'
+  - '%PYTHON%\\python.exe -m pip install -U -r requirements-dev.txt'
 build: false
 test_script:
-  - 'build.cmd %PYTHON%\\python.exe -m pytest -m "not integration"'
+  - '%PYTHON%\\python.exe -m pytest -m "not integration"'
