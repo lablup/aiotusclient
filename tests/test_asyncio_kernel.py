@@ -26,9 +26,9 @@ async def test_create_kernel_url():
         await create_kernel('python')
 
         mock_req_cls.assert_called_once_with('POST', '/kernel/create', mock.ANY)
-        mock_req_obj.sign.assert_called_once()
-        mock_req_obj.asend.assert_called_once()
-        mock_req_obj.asend.return_value.json.assert_called_once()
+        mock_req_obj.sign.assert_called_once_with()
+        mock_req_obj.asend.assert_called_once_with()
+        mock_req_obj.asend.return_value.json.assert_called_once_with()
 
 
 @pytest.mark.asyncio
@@ -145,8 +145,8 @@ async def test_stream_pty(mocker):
                          return_value=mock_req_obj) as mock_req_cls:
         ws = await stream_pty('mykernel')
         mock_req_cls.assert_called_once_with('GET', '/stream/kernel/{}/pty'.format('mykernel'))
-        mock_req_obj.sign.assert_called_once()
-        mock_req_obj.connect_websocket.assert_called_once()
+        mock_req_obj.sign.assert_called_once_with()
+        mock_req_obj.connect_websocket.assert_called_once_with()
         assert isinstance(ws, StreamPty)
         ws.send_str('test-string')
 
@@ -160,4 +160,4 @@ async def test_stream_pty_raises_error_with_abnormal_status(mocker):
                          return_value=mock_req_obj) as mock_req_cls:
         with pytest.raises(SornaAPIError):
             await stream_pty('mykernel')
-        mock_req_obj.sign.assert_called_once()
+        mock_req_obj.sign.assert_called_once_with()
