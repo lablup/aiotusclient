@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from datetime import datetime
+import threading
 from typing import Mapping, Optional, Union
 from urllib.parse import urljoin
 
@@ -14,19 +15,9 @@ from .config import APIConfig, get_config
 from .exceptions import SornaAPIError
 
 
-class _DummySession:
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        pass
-
-    async def __aenter__(self):
-        pass
-
-    async def __aexit__(self, exc_type, exc_value, exc_tb):
-        pass
+tlstorage = threading.local()
+tlstorage.cached_aiohttp_sess = None
+tlstorage.cached_requests_sess = None
 
 
 class Request:
@@ -116,23 +107,22 @@ class Request:
         Sends the request to the server.
         '''
         assert self.method in self._allowed_methods
-        sess_created = False
         if sess is None:
-            sess = requests.Session()
-            sess_created = True
+            if tlstorage.cached_requests_sess is None:
+                tlstorage.cached_requests_sess = requests.Session()
+            sess = tlstorage.cached_requests_sess
         else:
             assert isinstance(sess, requests.Session)
-        with (sess if sess_created else _DummySession()):
-            reqfunc = getattr(sess, self.method.lower())
-            resp = reqfunc(self.build_url(),
-                           data=self.content,
-                           headers=self.headers)
-            try:
-                return Response(resp.status_code, resp.reason, resp.text,
-                                resp.headers['content-type'],
-                                resp.headers['content-length'])
-            except requests.exceptions.RequestException as e:
-                raise SornaAPIError from e
+        reqfunc = getattr(sess, self.method.lower())
+        resp = reqfunc(self.build_url(),
+                       data=self.content,
+                       headers=self.headers)
+        try:
+            return Response(resp.status_code, resp.reason, resp.text,
+                            resp.headers['content-type'],
+                            resp.headers['content-length'])
+        except requests.exceptions.RequestException as e:
+            raise SornaAPIError from e
 
     async def asend(self, sess=None, timeout=10.0):
         '''
@@ -141,26 +131,42 @@ class Request:
         This method is a coroutine.
         '''
         assert self.method in self._allowed_methods
-        sess_created = False
         if sess is None:
-            sess = aiohttp.ClientSession()
-            sess_created = True
+            if tlstorage.cached_aiohttp_sess is None:
+                tlstorage.cached_aiohttp_sess = aiohttp.ClientSession()
+            sess = tlstorage.cached_aiohttp_sess
         else:
             assert isinstance(sess, aiohttp.ClientSession)
-        async with (sess if sess_created else _DummySession()):
-            reqfunc = getattr(sess, self.method.lower())
-            try:
-                with _timeout(timeout):
-                    resp = await reqfunc(self.build_url(),
-                                         data=self.content,
-                                         headers=self.headers)
-                    async with resp:
-                        body = await resp.text()
-                        return Response(resp.status, resp.reason, body,
-                                        resp.content_type,
-                                        len(body))
-            except Exception as e:
-                raise SornaAPIError from e
+        reqfunc = getattr(sess, self.method.lower())
+        try:
+            with _timeout(timeout):
+                resp = await reqfunc(self.build_url(),
+                                     data=self.content,
+                                     headers=self.headers)
+                async with resp:
+                    body = await resp.text()
+                    return Response(resp.status, resp.reason, body,
+                                    resp.content_type,
+                                    len(body))
+        except Exception as e:
+            raise SornaAPIError from e
+
+    async def connect_websocket(self, sess=None):
+        '''
+        Creates a WebSocket connection.
+
+        This method is an async-generator, where you can fetch WebSocket
+        messages using `async for` clause to the returned value.
+        '''
+        assert self.method == 'GET'
+        if sess is None:
+            if tlstorage.cached_aiohttp_sess is None:
+                tlstorage.cached_aiohttp_sess = aiohttp.ClientSession()
+            sess = tlstorage.cached_aiohttp_sess
+        else:
+            assert isinstance(sess, aiohttp.ClientSession)
+        ws = await sess.ws_connect(self.build_url(), headers=self.headers)
+        return ws
 
 
 class Response:

@@ -1,5 +1,8 @@
+import json
+import sys
 import uuid
 
+import aiohttp
 from ..exceptions import SornaAPIError
 from ..request import Request
 
@@ -63,3 +66,53 @@ async def execute_code(kernel_id, code_id, code):
         return resp.json()['result']
     else:
         raise SornaAPIError(resp.status, resp.reason, resp.text())
+
+
+class StreamPty:
+
+    def __init__(self, kernel_id, ws):
+        self.kernel_id = kernel_id
+        self.ws = ws
+
+    @property
+    def closed(self):
+        return self.ws.closed
+
+    if sys.version_info < (3, 5, 2):
+        async def __aiter__(self):
+            return (await self.ws.__aiter__())
+    else:
+        def __aiter__(self):
+            return self.ws.__aiter__()
+
+    async def __anext__(self):
+        msg = await self.ws.__anext__()
+        return msg
+
+    def send_str(self, raw_str):
+        self.ws.send_str(raw_str)
+
+    def resize(self, rows, cols):
+        self.ws.send_str(json.dumps({
+            'type': 'resize',
+            'rows': rows,
+            'cols': cols,
+        }))
+
+    def restart(self):
+        self.ws.send_str(json.dumps({
+            'type': 'restart',
+        }))
+
+    async def close(self):
+        await self.ws.close()
+
+
+async def stream_pty(kernel_id):
+    request = Request('GET', '/stream/kernel/{}/pty'.format(kernel_id))
+    request.sign()
+    try:
+        ws = await request.connect_websocket()
+    except aiohttp.errors.HttpProcessingError as e:
+        raise SornaAPIError(e.code, e.message)
+    return StreamPty(kernel_id, ws)

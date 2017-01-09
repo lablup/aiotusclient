@@ -24,3 +24,5 @@ coverage.xml
 *.mo
 *.pot
 docs/_build
+
+venv*
