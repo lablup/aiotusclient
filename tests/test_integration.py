@@ -29,6 +29,7 @@ suite.  Of course, the service must be fully configured as follows:
    (Check out `python -m sorna.gateway.models --populate-fixtures`)
 '''
 
+import textwrap
 import uuid
 
 import pytest
@@ -157,16 +158,34 @@ def test_kernel_execution(defconfig, py3_kernel):
 @pytest.mark.integration
 def test_kernel_restart(defconfig, py3_kernel):
     kernel_id = py3_kernel
-    result = execute_code(kernel_id, 'code-001', 'a = "first"; print(a)')
+    first_code = textwrap.dedent('''
+    a = "first"
+    with open("test.txt", "w") as f:
+        f.write("helloo?")
+    print(a)
+    ''').strip()
+    second_code_name_error = textwrap.dedent('''
+    print(a)
+    ''').strip()
+    second_code_file_check = textwrap.dedent('''
+    with open("test.txt", "r") as f:
+        print(f.read())
+    ''').strip()
+    result = execute_code(kernel_id, 'code-001', first_code)
     assert 'first' in result['stdout']
     assert result['stderr'] == ''
     assert len(result['media']) == 0
     assert len(result['exceptions']) == 0
     restart_kernel(kernel_id)
-    result = execute_code(kernel_id, 'code-002', 'print(a)')
+    result = execute_code(kernel_id, 'code-002', second_code_name_error)
     assert result['stderr'] == ''
     assert len(result['media']) == 0
     assert len(result['exceptions']) == 1
     assert result['exceptions'][0][0] == 'NameError'
+    result = execute_code(kernel_id, 'code-002', second_code_file_check)
+    assert 'helloo?' in result['stdout']
+    assert result['stderr'] == ''
+    assert len(result['media']) == 0
+    assert len(result['exceptions']) == 0
     info = get_kernel_info(kernel_id)
-    assert info['numQueriesExecuted'] == 3
+    assert info['numQueriesExecuted'] == 4

@@ -11,9 +11,22 @@ from statistics import mean, median, stdev
 import sys
 import time
 
-from sorna.kernel import create_kernel, destroy_kernel, execute_code
+import pytest
+
+from sorna.kernel import create_kernel, destroy_kernel, execute_code, restart_kernel
 
 log = logging.getLogger('sorna.test.load')
+
+sample_code = '''
+import os
+print('ls:', os.listdir('.'))
+with open('test.txt', 'w') as f:
+    f.write('hello world')
+'''
+
+sample_code_julia = '''
+println("wow")
+'''
 
 
 def print_stat(msg, times_taken):
@@ -34,6 +47,7 @@ def run_create_kernel(_idx):
     t = end - begin
     return t, kid
 
+
 def create_kernels(concurrency, parallel=False):
     kernel_ids = []
     times_taken = []
@@ -53,19 +67,17 @@ def create_kernels(concurrency, parallel=False):
     print_stat('create_kernel', times_taken)
     return kernel_ids
 
-sample_code = '''
-import uuid
-print("hello world {}".format(uuid.uuid4()))
-'''
 
 def run_execute_code(kid):
     # 2nd params is currently ignored.
     if kid is not None:
         begin = time.monotonic()
-        execute_code(kid, 'code_id', sample_code)
+        result = execute_code(kid, 'code_id', sample_code)
+        print(result['stdout'])
         end = time.monotonic()
         return end - begin
     return None
+
 
 def execute_codes(kernel_ids, parallel=False):
     times_taken = []
@@ -85,6 +97,33 @@ def execute_codes(kernel_ids, parallel=False):
     print_stat('execute_code', times_taken)
 
 
+def run_restart_kernel(kid):
+    # 2nd params is currently ignored.
+    if kid is not None:
+        begin = time.monotonic()
+        restart_kernel(kid)
+        end = time.monotonic()
+        return end - begin
+    return None
+
+
+def restart_kernels(kernel_ids, parallel=False):
+    times_taken = []
+
+    if parallel:
+        pool = multiprocessing.Pool(len(kernel_ids))
+        results = pool.map(run_restart_kernel, kernel_ids)
+        for t in results:
+            if t is not None:
+                times_taken.append(t)
+    else:
+        for kid in kernel_ids:
+            t = run_restart_kernel(kid)
+            if t is not None:
+                times_taken.append(t)
+
+    print_stat('restart_kernel', times_taken)
+
 
 def run_destroy_kernel(kid):
     if kid is not None:
@@ -93,6 +132,7 @@ def run_destroy_kernel(kid):
         end = time.monotonic()
         return end - begin
     return None
+
 
 def destroy_kernels(kernel_ids, parallel=False):
     times_taken = []
@@ -112,17 +152,19 @@ def destroy_kernels(kernel_ids, parallel=False):
     print_stat('destroy_kernel', times_taken)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('concurrency', type=int, default=5)
-    parser.add_argument('--parallel', action='store_true', default=False)
-    args = parser.parse_args()
-
-    if args.concurrency < 1 or args.concurrency > 50:
-        print('Concurrency must be in the range of [1, 50].', file=sys.stderr)
-        sys.exit(1)
-
-    kids = create_kernels(args.concurrency, args.parallel)
-    execute_codes(kids, args.parallel)
-    destroy_kernels(kids, args.parallel)
-
+@pytest.mark.integration
+@pytest.mark.parametrize('concurrency,parallel,restart', [
+    (5, False, False),
+    (5, True,  False),
+    (5, False, True),
+    (5, True,  True),
+])
+def test_high_load_requests(capsys, defconfig, concurrency, parallel, restart):
+    # Show stdout for timing statistics
+    with capsys.disabled():
+        kids = create_kernels(concurrency, parallel)
+        execute_codes(kids, parallel)
+        if restart:
+            restart_kernels(kids, parallel)
+            execute_codes(kids, parallel)
+        destroy_kernels(kids, parallel)
