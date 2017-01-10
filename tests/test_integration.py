@@ -30,6 +30,7 @@ suite.  Of course, the service must be fully configured as follows:
 '''
 
 import textwrap
+import time
 import uuid
 
 import pytest
@@ -131,9 +132,11 @@ def test_kernel_lifecycles(defconfig):
     info = get_kernel_info(kernel_id)
     assert info['numQueriesExecuted'] == 1
     destroy_kernel(kernel_id)
+    # kernel destruction is no longer synchronous!
+    time.sleep(2.0)
     with pytest.raises(SornaAPIError) as e:
         info = get_kernel_info(kernel_id)
-        assert e.status == 404
+    assert e.value.args[0] == 404
 
 
 @pytest.yield_fixture
@@ -188,4 +191,5 @@ def test_kernel_restart(defconfig, py3_kernel):
     assert len(result['media']) == 0
     assert len(result['exceptions']) == 0
     info = get_kernel_info(kernel_id)
+    # FIXME: this varies between 2~4
     assert info['numQueriesExecuted'] == 4
