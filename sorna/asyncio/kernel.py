@@ -89,6 +89,9 @@ class StreamPty:
         msg = await self.ws.__anext__()
         return msg
 
+    def exception(self):
+        return self.ws.exception()
+
     def send_str(self, raw_str):
         self.ws.send_str(raw_str)
 
