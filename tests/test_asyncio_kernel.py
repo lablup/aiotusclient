@@ -141,14 +141,17 @@ async def test_execute_code_raises_err_with_abnormal_status():
 @pytest.mark.asyncio
 async def test_stream_pty(mocker):
     mock_req_obj = asynctest.MagicMock(spec=Request)
+    sess, ws = object(), object()
+    mock_req_obj.connect_websocket.return_value = (sess, ws)
     with asynctest.patch('sorna.asyncio.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
-        ws = await stream_pty('mykernel')
+        stream = await stream_pty('mykernel')
         mock_req_cls.assert_called_once_with('GET', '/stream/kernel/{}/pty'.format('mykernel'))
         mock_req_obj.sign.assert_called_once_with()
         mock_req_obj.connect_websocket.assert_called_once_with()
-        assert isinstance(ws, StreamPty)
-        ws.send_str('test-string')
+        assert isinstance(stream, StreamPty)
+        assert stream.sess is sess
+        assert stream.ws is ws
 
 
 @pytest.mark.asyncio
