@@ -155,7 +155,7 @@ class Request:
         else:
             assert isinstance(sess, aiohttp.ClientSession)
         ws = await sess.ws_connect(self.build_url(), headers=self.headers)
-        return ws
+        return sess, ws
 
 
 class Response:

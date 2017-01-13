@@ -70,8 +70,9 @@ async def execute_code(kernel_id, code_id, code):
 
 class StreamPty:
 
-    def __init__(self, kernel_id, ws):
+    def __init__(self, kernel_id, sess, ws):
         self.kernel_id = kernel_id
+        self.sess = sess  # we should keep reference while connection is active.
         self.ws = ws
 
     @property
@@ -109,13 +110,14 @@ class StreamPty:
 
     async def close(self):
         await self.ws.close()
+        await self.sess.close()
 
 
 async def stream_pty(kernel_id):
     request = Request('GET', '/stream/kernel/{}/pty'.format(kernel_id))
     request.sign()
     try:
-        ws = await request.connect_websocket()
+        sess, ws = await request.connect_websocket()
     except aiohttp.errors.HttpProcessingError as e:
         raise SornaAPIError(e.code, e.message)
-    return StreamPty(kernel_id, ws)
+    return StreamPty(kernel_id, sess, ws)
