@@ -124,7 +124,7 @@ async def destroy_kernel(kernel):
 async def restart_kernel(kernel):
     warnings.warn('deprecated client API', DeprecationWarning, stacklevel=2)
     if isinstance(kernel, AsyncKernel):
-        await kernel.destroy()
+        await kernel.restart()
     elif isinstance(kernel, str):
         await AsyncKernel(kernel).restart()
     else:
