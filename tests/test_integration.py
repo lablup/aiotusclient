@@ -41,6 +41,15 @@ from sorna.kernel import create_kernel, destroy_kernel, restart_kernel, \
 from sorna.exceptions import SornaAPIError
 
 
+def aggregate_console(c):
+    return {
+        'stdout': ''.join(item[1] for item in c if item[0] == 'stdout'),
+        'stderr': ''.join(item[1] for item in c if item[0] == 'stderr'),
+        'html': ''.join(item[1] for item in c if item[0] == 'html'),
+        'media': list(item[1] for item in c if item[0] == 'media'),
+    }
+
+
 @pytest.mark.integration
 def test_connection(defconfig):
     request = Request('GET', '/')
@@ -149,11 +158,11 @@ def py3_kernel():
 @pytest.mark.integration
 def test_kernel_execution(defconfig, py3_kernel):
     kernel_id = py3_kernel
-    result = execute_code(kernel_id, 'code-001', 'print("hello world")')
-    assert 'hello world' in result['stdout']
-    assert result['stderr'] == ''
-    assert len(result['media']) == 0
-    assert len(result['exceptions']) == 0
+    result = execute_code(kernel_id, 'print("hello world")')
+    console = aggregate_console(result['console'])
+    assert 'hello world' in console['stdout']
+    assert console['stderr'] == ''
+    assert len(console['media']) == 0
     info = get_kernel_info(kernel_id)
     assert info['numQueriesExecuted'] == 1
 
@@ -174,22 +183,21 @@ def test_kernel_restart(defconfig, py3_kernel):
     with open("test.txt", "r") as f:
         print(f.read())
     ''').strip()
-    result = execute_code(kernel_id, 'code-001', first_code)
-    assert 'first' in result['stdout']
-    assert result['stderr'] == ''
-    assert len(result['media']) == 0
-    assert len(result['exceptions']) == 0
+    result = execute_code(kernel_id, first_code)
+    console = aggregate_console(result['console'])
+    assert 'first' in console['stdout']
+    assert console['stderr'] == ''
+    assert len(console['media']) == 0
     restart_kernel(kernel_id)
-    result = execute_code(kernel_id, 'code-002', second_code_name_error)
-    assert result['stderr'] == ''
-    assert len(result['media']) == 0
-    assert len(result['exceptions']) == 1
-    assert result['exceptions'][0][0] == 'NameError'
-    result = execute_code(kernel_id, 'code-002', second_code_file_check)
-    assert 'helloo?' in result['stdout']
-    assert result['stderr'] == ''
-    assert len(result['media']) == 0
-    assert len(result['exceptions']) == 0
+    result = execute_code(kernel_id, second_code_name_error)
+    console = aggregate_console(result['console'])
+    assert 'NameError' in console['stderr']
+    assert len(console['media']) == 0
+    result = execute_code(kernel_id, second_code_file_check)
+    console = aggregate_console(result['console'])
+    assert 'helloo?' in console['stdout']
+    assert console['stderr'] == ''
+    assert len(console['media']) == 0
     info = get_kernel_info(kernel_id)
     # FIXME: this varies between 2~4
-    assert info['numQueriesExecuted'] == 4
+    assert 2 <= info['numQueriesExecuted'] <= 4

@@ -10,7 +10,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.8.3',
+    version='0.9.0',
     description='Sorna API Client Library',
     long_description='',
     url='https://github.com/lablup/sorna-client',
@@ -23,7 +23,6 @@ setup(
         'Intended Audience :: Developers',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Operating System :: POSIX',
         'Operating System :: MacOS :: MacOS X',
@@ -34,7 +33,7 @@ setup(
 
     packages=['sorna', 'sorna.asyncio'],
 
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     install_requires=[
         'aiohttp>=1.1',
         'namedlist',

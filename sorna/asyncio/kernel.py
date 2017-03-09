@@ -1,71 +1,58 @@
+import functools
+import inspect
 import json
 import sys
+from typing import Iterable, Optional
 import uuid
+import warnings
 
 import aiohttp
-from ..exceptions import SornaAPIError
+from ..exceptions import SornaAPIError, SornaClientError
 from ..request import Request
+from ..kernel import BaseKernel
 
 
-async def create_kernel(kernel_type, client_token=None, max_mem=0, timeout=0, return_id_only=True):
-    if client_token is not None:
-        assert isinstance(client_token, str)
-        assert len(client_token) > 8
-    request = Request('POST', '/kernel/create', {
-        'lang': kernel_type,
-        'clientSessionToken': client_token if client_token else uuid.uuid4().hex,
-        'resourceLimits': {
-            'maxMem': max_mem,
-            'timeout': timeout,
-        }
-    })
-    request.sign()
-    resp = await request.asend()
-    if resp.status == 201:
-        if return_id_only:
-            return resp.json()['kernelId']
-        return resp.json()
-    else:
-        raise SornaAPIError(resp.status, resp.reason, resp.text())
+class AsyncKernel(BaseKernel):
+    '''
+    Asynchronous request sender kernel using aiohttp.
+    '''
 
+    @staticmethod
+    async def _make_request(gen):
+        rqst = next(gen)
+        rqst.sign()
+        resp = await rqst.asend()
+        return resp
 
-async def destroy_kernel(kernel_id):
-    request = Request('DELETE', '/kernel/{}'.format(kernel_id))
-    request.sign()
-    resp = await request.asend()
-    if resp.status != 204:
-        raise SornaAPIError(resp.status, resp.reason, resp.text())
+    @classmethod
+    def _call_base_clsmethod(cls, meth):
+        assert inspect.ismethod(meth)
+        @classmethod
+        @functools.wraps(meth)
+        async def _caller(cls, *args, **kwargs):
+            gen = meth(*args, **kwargs)
+            resp = await cls._make_request(gen)
+            return cls._handle_response(resp, gen)
+        return _caller
 
+    def _call_base_method(self, meth):
+        assert inspect.ismethod(meth)
+        @functools.wraps(meth)
+        async def _caller(*args, **kwargs):
+            gen = meth(*args, **kwargs)
+            resp = await self._make_request(gen)
+            return self._handle_response(resp, gen)
+        return _caller
 
-async def restart_kernel(kernel_id):
-    request = Request('PATCH', '/kernel/{}'.format(kernel_id))
-    request.sign()
-    resp = await request.asend()
-    if resp.status != 204:
-        raise SornaAPIError(resp.status, resp.reason, resp.text())
-
-
-async def get_kernel_info(kernel_id):
-    request = Request('GET', '/kernel/{}'.format(kernel_id))
-    request.sign()
-    resp = await request.asend()
-    if resp.status == 200:
-        return resp.json()
-    else:
-        raise SornaAPIError(resp.status, resp.reason, resp.text())
-
-
-async def execute_code(kernel_id, code_id, code):
-    request = Request('POST', '/kernel/{}'.format(kernel_id), {
-        'codeId': code_id,
-        'code': code,
-    })
-    request.sign()
-    resp = await request.asend()
-    if resp.status == 200:
-        return resp.json()['result']
-    else:
-        raise SornaAPIError(resp.status, resp.reason, resp.text())
+    # only supported in AsyncKernel
+    async def stream_pty(self):
+        request = Request('GET', '/stream/kernel/{}/pty'.format(self.kernel_id))
+        request.sign()
+        try:
+            sess, ws = await request.connect_websocket()
+        except aiohttp.errors.HttpProcessingError as e:
+            raise SornaClientError(e.code, e.message)
+        return StreamPty(self.kernel_id, sess, ws)
 
 
 class StreamPty:
@@ -113,11 +100,64 @@ class StreamPty:
         await self.sess.close()
 
 
-async def stream_pty(kernel_id):
-    request = Request('GET', '/stream/kernel/{}/pty'.format(kernel_id))
-    request.sign()
-    try:
-        sess, ws = await request.connect_websocket()
-    except aiohttp.errors.HttpProcessingError as e:
-        raise SornaAPIError(e.code, e.message)
-    return StreamPty(kernel_id, sess, ws)
+# Legacy functions
+
+async def create_kernel(lang: str, client_token: Optional[str]=None,
+                        mounts: Optional[Iterable[str]]=None,
+                        max_mem: int=0, exec_timeout: int=0,
+                        return_id_only: bool=True):
+    warnings.warn('deprecated client API', DeprecationWarning, stacklevel=2)
+    return await AsyncKernel.get_or_create(lang, client_token,
+                                           mounts, max_mem, exec_timeout)
+
+
+async def destroy_kernel(kernel):
+    warnings.warn('deprecated client API', DeprecationWarning, stacklevel=2)
+    if isinstance(kernel, AsyncKernel):
+        await kernel.destroy()
+    elif isinstance(kernel, str):
+        await AsyncKernel(kernel).destroy()
+    else:
+        raise SornaClientError('Called async API with synchronous Kernel object')
+
+
+async def restart_kernel(kernel):
+    warnings.warn('deprecated client API', DeprecationWarning, stacklevel=2)
+    if isinstance(kernel, AsyncKernel):
+        await kernel.destroy()
+    elif isinstance(kernel, str):
+        await AsyncKernel(kernel).restart()
+    else:
+        raise SornaClientError('Called async API with synchronous Kernel object')
+
+
+async def get_kernel_info(kernel):
+    warnings.warn('deprecated client API', DeprecationWarning, stacklevel=2)
+    if isinstance(kernel, AsyncKernel):
+        return await kernel.get_info()
+    elif isinstance(kernel, str):
+        return await AsyncKernel(kernel).get_info()
+    else:
+        raise SornaClientError('Called async API with synchronous Kernel object')
+
+
+async def execute_code(kernel, code: Optional[str]=None,
+                       mode: str='query',
+                       opts: Optional[str]=None):
+    warnings.warn('deprecated client API', DeprecationWarning, stacklevel=2)
+    if isinstance(kernel, AsyncKernel):
+        return await kernel.execute(code, mode, opts)
+    elif isinstance(kernel, str):
+        return await AsyncKernel(kernel).execute(code, mode, opts)
+    else:
+        raise SornaClientError('Called async API with synchronous Kernel object')
+
+
+async def stream_pty(kernel):
+    warnings.warn('deprecated client API', DeprecationWarning, stacklevel=2)
+    if isinstance(kernel, AsyncKernel):
+        return await kernel.stream_pty()
+    elif isinstance(kernel, str):
+        return await AsyncKernel(kernel).stream_pty()
+    else:
+        raise SornaClientError('Called async API with synchronous Kernel object')

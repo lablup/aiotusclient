@@ -9,11 +9,11 @@ class APIConfig:
     DEFAULTS = {
         'endpoint': 'https://api.sorna.io',
         'user_agent': 'Sorna Client Library (Python/v0.1)',
-        'version': 'v1.20160915',
+        'version': 'v2.20170315',
     }
 
     def __init__(self, endpoint: Optional[str]=None,
-                 version: str='v1.20160915',
+                 version: str='v2.20170315',
                  user_agent: Optional[str]=None,
                  access_key: Optional[str]=None,
                  secret_key: Optional[str]=None,

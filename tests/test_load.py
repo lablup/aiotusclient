@@ -72,7 +72,7 @@ def run_execute_code(kid):
     # 2nd params is currently ignored.
     if kid is not None:
         begin = time.monotonic()
-        result = execute_code(kid, 'code_id', sample_code)
+        result = execute_code(kid, sample_code)
         print(result['stdout'])
         end = time.monotonic()
         return end - begin
