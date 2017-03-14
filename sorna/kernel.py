@@ -67,9 +67,9 @@ class BaseKernel(metaclass=ABCMeta):
         resp = yield Request('GET', '/kernel/{}'.format(self.kernel_id))
         return resp.json()
 
-    def _execute(self, code: str=None, mode: str='query', opts: str=None):
+    def _execute(self, code: str=None, mode: str='query', opts: dict=None):
         if mode == 'query':
-            assert code
+            assert code is not None  # but maybe empty due to continuation
             rqst = Request('POST', '/kernel/{}'.format(self.kernel_id), {
                 'mode': mode,
                 'code': code,

@@ -1,6 +1,13 @@
 Changes
 =======
 
+0.9.1 (2017-03-14)
+------------------
+
+**FIX**
+
+ - Fix a bogus error when given empty codes for continuation.
+
 0.9.0 (2017-03-14)
 ------------------
 
