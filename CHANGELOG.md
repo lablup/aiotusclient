@@ -1,6 +1,27 @@
 Changes
 =======
 
+0.9.0 (2017-03-14)
+------------------
+
+**NEW**
+
+ - New object-style API: Kernel objects.
+   You can still use the legacy (but deprecated) function API.
+
+ - Add support for APIv2.20170315
+   (vfolder API is coming soon!)
+
+**CHANGES**
+
+ - Now requires Python 3.6 or higher.
+
+ - Improved exception handling.
+
+   Now it uses a common base exception called "SornaError"
+   and reports client-side errors as "SornaClientError"
+   while server-side errors as "SornaAPIError".
+
 0.8.3 (2017-01-13)
 ------------------
 
