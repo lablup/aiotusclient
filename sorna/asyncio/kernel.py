@@ -57,6 +57,12 @@ class AsyncKernel(BaseKernel):
 
 class StreamPty:
 
+    '''
+    A very thin wrapper of aiohttp.WebSocketResponse object.
+    It keeps the reference to the mother aiohttp.ClientSession object while the
+    connection is alive.
+    '''
+
     def __init__(self, kernel_id, sess, ws):
         self.kernel_id = kernel_id
         self.sess = sess  # we should keep reference while connection is active.
@@ -66,12 +72,8 @@ class StreamPty:
     def closed(self):
         return self.ws.closed
 
-    if sys.version_info < (3, 5, 2):
-        async def __aiter__(self):
-            return (await self.ws.__aiter__())
-    else:
-        def __aiter__(self):
-            return self.ws.__aiter__()
+    def __aiter__(self):
+        return self.ws.__aiter__()
 
     async def __anext__(self):
         msg = await self.ws.__anext__()

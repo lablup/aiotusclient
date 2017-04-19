@@ -145,9 +145,6 @@ class Request:
     async def connect_websocket(self, sess=None):
         '''
         Creates a WebSocket connection.
-
-        This method is an async-generator, where you can fetch WebSocket
-        messages using `async for` clause to the returned value.
         '''
         assert self.method == 'GET'
         if sess is None:
