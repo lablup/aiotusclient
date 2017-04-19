@@ -83,6 +83,17 @@ class BaseKernel(metaclass=ABCMeta):
                     'exec': opts.get('exec', None),
                 },
             })
+        elif mode == 'complete':
+            rqst = Request('POST', '/kernel/{}'.format(self.kernel_id), {
+                'mode': mode,
+                'code': code,
+                'options': {
+                    'row': int(opts.get('row', 0)),
+                    'col': int(opts.get('col', 0)),
+                    'line': opts.get('line', ''),
+                    'post': opts.get('post', ''),
+                },
+            })
         else:
             raise SornaClientError('Invalid execution mode')
         resp = yield rqst
