@@ -1,6 +1,17 @@
 Changes
 =======
 
+0.9.2 (2017-04-20)
+------------------
+
+**NEW**
+
+ - It supports the draft auto-completion API.
+
+**FIX**
+
+ - Now compatible with aiohttp 2.0+
+
 0.9.1 (2017-03-14)
 ------------------
 
