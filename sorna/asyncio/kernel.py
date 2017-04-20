@@ -50,7 +50,7 @@ class AsyncKernel(BaseKernel):
         request.sign()
         try:
             sess, ws = await request.connect_websocket()
-        except aiohttp.errors.HttpProcessingError as e:
+        except aiohttp.ClientResponseError as e:
             raise SornaClientError(e.code, e.message)
         return StreamPty(self.kernel_id, sess, ws)
 
