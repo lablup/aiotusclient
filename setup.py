@@ -4,6 +4,13 @@ from os import path
 
 here = path.abspath(path.dirname(__file__))
 
+try:
+    import pypandoc
+    long_description = pypandoc.convert('README.md', 'rst')
+except (IOError, ImportError):
+    long_description = ""
+
+
 setup(
     name='sorna-client',
 
@@ -12,7 +19,7 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version='0.9.2',
     description='Sorna API Client Library',
-    long_description='',
+    long_description=long_description,
     url='https://github.com/lablup/sorna-client',
     author='Lablup Inc.',
     author_email='joongi@lablup.com',
