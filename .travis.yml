@@ -5,8 +5,11 @@ os:
   - linux
   # - osx  # not supported yet
 install:
-  - pip install -U pip
-  - pip install -U wheel setuptools
+  - pip install -U pip wheel setuptools
   - pip install -U -r requirements-dev.txt
+  - pip install codecov pytest-cov
+  - pip install -e .
 script:
-  - pytest -m "not integration"
+  - pytest --cov=sorna -m "not integration"
+after_success:
+  - codecov
