@@ -58,8 +58,8 @@ setup(
     install_requires=requires,
     dependency_links=links,
     extras_require={
-        'dev': ['pytest', 'pytest-mock', 'pytest-asyncio', 'asynctest'],
-        'test': ['pytest', 'pytest-mock', 'pytest-asyncio', 'asynctest'],
+        'dev': ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-asyncio', 'asynctest', 'codecov'],
+        'test': ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-asyncio', 'asynctest', 'codecov'],
     },
     data_files=[],
 )

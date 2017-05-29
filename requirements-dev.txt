@@ -5,6 +5,8 @@ requests>=2.12
 simplejson
 -e .
 pytest
+pytest-cov
 pytest-mock
 pytest-asyncio
 asynctest
+codecov
