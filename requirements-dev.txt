@@ -3,6 +3,7 @@ namedlist>=1.6
 python-dateutil>=2.5
 requests>=2.12
 simplejson
+-e .
 pytest
 pytest-mock
 pytest-asyncio

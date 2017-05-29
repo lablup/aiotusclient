@@ -10,6 +10,19 @@ try:
 except (IOError, ImportError):
     long_description = ""
 
+requires = []
+links = []
+requirements = pip.req.parse_requirements(
+    'requirements.txt', session=pip.download.PipSession()
+)
+for item in requirements:
+    if getattr(item, 'url', None):  # older pip has url
+        links.append(str(item.url))
+    if getattr(item, 'link', None):  # newer pip has link
+        links.append(str(item.link))
+    if item.req:
+        requires.append(str(item.req))  # always the package name
+
 
 setup(
     name='sorna-client',
@@ -41,15 +54,10 @@ setup(
     packages=['sorna', 'sorna.asyncio'],
 
     python_requires='>=3.6',
-    install_requires=[
-        'aiohttp~=2.0.7',
-        'namedlist',
-        'python-dateutil>=2.5',
-        'simplejson',
-        'requests',
-    ],
+    install_requires=requires,
+    dependency_links=links,
     extras_require={
-        'dev': [],
+        'dev': ['pytest', 'pytest-mock', 'pytest-asyncio', 'asynctest'],
         'test': ['pytest', 'pytest-mock', 'pytest-asyncio', 'asynctest'],
     },
     data_files=[],
