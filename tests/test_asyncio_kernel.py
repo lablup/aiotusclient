@@ -163,7 +163,8 @@ async def test_stream_pty(mocker):
 @pytest.mark.asyncio
 async def test_stream_pty_raises_error_with_abnormal_status(mocker):
     mock_req_obj = asynctest.MagicMock(spec=Request)
-    mock_exception = aiohttp.ClientResponseError(code=400, message='emulated-handshake-error')
+    mock_exception = aiohttp.ClientResponseError(None, None,
+                                                 code=400, message='emulated-handshake-error')
     mock_req_obj.connect_websocket = asynctest.MagicMock(side_effect=mock_exception)
     with asynctest.patch('sorna.asyncio.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
