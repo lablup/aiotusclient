@@ -1,6 +1,7 @@
 # Always prefer setuptools over distutils
 from setuptools import setup
 from os import path
+import pip
 
 here = path.abspath(path.dirname(__file__))
 
