@@ -17,7 +17,7 @@ class APIConfig:
                  user_agent: Optional[str]=None,
                  access_key: Optional[str]=None,
                  secret_key: Optional[str]=None,
-                 hash_type: Optional[str]=None):
+                 hash_type: Optional[str]=None) -> None:
         self._endpoint = endpoint if endpoint else os.environ.get('SORNA_ENDPOINT', self.DEFAULTS['endpoint'])
         self._version = version if version else self.DEFAULTS['version']
         self._user_agent = user_agent if user_agent else self.DEFAULTS['user_agent']

@@ -18,12 +18,12 @@ class BaseKernel(metaclass=ABCMeta):
     '''
 
     @abstractmethod
-    def _call_base_method(meth):
+    def _call_base_method(self, meth):
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
-    def _call_base_clsmethod(meth):
+    def _call_base_clsmethod(cls, meth):
         raise NotImplementedError
 
     @staticmethod
@@ -41,7 +41,7 @@ class BaseKernel(metaclass=ABCMeta):
     def _get_or_create(cls, lang: str,
                       client_token: Optional[str]=None,
                       mounts: Optional[Iterable[str]]=None,
-                      max_mem: int=0, exec_timeout: int=0):
+                      max_mem: int=0, exec_timeout: int=0) -> str:
         if client_token:
             assert len(client_token) > 8
         else:
@@ -55,7 +55,7 @@ class BaseKernel(metaclass=ABCMeta):
             },
             'mounts': tuple(mounts) if mounts else tuple(),
         })
-        return cls(resp.json()['kernelId'])
+        return cls(resp.json()['kernelId'])  # type: ignore
 
     def _destroy(self):
         yield Request('DELETE', '/kernel/{}'.format(self.kernel_id))
@@ -99,7 +99,7 @@ class BaseKernel(metaclass=ABCMeta):
         resp = yield rqst
         return resp.json()['result']
 
-    def __init__(self, kernel_id):
+    def __init__(self, kernel_id: str) -> None:
         self.kernel_id = kernel_id
         self.destroy  = self._call_base_method(self._destroy)
         self.restart  = self._call_base_method(self._restart)

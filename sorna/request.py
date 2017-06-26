@@ -28,7 +28,7 @@ class Request:
     def __init__(self, method: str='GET',
                  path: Optional[str]=None,
                  data: Optional[Mapping]=None,
-                 config: Optional[APIConfig]=None):
+                 config: Optional[APIConfig]=None) -> None:
         self.config = config if config else get_config()
         self.method = method
         if path.startswith('/'):
@@ -41,7 +41,7 @@ class Request:
             ('Date', self.date.isoformat()),
             ('X-Sorna-Version', self.config.version),
         ])
-        self._content = None
+        self._content: Optional[bytes] = None
 
     @property
     def content(self) -> Union[bytes, bytearray, None]:
