@@ -19,7 +19,6 @@ def test_create_kernel_url(mocker):
     create_kernel('python')
 
     mock_req.assert_called_once_with('POST', '/kernel/create', mocker.ANY)
-    mock_req_obj.sign.assert_called_once_with()
     mock_req_obj.send.assert_called_once_with()
     mock_req_obj.send.return_value.json.assert_called_once_with()
 
@@ -55,7 +54,6 @@ def test_destroy_kernel_url(mocker):
     destroy_kernel(kernel_id)
 
     mock_req.assert_called_once_with('DELETE', '/kernel/{}'.format(kernel_id))
-    mock_req_obj.sign.assert_called_once_with()
     mock_req_obj.send.assert_called_once_with()
 
 
@@ -78,7 +76,6 @@ def test_restart_kernel_url(mocker):
     restart_kernel(kernel_id)
 
     mock_req.assert_called_once_with('PATCH', '/kernel/{}'.format(kernel_id))
-    mock_req_obj.sign.assert_called_once_with()
     mock_req_obj.send.assert_called_once_with()
 
 
@@ -101,7 +98,6 @@ def test_get_kernel_info_url(mocker):
     get_kernel_info(kernel_id)
 
     mock_req.assert_called_once_with('GET', '/kernel/{}'.format(kernel_id))
-    mock_req_obj.sign.assert_called_once_with()
     mock_req_obj.send.assert_called_once_with()
     mock_req_obj.send.return_value.json.assert_called_once_with()
 
@@ -126,7 +122,6 @@ def test_execute_code_url(mocker):
 
     mock_req.assert_called_once_with('POST', '/kernel/{}'.format(kernel_id),
                                      {'mode': 'query', 'code': 'hello'})
-    mock_req_obj.sign.assert_called_once_with()
     mock_req_obj.send.assert_called_once_with()
     mock_req_obj.send.return_value.json.assert_called_once_with()
 

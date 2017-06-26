@@ -1,11 +1,13 @@
 from collections import OrderedDict
 from datetime import datetime
-from typing import Mapping, Optional, Union
+from typing import Any, Mapping, Optional, Sequence, Union
 from urllib.parse import urljoin
 
 import aiohttp
+import aiohttp.web
 from async_timeout import timeout as _timeout
 from dateutil.tz import tzutc
+from multidict import CIMultiDict
 import requests
 import simplejson as json
 
@@ -17,8 +19,8 @@ from .exceptions import SornaAPIError
 class Request:
 
     __slots__ = ['config', 'method', 'path',
-                 'data', 'date', 'headers',
-                 '_content']
+                 'date', 'headers',
+                 'content_type', '_content']
 
     _allowed_methods = frozenset([
         'GET', 'HEAD', 'POST',
@@ -27,50 +29,74 @@ class Request:
 
     def __init__(self, method: str='GET',
                  path: Optional[str]=None,
-                 data: Optional[Mapping]=None,
+                 content: Optional[Mapping]=None,
                  config: Optional[APIConfig]=None) -> None:
         self.config = config if config else get_config()
         self.method = method
         if path.startswith('/'):
             path = path[1:]
         self.path = path
-        self.data = data if data else OrderedDict()
         self.date = datetime.now(tzutc())
-        self.headers = OrderedDict([
-            ('Content-Type', 'application/json'),
+        self.headers = CIMultiDict([
             ('Date', self.date.isoformat()),
             ('X-Sorna-Version', self.config.version),
         ])
-        self._content = None  # type: Optional[bytes]
+        self.content = content if content is not None else b''
 
     @property
     def content(self) -> Union[bytes, bytearray, None]:
         '''
-        Retrieves the JSON-encoded body content from request.data object.
-        Once called, the result is cached until request.content is set manually.
-        After reading this, you need to manually reset it by setting to None
-        if you have further content changes of request.data.
+        Retrieves the content in the original form.
+        Private codes should NOT use this as it incurs duplicate encoding/decoding.
         '''
         if self._content is None:
-            if not self.data:  # for empty data
-                self._content = b''
-            else:
-                self._content = json.dumps(self.data, ensure_ascii=False).encode()
-            self.headers['Content-Length'] = str(len(self._content))
-        return self._content
+            raise ValueError('content is not set.')
+        if self.content_type == 'application/octet-stream':
+            return self._content
+        elif self.content_type == 'application/json':
+            return json.loads(self._content.decode('utf-8'))
+        elif self.content_type == 'text/plain':
+            return self._content.decode('utf-8')
+        elif self.content_type == 'multipart/form-data':
+            return self._content
+        else:
+            raise RuntimeError('should not reach here')  # pragma: no cover
 
     @content.setter
-    def content(self, value: Union[bytes, bytearray, None]):
+    def content(self, value: Union[bytes, bytearray, Mapping[str, Any], Sequence[aiohttp.web.FileField], None]):
         '''
-        Manually set the raw bytes content of the request body.
-        It raises AssertionError if the request already has a value in the `data` field.
+        Sets the content of the request.
+        Depending on the type of content, it automatically sets appropriate headers
+        such as content-type and content-length.
         '''
-        if value is not None:
-            assert not self.data, 'request.data should be empty to set request.content manually.'
-            self.headers['Content-Length'] = str(len(value))
-        self._content = value
+        if isinstance(value, (bytes, bytearray)):
+            self.content_type = 'application/octet-stream'
+            self._content = value
+            self.headers['Content-Type'] = self.content_type
+            self.headers['Content-Length'] = str(len(self._content))
+        elif isinstance(value, str):
+            self.content_type = 'text/plain'
+            self._content = value.encode('utf-8')
+            self.headers['Content-Type'] = self.content_type
+            self.headers['Content-Length'] = str(len(self._content))
+        elif isinstance(value, (dict, OrderedDict)):
+            self.content_type = 'application/json'
+            self._content = json.dumps(value).encode('utf-8')
+            self.headers['Content-Type'] = self.content_type
+            self.headers['Content-Length'] = str(len(self._content))
+        elif isinstance(value, (list, tuple)):
+            self.content_type = 'multipart/form-data'
+            self._content = value
+            # Let the http client library decide the header values.
+            # (e.g., message boundaries)
+            if 'Content-Length' in self.headers:
+                del self.headers['Content-Length']
+            if 'Content-Type' in self.headers:
+                del self.headers['Content-Type']
+        else:
+            raise TypeError('Unsupported content value type.')
 
-    def sign(self, access_key=None, secret_key=None, hash_type=None):
+    def _sign(self, access_key=None, secret_key=None, hash_type=None):
         '''
         Calculates the signature of the given request and adds the
         Authorization HTTP header.
@@ -85,7 +111,7 @@ class Request:
             hash_type = self.config.hash_type
         hdrs, _ = generate_signature(
             self.method, self.config.version, self.config.endpoint,
-            self.date, self.path, self.content,
+            self.date, self.path, self.content_type, self._content,
             access_key, secret_key, hash_type)
         self.headers.update(hdrs)
 
@@ -96,7 +122,7 @@ class Request:
 
     # TODO: attach rate-limit information
 
-    def send(self, sess=None):
+    def send(self, *, sess=None):
         '''
         Sends the request to the server.
         '''
@@ -105,10 +131,18 @@ class Request:
             sess = requests.Session()
         else:
             assert isinstance(sess, requests.Session)
+        self._sign()
         reqfunc = getattr(sess, self.method.lower())
-        resp = reqfunc(self.build_url(),
-                       data=self.content,
-                       headers=self.headers)
+        if self.content_type == 'multipart/form-data':
+            files = map(lambda f: (f.name, (f.filename, f.file, f.content_type)),
+                        self._content)
+            resp = reqfunc(self.build_url(),
+                           files=files,
+                           headers=self.headers)
+        else:
+            resp = reqfunc(self.build_url(),
+                           data=self._content,
+                           headers=self.headers)
         try:
             return Response(resp.status_code, resp.reason, resp.text,
                             resp.headers['content-type'],
@@ -116,7 +150,7 @@ class Request:
         except requests.exceptions.RequestException as e:
             raise SornaAPIError from e
 
-    async def asend(self, sess=None, timeout=10.0):
+    async def asend(self, *, sess=None, timeout=10.0):
         '''
         Sends the request to the server.
 
@@ -128,11 +162,20 @@ class Request:
         else:
             assert isinstance(sess, aiohttp.ClientSession)
         with sess:
+            if self.content_type == 'multipart/form-data':
+                with aiohttp.MultipartWriter('mixed') as mpwriter:
+                    for file in self._content:
+                        part = mpwriter.append(file.file)
+                        part.set_content_disposition('attachment', filename=file.filename)
+                data = mpwriter
+            else:
+                data = self._content
+            self._sign()
             reqfunc = getattr(sess, self.method.lower())
             try:
                 with _timeout(timeout):
                     resp = await reqfunc(self.build_url(),
-                                         data=self.content,
+                                         data=data,
                                          headers=self.headers)
                     async with resp:
                         body = await resp.text()

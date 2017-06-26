@@ -19,16 +19,18 @@ def run(args):
     kernel = Kernel.get_or_create(args.lang, args.client_token)
     vprint('Connected to kernel (id: {0})'.format(kernel.kernel_id))
 
-    if args.file:
+    if args.files:
         if args.code:
             print('You can run only either source files or command-line '
                   'code snippet.', file=sys.stderr)
             return
         # upload files
-        kernel.upload(args.file)
+        ret = kernel.upload(args.files)
+        assert ret.status // 100 == 2
         # run code
-        result = kernel.execute(mode='batch')
-        print(result)
+        vprint('Upload done.')
+        #result = kernel.execute(mode='batch')
+        #print(result)
     else:
         if not args.code:
             print('You should provide the command-line code snippet using '
@@ -65,7 +67,7 @@ def run(args):
 
 run.add_argument('lang',
                  help='The runtime or programming language name')
-run.add_argument('file', nargs='*',
+run.add_argument('files', nargs='*',
                  help='The code file(s). Can be added multiple times')
 run.add_argument('-t', '--client-token',
                  help='Attach to existing kernel using the given client-side '

@@ -4,21 +4,24 @@ from urllib.parse import urlsplit
 
 
 def generate_signature(method, version, endpoint,
-                       date, request_path, content,
+                       date, request_path, content_type, content,
                        access_key, secret_key, hash_type):
     '''
     Generates the API request signature from the given parameters.
     '''
     hash_type = hash_type
     hostname = urlsplit(endpoint).netloc
+    if content_type.startswith('multipart/'):
+        content = b''
     body_hash = hashlib.new(hash_type, content).hexdigest()
     major_ver = version.split('.', 1)[0]
 
-    sign_str = '{}\n/{}/{}\n{}\nhost:{}\ncontent-type:application/json\nx-sorna-version:{}\n{}'.format(
+    sign_str = '{}\n/{}/{}\n{}\nhost:{}\ncontent-type:{}\nx-sorna-version:{}\n{}'.format(
         method.upper(),
         major_ver, request_path,
         date.isoformat(),
         hostname,
+        content_type.lower(),
         version,
         body_hash
     )

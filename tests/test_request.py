@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import io
 from unittest import mock
 from urllib.parse import urljoin
 
@@ -15,10 +16,10 @@ from sorna.request import Request, Response
 
 @pytest.fixture
 def req_params(defconfig):
-    return dict(
+    return OrderedDict(
         method='GET',
         path='/path/to/api/',
-        data=OrderedDict(test1='1'),
+        content=OrderedDict(test1='1'),
         config=defconfig
     )
 
@@ -58,53 +59,66 @@ def test_request_initialization(req_params):
     assert req.config == req_params['config']
     assert req.method == req_params['method']
     assert req.path == req_params['path'][1:]
-    assert req.data == req_params['data']
-    assert 'Content-Type' in req.headers
+    assert req.content == req_params['content']
     assert 'Date' in req.headers
     assert 'X-Sorna-Version' in req.headers
-    assert req._content is None
-
-
-def test_autofill_content_when_not_set(req_params):
-    req = Request(**req_params)
-
-    assert req._content is None
-    assert req.content == json.dumps(req_params['data']).encode()
-    assert req.headers['Content-Length'] == str(len(req.content))
+    assert req._content == json.dumps(req_params['content']).encode('utf8')
 
 
 def test_content_is_auto_set_to_blank_if_no_data(req_params):
-    req_params['data'] = OrderedDict()
+    req_params = req_params.copy()
+    req_params['content'] = None
     req = Request(**req_params)
 
+    assert req.content_type == 'application/octet-stream'
     assert req.content == b''
 
 
-def test_cannot_set_content_if_data_exists(req_params):
+def test_content_is_blank(req_params):
+    req_params['content'] = OrderedDict()
     req = Request(**req_params)
 
-    with pytest.raises(AssertionError):
-        req.content = b'new-data'
+    assert req.content_type == 'application/json'
+    assert req.content == {}
+
+
+def test_content_is_bytes(req_params):
+    req_params['content'] = b'\xff\xf1'
+    req = Request(**req_params)
+
+    assert req.content_type == 'application/octet-stream'
+    assert req.content == b'\xff\xf1'
+
+
+def test_content_is_text(req_params):
+    req_params['content'] = 'hello'
+    req = Request(**req_params)
+
+    assert req.content_type == 'text/plain'
+    assert req.content == 'hello'
+
+
+def test_content_is_files(req_params):
+    files = [
+        ('src', 'test1.txt', io.BytesIO(), 'application/octet-stream'),
+        ('src', 'test2.txt', io.BytesIO(), 'application/octet-stream'),
+    ]
+    req_params['content'] = files
+    req = Request(**req_params)
+
+    assert req.content_type == 'multipart/form-data'
+    assert req.content == files
 
 
 def test_set_content_correctly(req_params):
-    req_params['data'] = OrderedDict()
+    req_params['content'] = OrderedDict()
     req = Request(**req_params)
     new_data = b'new-data'
 
-    assert not req.data
+    assert not req.content
     req.content = new_data
     assert req.content == new_data
     assert req.headers['Content-Length'] == str(len(new_data))
-
-
-def test_sign_update_authorization_headers_info(req_params):
-    req = Request(**req_params)
-    old_hdrs = req.headers
-
-    assert 'Authorization' not in old_hdrs
-    req.sign()
-    assert 'Authorization' in req.headers
 
 
 def test_build_correct_url(req_params):
@@ -137,7 +151,7 @@ def test_send_with_appropriate_method(mocker, req_params):
         assert mock_reqfunc.call_count == 0
         req.send()
         mock_reqfunc.assert_called_once_with(
-            mocker.ANY, req.build_url(), data=req.content, headers=req.headers)
+            mocker.ANY, req.build_url(), data=req._content, headers=req.headers)
 
 
 def test_send_returns_appropriate_sorna_response(
@@ -188,7 +202,7 @@ async def test_asend_with_appropriate_method(mocker, req_params):
         except SornaAPIError:
             pass
         mock_reqfunc.assert_called_once_with(
-            mocker.ANY, req.build_url(), data=req.content, headers=req.headers)
+            mocker.ANY, req.build_url(), data=req._content, headers=req.headers)
 
 
 @pytest.mark.asyncio

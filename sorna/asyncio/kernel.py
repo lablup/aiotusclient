@@ -2,11 +2,13 @@ import functools
 import inspect
 import json
 import sys
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Sequence
 import uuid
 import warnings
 
 import aiohttp
+import aiohttp.web
+
 from ..exceptions import SornaAPIError, SornaClientError
 from ..request import Request
 from ..kernel import BaseKernel
@@ -20,7 +22,6 @@ class AsyncKernel(BaseKernel):
     @staticmethod
     async def _make_request(gen):
         rqst = next(gen)
-        rqst.sign()
         resp = await rqst.asend()
         return resp
 
@@ -44,10 +45,19 @@ class AsyncKernel(BaseKernel):
             return self._handle_response(resp, gen)
         return _caller
 
+    async def upload(self, files: Sequence[str]):
+        rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id))
+        rqst.content = [
+            # name filename file content_type headers
+            aiohttp.web.FileField(
+                'src', path, open(path, 'rb'), 'application/octet-stream', None
+            ) for path in files
+        ]
+        return (await rqst.asend())
+
     # only supported in AsyncKernel
     async def stream_pty(self):
         request = Request('GET', '/stream/kernel/{}/pty'.format(self.kernel_id))
-        request.sign()
         try:
             sess, ws = await request.connect_websocket()
         except aiohttp.ClientResponseError as e:

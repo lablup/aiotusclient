@@ -5,6 +5,8 @@ from typing import Iterable, Optional, Sequence
 import uuid
 import warnings
 
+import aiohttp.web
+
 from .compat import Py36Object
 from .exceptions import SornaAPIError, SornaClientError
 from .request import Request
@@ -100,16 +102,12 @@ class BaseKernel(Py36Object):
         resp = yield rqst
         return resp.json()['result']
 
-    def _upload(self, files: Sequence[str]):
-        yield Request('POST', '/kernel/{}/upload'.format(self.kernel_id))
-
     def __init__(self, kernel_id: str) -> None:
         self.kernel_id = kernel_id
         self.destroy  = self._call_base_method(self._destroy)
         self.restart  = self._call_base_method(self._restart)
         self.get_info = self._call_base_method(self._get_info)
         self.execute  = self._call_base_method(self._execute)
-        self.upload   = self._call_base_method(self._upload)
 
     def __init_subclass__(cls):
         cls.get_or_create = cls._call_base_clsmethod(cls._get_or_create)
@@ -123,7 +121,6 @@ class Kernel(BaseKernel):
     @staticmethod
     def _make_request(gen):
         rqst = next(gen)
-        rqst.sign()
         resp = rqst.send()
         return resp
 
@@ -146,6 +143,16 @@ class Kernel(BaseKernel):
             resp = self._make_request(gen)
             return self._handle_response(resp, gen)
         return _caller
+
+    def upload(self, files: Sequence[str]):
+        rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id))
+        rqst.content = [
+            # name filename file content_type headers
+            aiohttp.web.FileField(
+                'src', path, open(path, 'rb'), 'application/octet-stream', None
+            ) for path in files
+        ]
+        return rqst.send()
 
 
 # Legacy functions
