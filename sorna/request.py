@@ -41,7 +41,7 @@ class Request:
             ('Date', self.date.isoformat()),
             ('X-Sorna-Version', self.config.version),
         ])
-        self._content: Optional[bytes] = None
+        self._content = None  # type: Optional[bytes]
 
     @property
     def content(self) -> Union[bytes, bytearray, None]:

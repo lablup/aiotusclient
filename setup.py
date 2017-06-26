@@ -44,6 +44,7 @@ setup(
         'Intended Audience :: Developers',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Operating System :: POSIX',
         'Operating System :: MacOS :: MacOS X',
@@ -54,7 +55,7 @@ setup(
 
     packages=['sorna', 'sorna.asyncio'],
 
-    python_requires='>=3.6',
+    python_requires='>=3.5',
     install_requires=requires,
     dependency_links=links,
     extras_require={

@@ -5,11 +5,12 @@ from typing import Iterable, Optional
 import uuid
 import warnings
 
+from .compat import Py36Object
 from .exceptions import SornaAPIError, SornaClientError
 from .request import Request
 
 
-class BaseKernel(metaclass=ABCMeta):
+class BaseKernel(Py36Object):
 
     '''
     Implements the request creation and response handling logic,
