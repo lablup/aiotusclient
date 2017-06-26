@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import functools
 import inspect
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Sequence
 import uuid
 import warnings
 
@@ -100,12 +100,16 @@ class BaseKernel(Py36Object):
         resp = yield rqst
         return resp.json()['result']
 
+    def _upload(self, files: Sequence[str]):
+        yield Request('POST', '/kernel/{}/upload'.format(self.kernel_id))
+
     def __init__(self, kernel_id: str) -> None:
         self.kernel_id = kernel_id
         self.destroy  = self._call_base_method(self._destroy)
         self.restart  = self._call_base_method(self._restart)
         self.get_info = self._call_base_method(self._get_info)
         self.execute  = self._call_base_method(self._execute)
+        self.upload   = self._call_base_method(self._upload)
 
     def __init_subclass__(cls):
         cls.get_or_create = cls._call_base_clsmethod(cls._get_or_create)
