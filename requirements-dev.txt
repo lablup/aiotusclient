@@ -1,8 +1,9 @@
-aiohttp~=2.1.0
+aiohttp~=2.2.0
 namedlist>=1.6
 python-dateutil>=2.5
 requests>=2.12
 simplejson
+ConfigArgParse>=0.12.0
 -e .
 pytest
 pytest-cov
