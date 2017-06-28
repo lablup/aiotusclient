@@ -1,4 +1,5 @@
 import getpass
+from pathlib import Path
 import sys
 import traceback
 
@@ -8,9 +9,10 @@ from ..kernel import Kernel
 from ..compat import token_hex
 
 
-def exec_loop(kernel, code, mode):
+def exec_loop(kernel, code, mode, opts=None):
+    opts = opts if opts else {}
     while True:
-        result = kernel.execute(code, mode=mode)
+        result = kernel.execute(code, mode=mode, opts=opts)
         for rec in result['console']:
             if rec[0] == 'stdout':
                 print(rec[1], end='', file=sys.stdout)
@@ -65,13 +67,22 @@ def run(args):
                       'code snippet.', file=sys.stderr)
                 return
             vprint_wait('Uploading source files...')
+            args.files = [
+                str(Path(path).resolve()
+                    .relative_to(Path('.').resolve()))
+                for path in args.files
+            ]
             ret = kernel.upload(args.files)
             if ret.status // 100 != 2:
                 print_fail('Uploading source files failed!')
-                print('{0}: {1}\n{2}'.format(ret.status, ret.reason, ret.text()))
+                print('{0}: {1}\n{2}'.format(
+                    ret.status, ret.reason, ret.text()))
                 return
             vprint_done('Uploading done.')
-            exec_loop(kernel, None, 'batch')
+            exec_loop(kernel, None, 'batch', opts={
+                'build': '*',
+                'exec': '*',
+            })
         else:
             if not args.code:
                 print('You should provide the command-line code snippet using '
