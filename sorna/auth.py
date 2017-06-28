@@ -16,7 +16,7 @@ def generate_signature(method, version, endpoint,
     body_hash = hashlib.new(hash_type, content).hexdigest()
     major_ver = version.split('.', 1)[0]
 
-    sign_str = '{}\n/{}/{}\n{}\nhost:{}\ncontent-type:{}\nx-sorna-version:{}\n{}'.format(
+    sign_str = '{}\n/{}/{}\n{}\nhost:{}\ncontent-type:{}\nx-sorna-version:{}\n{}'.format(  # noqa
         method.upper(),
         major_ver, request_path,
         date.isoformat(),

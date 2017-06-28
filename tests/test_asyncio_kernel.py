@@ -26,7 +26,8 @@ async def test_create_kernel_url():
                          return_value=mock_req_obj) as mock_req_cls:
         await create_kernel('python')
 
-        mock_req_cls.assert_called_once_with('POST', '/kernel/create', mock.ANY)
+        mock_req_cls.assert_called_once_with(
+            'POST', '/kernel/create', mock.ANY)
         mock_req_obj.asend.assert_called_once_with()
         mock_req_obj.asend.return_value.json.assert_called_once_with()
 
@@ -65,7 +66,8 @@ async def test_destroy_kernel_url():
     with asynctest.patch('sorna.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         await destroy_kernel(kernel_id)
-        mock_req_cls.assert_called_once_with('DELETE', '/kernel/{}'.format(kernel_id))
+        mock_req_cls.assert_called_once_with(
+            'DELETE', '/kernel/{}'.format(kernel_id))
 
 
 @pytest.mark.asyncio
@@ -86,7 +88,8 @@ async def test_restart_kernel_url():
     with asynctest.patch('sorna.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         await restart_kernel(kernel_id)
-        mock_req_cls.assert_called_once_with('PATCH', '/kernel/{}'.format(kernel_id))
+        mock_req_cls.assert_called_once_with(
+            'PATCH', '/kernel/{}'.format(kernel_id))
 
 
 @pytest.mark.asyncio
@@ -107,7 +110,8 @@ async def test_get_kernel_info_url():
     with asynctest.patch('sorna.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         await get_kernel_info(kernel_id)
-        mock_req_cls.assert_called_once_with('GET', '/kernel/{}'.format(kernel_id))
+        mock_req_cls.assert_called_once_with(
+            'GET', '/kernel/{}'.format(kernel_id))
 
 
 @pytest.mark.asyncio
@@ -128,8 +132,9 @@ async def test_execute_code_url():
     with asynctest.patch('sorna.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         await execute_code(kernel_id, 'hello')
-        mock_req_cls.assert_called_once_with('POST', '/kernel/{}'.format(kernel_id),
-                                             {'mode': 'query', 'code': 'hello'})
+        mock_req_cls.assert_called_once_with(
+            'POST', '/kernel/{}'.format(kernel_id),
+            {'mode': 'query', 'code': 'hello'})
 
 
 @pytest.mark.asyncio
@@ -151,7 +156,8 @@ async def test_stream_pty(mocker):
     with asynctest.patch('sorna.asyncio.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         stream = await stream_pty(kernel_id)
-        mock_req_cls.assert_called_once_with('GET', '/stream/kernel/{}/pty'.format(kernel_id))
+        mock_req_cls.assert_called_once_with(
+            'GET', '/stream/kernel/{}/pty'.format(kernel_id))
         mock_req_obj.connect_websocket.assert_called_once_with()
         assert isinstance(stream, StreamPty)
         assert stream.sess is sess
@@ -161,9 +167,11 @@ async def test_stream_pty(mocker):
 @pytest.mark.asyncio
 async def test_stream_pty_raises_error_with_abnormal_status(mocker):
     mock_req_obj = asynctest.MagicMock(spec=Request)
-    mock_exception = aiohttp.ClientResponseError(None, None,
-                                                 code=400, message='emulated-handshake-error')
-    mock_req_obj.connect_websocket = asynctest.MagicMock(side_effect=mock_exception)
+    mock_exception = aiohttp.ClientResponseError(
+        None, None, code=400,
+        message='emulated-handshake-error')
+    mock_req_obj.connect_websocket = \
+        asynctest.MagicMock(side_effect=mock_exception)
     with asynctest.patch('sorna.asyncio.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         with pytest.raises(SornaClientError):

@@ -1,15 +1,13 @@
 import functools
 import inspect
 import json
-import sys
 from typing import Iterable, Optional, Sequence
-import uuid
 import warnings
 
 import aiohttp
 import aiohttp.web
 
-from ..exceptions import SornaAPIError, SornaClientError
+from ..exceptions import SornaClientError
 from ..request import Request
 from ..kernel import BaseKernel
 
@@ -28,21 +26,25 @@ class AsyncKernel(BaseKernel):
     @classmethod
     def _call_base_clsmethod(cls, meth):
         assert inspect.ismethod(meth)
+
         @classmethod
         @functools.wraps(meth)
         async def _caller(cls, *args, **kwargs):
             gen = meth(*args, **kwargs)
             resp = await cls._make_request(gen)
             return cls._handle_response(resp, gen)
+
         return _caller
 
     def _call_base_method(self, meth):
         assert inspect.ismethod(meth)
+
         @functools.wraps(meth)
         async def _caller(*args, **kwargs):
             gen = meth(*args, **kwargs)
             resp = await self._make_request(gen)
             return self._handle_response(resp, gen)
+
         return _caller
 
     async def upload(self, files: Sequence[str]):

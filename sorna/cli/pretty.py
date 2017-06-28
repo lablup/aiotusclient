@@ -1,7 +1,6 @@
 import enum
 import functools
 import sys
-import time
 
 __all__ = (
     'PrintStatus', 'print_pretty', 'print_info', 'print_wait',

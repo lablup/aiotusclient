@@ -9,5 +9,8 @@ class SornaAPIError(SornaError):
 
 
 class SornaClientError(SornaError):
-    '''Exceptions from the client library, such as argument validation errors.'''
+    '''
+    Exceptions from the client library, such as argument validation
+    errors.
+    '''
     pass

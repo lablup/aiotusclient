@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 import functools
 import inspect
 from typing import Iterable, Optional, Sequence
@@ -42,9 +42,9 @@ class BaseKernel(Py36Object):
 
     @classmethod
     def _get_or_create(cls, lang: str,
-                      client_token: Optional[str]=None,
-                      mounts: Optional[Iterable[str]]=None,
-                      max_mem: int=0, exec_timeout: int=0) -> str:
+                       client_token: Optional[str]=None,
+                       mounts: Optional[Iterable[str]]=None,
+                       max_mem: int=0, exec_timeout: int=0) -> str:
         if client_token:
             assert len(client_token) > 8
         else:
@@ -127,21 +127,25 @@ class Kernel(BaseKernel):
     @classmethod
     def _call_base_clsmethod(cls, meth):
         assert inspect.ismethod(meth)
+
         @classmethod
         @functools.wraps(meth)
         def _caller(cls, *args, **kwargs):
             gen = meth(*args, **kwargs)
             resp = cls._make_request(gen)
             return cls._handle_response(resp, gen)
+
         return _caller
 
     def _call_base_method(self, meth):
         assert inspect.ismethod(meth)
+
         @functools.wraps(meth)
         def _caller(*args, **kwargs):
             gen = meth(*args, **kwargs)
             resp = self._make_request(gen)
             return self._handle_response(resp, gen)
+
         return _caller
 
     def upload(self, files: Sequence[str]):

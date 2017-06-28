@@ -4,7 +4,6 @@ A compatibility module for backported codes from Python 3.6 standard library.
 
 import binascii
 import os
-import random
 import sys
 import types
 
@@ -58,4 +57,4 @@ class Py36Object(object, metaclass=Py36Type):
 
 
 if sys.version_info >= (3, 6):
-    Py36Object = object
+    Py36Object = object  # noqa

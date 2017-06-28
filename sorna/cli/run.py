@@ -33,6 +33,7 @@ def exec_loop(kernel, code, mode, opts=None):
         elif result['status'] == 'continued':
             continue
 
+
 def _noop(*args, **kwargs):
     pass
 
@@ -42,13 +43,11 @@ def run(args):
     '''Run the code.'''
     attach_to_existing = True
     if args.quiet:
-        vprint_info = vprint_wait = _noop
-        vprint_done = vprint_fail = _noop
+        vprint_info = vprint_wait = vprint_done = _noop
     else:
         vprint_info = print_info
         vprint_wait = print_wait
         vprint_done = print_done
-        vprint_fail = print_fail
     if not args.client_token:
         args.client_token = token_hex(16)
         attach_to_existing = False

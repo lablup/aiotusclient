@@ -11,8 +11,8 @@ _subparsers = dict()
 
 
 def register_command(handler: Callable[[argparse.Namespace], None],
-                     main_parser: Optional[ArgParserType]=None) \
-                     -> Callable[[argparse.Namespace], None]:
+                     main_parser: Optional[ArgParserType]=None,
+                    ) -> Callable[[argparse.Namespace], None]:
     if main_parser is None:
         main_parser = global_argparser
     if id(main_parser) not in _subparsers:

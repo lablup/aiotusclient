@@ -47,7 +47,8 @@ class Request:
     def content(self) -> Union[bytes, bytearray, None]:
         '''
         Retrieves the content in the original form.
-        Private codes should NOT use this as it incurs duplicate encoding/decoding.
+        Private codes should NOT use this as it incurs duplicate
+        encoding/decoding.
         '''
         if self._content is None:
             raise ValueError('content is not set.')
@@ -63,11 +64,14 @@ class Request:
             raise RuntimeError('should not reach here')  # pragma: no cover
 
     @content.setter
-    def content(self, value: Union[bytes, bytearray, Mapping[str, Any], Sequence[aiohttp.web.FileField], None]):
+    def content(self, value: Union[bytes, bytearray,
+                                   Mapping[str, Any],
+                                   Sequence[aiohttp.web.FileField],
+                                   None]):
         '''
         Sets the content of the request.
-        Depending on the type of content, it automatically sets appropriate headers
-        such as content-type and content-length.
+        Depending on the type of content, it automatically sets appropriate
+        headers such as content-type and content-length.
         '''
         if isinstance(value, (bytes, bytearray)):
             self.content_type = 'application/octet-stream'
@@ -134,7 +138,9 @@ class Request:
         self._sign()
         reqfunc = getattr(sess, self.method.lower())
         if self.content_type == 'multipart/form-data':
-            files = map(lambda f: (f.name, (f.filename, f.file, f.content_type)),
+            files = map(lambda f: (f.name,
+                                   (f.filename, f.file, f.content_type)
+                                  ),
                         self._content)
             resp = reqfunc(self.build_url(),
                            files=files,
@@ -166,7 +172,8 @@ class Request:
                 with aiohttp.MultipartWriter('mixed') as mpwriter:
                     for file in self._content:
                         part = mpwriter.append(file.file)
-                        part.set_content_disposition('attachment', filename=file.filename)
+                        part.set_content_disposition('attachment',
+                                                     filename=file.filename)
                 data = mpwriter
             else:
                 data = self._content
