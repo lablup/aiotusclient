@@ -23,6 +23,36 @@ export SORNA_SECRET_KEY=...
 export SORNA_ENDPOINT="https://my-precious-cluster/"
 ```
 
+Command-line Interface
+----------------------
+
+Use `sorna.cli` module with `run` command.
+
+To run the code specified in the command line directly,
+use `-c` option to pass the code string.
+
+```console
+$ python -m sorna.cli run python3 -c "print('hello world')"
+∙ Client session token: d3694dda6e5a9f1e5c718e07bba291a9
+✔ Kernel (ID: zuF1OzMIhFknyjUl7Apbvg) is ready.
+hello world
+✔ Cleaned up the kernel.
+```
+
+For more large programs, you may upload multiple files and then build & execute
+them.  The below is a simple example to run a C program.
+
+```console
+$ python -m sorna.cli run c main.c mylib.c mylib.h
+∙ Client session token: 1c352a572bc751a81d1f812186093c47
+✔ Kernel (ID: kJ6CgWR7Tz3_v2WsDHOwLQ) is ready.
+✔ Uploading done.
+myvalue is 42
+✔ Cleaned up the kernel.
+```
+
+Please refer the `--help` manual provided by the `run` command.
+
 Synchronous API
 ---------------
 
