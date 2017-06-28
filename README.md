@@ -47,6 +47,7 @@ $ python -m sorna.cli run c main.c mylib.c mylib.h
 ∙ Client session token: 1c352a572bc751a81d1f812186093c47
 ✔ Kernel (ID: kJ6CgWR7Tz3_v2WsDHOwLQ) is ready.
 ✔ Uploading done.
+✔ Build finished.
 myvalue is 42
 ✔ Cleaned up the kernel.
 ```

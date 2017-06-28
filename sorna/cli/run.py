@@ -9,10 +9,17 @@ from ..kernel import Kernel
 from ..compat import token_hex
 
 
-def exec_loop(kernel, code, mode, opts=None):
+def exec_loop(kernel, code, mode, opts=None,
+              vprint_wait=print_wait, vprint_done=print_done):
     opts = opts if opts else {}
+    if mode == 'batch':
+        vprint_wait('Building your code...')
     while True:
         result = kernel.execute(code, mode=mode, opts=opts)
+        code = ''
+        opts = {}
+        if result['status'] == 'build-finished':
+            vprint_done('Build finished.')
         for rec in result['console']:
             if rec[0] == 'stdout':
                 print(rec[1], end='', file=sys.stdout)
@@ -81,13 +88,14 @@ def run(args):
             exec_loop(kernel, None, 'batch', opts={
                 'build': '*',
                 'exec': '*',
-            })
+            }, vprint_wait=vprint_wait, vprint_done=vprint_done)
         else:
             if not args.code:
                 print('You should provide the command-line code snippet using '
                       '"-c" option if run without files.', file=sys.stderr)
                 return
-            exec_loop(kernel, args.code, 'query')
+            exec_loop(kernel, args.code, 'query',
+                      vprint_wait=vprint_wait, vprint_done=vprint_done)
     except:
         print_fail('Execution failed!')
         traceback.print_exc()
