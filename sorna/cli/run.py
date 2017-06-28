@@ -3,7 +3,7 @@ import sys
 import traceback
 
 from . import register_command
-from .pretty import print_none, print_wait, print_done, print_fail
+from .pretty import print_info, print_wait, print_done, print_fail
 from ..kernel import Kernel
 from ..compat import token_hex
 
@@ -13,20 +13,20 @@ def run(args):
     '''Run the code.'''
     attach_to_existing = True
     if args.verbose:
-        vprint_none = print_none
+        vprint_info = print_info
         vprint_wait = print_wait
         vprint_done = print_done
         vprint_fail = print_fail
     else:
-        vprint_none = vprint_wait = lambda *args, **kwargs: None
+        vprint_info = vprint_wait = lambda *args, **kwargs: None
         vprint_done = vprint_fail = lambda *args, **kwargs: None
     if not args.client_token:
         args.client_token = token_hex(16)
         attach_to_existing = False
-        vprint_none('Client session token: {0}'.format(args.client_token))
+        vprint_info('Client session token: {0}'.format(args.client_token))
         vprint_wait('Creating a temporary kernel...')
     else:
-        vprint_none('Client session token: {0}'.format(args.client_token))
+        vprint_info('Client session token: {0}'.format(args.client_token))
         vprint_wait('Connecting to the kernel...')
     kernel = Kernel.get_or_create(args.lang, args.client_token)
     vprint_done('Kernel (ID: {0}) is ready.'.format(kernel.kernel_id))

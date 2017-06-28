@@ -3,16 +3,20 @@ import functools
 import sys
 import time
 
+__all__ = (
+    'PrintStatus', 'print_pretty', 'print_info', 'print_wait',
+    'print_done', 'print_fail',
+)
+
+_last_width = 1
+_last_printed = False
+
 
 class PrintStatus(enum.Enum):
     NONE = 0
     WAITING = 1
     DONE = 2
     FAILED = 3
-
-
-_last_width = 1
-_last_printed = False
 
 
 def print_pretty(msg, *, status=PrintStatus.NONE, file=sys.stderr):
@@ -38,7 +42,7 @@ def print_pretty(msg, *, status=PrintStatus.NONE, file=sys.stderr):
         print('', file=file)
 
 
-print_none = functools.partial(print_pretty, status=PrintStatus.NONE)
+print_info = functools.partial(print_pretty, status=PrintStatus.NONE)
 print_wait = functools.partial(print_pretty, status=PrintStatus.WAITING)
 print_done = functools.partial(print_pretty, status=PrintStatus.DONE)
 print_fail = functools.partial(print_pretty, status=PrintStatus.FAILED)
