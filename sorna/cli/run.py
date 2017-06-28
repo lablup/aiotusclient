@@ -8,18 +8,45 @@ from ..kernel import Kernel
 from ..compat import token_hex
 
 
+def exec_loop(kernel, code, mode):
+    while True:
+        result = kernel.execute(code, mode=mode)
+        for rec in result['console']:
+            if rec[0] == 'stdout':
+                print(rec[1], end='', file=sys.stdout)
+            elif rec[0] == 'stderr':
+                print(rec[1], end='', file=sys.stderr)
+            else:
+                print('----- output record (type: {0}) -----'.format(rec[0]))
+                print(rec[1])
+                print('----- end of record -----')
+        sys.stdout.flush()
+        if result['status'] == 'finished':
+            break
+        elif result['status'] == 'waiting-input':
+            if result['options'].get('is_password', False):
+                code = getpass.getpass()
+            else:
+                code = input()
+        elif result['status'] == 'continued':
+            continue
+
+def _noop(*args, **kwargs):
+    pass
+
+
 @register_command
 def run(args):
     '''Run the code.'''
     attach_to_existing = True
-    if args.verbose:
+    if args.quiet:
+        vprint_info = vprint_wait = _noop
+        vprint_done = vprint_fail = _noop
+    else:
         vprint_info = print_info
         vprint_wait = print_wait
         vprint_done = print_done
         vprint_fail = print_fail
-    else:
-        vprint_info = vprint_wait = lambda *args, **kwargs: None
-        vprint_done = vprint_fail = lambda *args, **kwargs: None
     if not args.client_token:
         args.client_token = token_hex(16)
         attach_to_existing = False
@@ -44,35 +71,13 @@ def run(args):
                 print('{0}: {1}\n{2}'.format(ret.status, ret.reason, ret.text()))
                 return
             vprint_done('Uploading done.')
-            #result = kernel.execute(mode='batch')
-            #print(result)
+            exec_loop(kernel, None, 'batch')
         else:
             if not args.code:
                 print('You should provide the command-line code snippet using '
                       '"-c" option if run without files.', file=sys.stderr)
                 return
-            # run code
-            while True:
-                result = kernel.execute(args.code, mode='query')
-                for rec in result['console']:
-                    if rec[0] == 'stdout':
-                        print(rec[1], end='', file=sys.stdout)
-                    elif rec[0] == 'stderr':
-                        print(rec[1], end='', file=sys.stderr)
-                    else:
-                        print('----- output record (type: {0}) -----'.format(rec[0]))
-                        print(rec[1])
-                        print('----- end of record -----')
-                sys.stdout.flush()
-                if result['status'] == 'finished':
-                    break
-                elif result['status'] == 'waiting-input':
-                    if result['options'].get('is_password', False):
-                        args.code = getpass.getpass()
-                    else:
-                        args.code = input()
-                elif result['status'] == 'continued':
-                    continue
+            exec_loop(kernel, args.code, 'query')
     except:
         print_fail('Execution failed!')
         traceback.print_exc()
@@ -92,5 +97,6 @@ run.add_argument('-t', '--client-token',
                       'token [default: use a temporary kernel]')
 run.add_argument('-c', '--code',
                  help='The code snippet in a single line.')
-run.add_argument('-v', '--verbose', action='store_true', default=False,
-                 help='Print execution details and status.')
+run.add_argument('-q', '--quiet', action='store_true', default=False,
+                 help='Hide execution details but show only the kernel'
+                      'outputs.')
