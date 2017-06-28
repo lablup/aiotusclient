@@ -1,6 +1,19 @@
 Changes
 =======
 
+0.9.3 (2017-06-29)
+------------------
+
+**NEW**
+
+ - The command-line interface.  Try `python -m sorna.cli run` command.
+
+ - It supports the batch-mode API with source file uploads.
+
+ - The client now now runs on Python 3.5 as well as Python 3.6.
+   (Debian 9 / Ubuntu 16.04 users can install the client without
+   searching for Google!)
+
 0.9.2 (2017-04-20)
 ------------------
 
