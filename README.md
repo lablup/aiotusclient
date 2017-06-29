@@ -39,10 +39,26 @@ hello world
 ✔ Cleaned up the kernel.
 ```
 
-For more large programs, you may upload multiple files and then build & execute
-them.  The below is a simple example to run a C program.
+You can even run a C code on-the-fly. (Note that we put a dollar sign before
+the single-quoted code argument so that the shell to interpret `'\n'` as
+actual newlines.)
 
 ```console
+$ python -m sorna.cli run c -c $'#include <stdio.h>\nint main() {printf("hello world\n");}'
+∙ Client session token: abc06ee5e03fce60c51148c6d2dd6126
+✔ Kernel (ID: d1YXvee-uAJTx4AKYyeksA) is ready.
+hello world
+✔ Cleaned up the kernel.
+```
+
+For larger programs, you may upload multiple files and then build & execute
+them.  The below is a simple example to run [a sample C program](https://gist.github.com/achimnol/df464c6a3fe05b21e9b06d5b80e986c5).
+
+```console
+$ git clone https://gist.github.com/achimnol/df464c6a3fe05b21e9b06d5b80e986c5 sorna-c-example
+Cloning into 'sorna-c-example'...
+Unpacking objects: 100% (5/5), done.
+$ cd sorna-c-example
 $ python -m sorna.cli run c main.c mylib.c mylib.h
 ∙ Client session token: 1c352a572bc751a81d1f812186093c47
 ✔ Kernel (ID: kJ6CgWR7Tz3_v2WsDHOwLQ) is ready.
