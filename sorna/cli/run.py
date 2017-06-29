@@ -16,8 +16,6 @@ def exec_loop(kernel, code, mode, opts=None,
         vprint_wait('Building your code...')
     while True:
         result = kernel.execute(code, mode=mode, opts=opts)
-        code = ''
-        opts = {}
         if result['status'] == 'build-finished':
             vprint_done('Build finished.')
         for rec in result['console']:
@@ -38,6 +36,7 @@ def exec_loop(kernel, code, mode, opts=None,
             else:
                 code = input()
         elif result['status'] == 'continued':
+            code = ''
             continue
 
 
@@ -85,7 +84,7 @@ def run(args):
                     ret.status, ret.reason, ret.text()))
                 return
             vprint_done('Uploading done.')
-            exec_loop(kernel, None, 'batch', opts={
+            exec_loop(kernel, '', 'batch', opts={
                 'build': '*',
                 'exec': '*',
             }, vprint_wait=vprint_wait, vprint_done=vprint_done)

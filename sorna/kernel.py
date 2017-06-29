@@ -80,6 +80,7 @@ class BaseKernel(Py36Object):
         elif mode == 'batch':
             rqst = Request('POST', '/kernel/{}'.format(self.kernel_id), {
                 'mode': mode,
+                'code': code,
                 'options': {
                     'build': opts.get('build', None),
                     'buildLog': bool(opts.get('buildLog', False)),
