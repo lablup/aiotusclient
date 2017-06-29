@@ -44,7 +44,7 @@ the single-quoted code argument so that the shell to interpret `'\n'` as
 actual newlines.)
 
 ```console
-$ python -m sorna.cli run c -c $'#include <stdio.h>\nint main() {printf("hello world\n");}'
+$ python -m sorna.cli run c -c $'#include <stdio.h>\nint main() {printf("hello world\\n");}'
 ∙ Client session token: abc06ee5e03fce60c51148c6d2dd6126
 ✔ Kernel (ID: d1YXvee-uAJTx4AKYyeksA) is ready.
 hello world
