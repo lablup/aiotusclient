@@ -1,6 +1,13 @@
 Changes
 =======
 
+0.9.5 (2017-06-30)
+------------------
+
+**FIX**
+
+ - Fix support for interactive inputs in the batch mode.
+
 0.9.4 (2017-06-29)
 ------------------
 
