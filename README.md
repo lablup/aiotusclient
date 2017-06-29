@@ -65,6 +65,8 @@ $ python -m sorna.cli run c main.c mylib.c mylib.h
 ✔ Uploading done.
 ✔ Build finished.
 myvalue is 42
+your name? LABLUP
+hello, LABLUP!
 ✔ Cleaned up the kernel.
 ```
 
