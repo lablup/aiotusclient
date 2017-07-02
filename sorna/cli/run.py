@@ -84,9 +84,11 @@ def run(args):
                     ret.status, ret.reason, ret.text()))
                 return
             vprint_done('Uploading done.')
+            build_cmd = args.build if args.build else '*'
+            exec_cmd = args.exec if args.exec else '*'
             exec_loop(kernel, '', 'batch', opts={
-                'build': '*',
-                'exec': '*',
+                'build': build_cmd,
+                'exec': exec_cmd,
             }, vprint_wait=vprint_wait, vprint_done=vprint_done)
         else:
             if not args.code:
@@ -114,6 +116,10 @@ run.add_argument('-t', '--client-token',
                       'token [default: use a temporary kernel]')
 run.add_argument('-c', '--code',
                  help='The code snippet in a single line.')
+run.add_argument('-b', '--build',
+                 help='Custom build command')
+run.add_argument('-e', '--exec',
+                 help='Custom execute command')
 run.add_argument('-q', '--quiet', action='store_true', default=False,
                  help='Hide execution details but show only the kernel'
                       'outputs.')
