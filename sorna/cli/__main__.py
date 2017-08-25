@@ -1,7 +1,3 @@
-from sorna.cli import global_argparser
+from . import main
 
-import sorna.cli.run  # noqa
-
-
-args = global_argparser.parse_args()
-args.function(args)
+main()

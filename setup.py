@@ -63,4 +63,10 @@ setup(
         'test': ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-asyncio', 'asynctest', 'codecov'],
     },
     data_files=[],
+    entry_points={
+        'console_scripts': [
+            'lcc = sorna.cli:main',
+            'lpython = sorna.cli:main',
+        ],
+    },
 )
