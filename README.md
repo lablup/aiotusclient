@@ -72,6 +72,13 @@ hello, LABLUP!
 
 Please refer the `--help` manual provided by the `run` command.
 
+You may use a shortcut command `lcc` and `lpython` instead of typing the full
+Python module path like:
+
+```console
+$ lcc main.c mylib.c mylib.h
+```
+
 Synchronous API
 ---------------
 

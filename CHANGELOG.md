@@ -1,6 +1,17 @@
 Changes
 =======
 
+0.9.6 (2017-08-25)
+------------------
+
+**NEW**
+
+ - Add console scripts "lcc" and "lpython" which are aliases
+   of "python -m sorna.cli run c" and "python -m sorna.cli run python".
+
+ - Add explicit "--build" and "--exec" option for batch-mode
+   customization.
+
 0.9.5 (2017-06-30)
 ------------------
 
