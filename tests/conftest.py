@@ -1,6 +1,6 @@
 import pytest
 
-from sorna.config import APIConfig, set_config
+from ai.backend.client.config import APIConfig, set_config
 
 
 @pytest.fixture(autouse=True)

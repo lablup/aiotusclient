@@ -4,13 +4,13 @@ import aiohttp
 import asynctest
 import pytest
 
-from sorna.asyncio.kernel import (
+from ai.backend.client.asyncio.kernel import (
     create_kernel, destroy_kernel, restart_kernel, get_kernel_info,
     execute_code, stream_pty, StreamPty
 )
-from sorna.compat import token_hex
-from sorna.exceptions import SornaAPIError, SornaClientError
-from sorna.request import Request
+from ai.backend.client.compat import token_hex
+from ai.backend.client.exceptions import BackendAPIError, BackendClientError
+from ai.backend.client.request import Request
 
 
 @pytest.mark.asyncio
@@ -22,7 +22,7 @@ async def test_create_kernel_url():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = mock_resp
 
-    with asynctest.patch('sorna.kernel.Request',
+    with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         await create_kernel('python')
 
@@ -41,7 +41,7 @@ async def test_create_kernel_return_id_only():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = mock_resp
 
-    with asynctest.patch('sorna.kernel.Request',
+    with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         k = await create_kernel('python')
 
@@ -52,9 +52,9 @@ async def test_create_kernel_return_id_only():
 async def test_create_kernel_raises_err_with_abnormal_status():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=400)
-    with asynctest.patch('sorna.kernel.Request',
+    with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj):
-        with pytest.raises(SornaAPIError):
+        with pytest.raises(BackendAPIError):
             await create_kernel('python')
 
 
@@ -63,7 +63,7 @@ async def test_destroy_kernel_url():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=204)
     kernel_id = token_hex(12)
-    with asynctest.patch('sorna.kernel.Request',
+    with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         await destroy_kernel(kernel_id)
         mock_req_cls.assert_called_once_with(
@@ -74,9 +74,9 @@ async def test_destroy_kernel_url():
 async def test_destroy_kernel_raises_err_with_abnormal_status():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=400)
-    with asynctest.patch('sorna.kernel.Request',
+    with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj):
-        with pytest.raises(SornaAPIError):
+        with pytest.raises(BackendAPIError):
             await destroy_kernel('mykernel')
 
 
@@ -85,7 +85,7 @@ async def test_restart_kernel_url():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=204)
     kernel_id = token_hex(12)
-    with asynctest.patch('sorna.kernel.Request',
+    with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         await restart_kernel(kernel_id)
         mock_req_cls.assert_called_once_with(
@@ -96,9 +96,9 @@ async def test_restart_kernel_url():
 async def test_restart_kernel_raises_err_with_abnormal_status():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=400)
-    with asynctest.patch('sorna.kernel.Request',
+    with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj):
-        with pytest.raises(SornaAPIError):
+        with pytest.raises(BackendAPIError):
             await restart_kernel('mykernel')
 
 
@@ -107,7 +107,7 @@ async def test_get_kernel_info_url():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=200)
     kernel_id = token_hex(12)
-    with asynctest.patch('sorna.kernel.Request',
+    with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         await get_kernel_info(kernel_id)
         mock_req_cls.assert_called_once_with(
@@ -118,9 +118,9 @@ async def test_get_kernel_info_url():
 async def test_get_kernel_info_raises_err_with_abnormal_status():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=400)
-    with asynctest.patch('sorna.kernel.Request',
+    with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj):
-        with pytest.raises(SornaAPIError):
+        with pytest.raises(BackendAPIError):
             await get_kernel_info('mykernel')
 
 
@@ -129,7 +129,7 @@ async def test_execute_code_url():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=200)
     kernel_id = token_hex(12)
-    with asynctest.patch('sorna.kernel.Request',
+    with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         await execute_code(kernel_id, 'hello')
         mock_req_cls.assert_called_once_with(
@@ -141,9 +141,9 @@ async def test_execute_code_url():
 async def test_execute_code_raises_err_with_abnormal_status():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=400)
-    with asynctest.patch('sorna.kernel.Request',
+    with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
-        with pytest.raises(SornaAPIError):
+        with pytest.raises(BackendAPIError):
             await execute_code('mykernel', 'hello')
 
 
@@ -153,7 +153,7 @@ async def test_stream_pty(mocker):
     sess, ws = object(), object()
     mock_req_obj.connect_websocket.return_value = (sess, ws)
     kernel_id = token_hex(12)
-    with asynctest.patch('sorna.asyncio.kernel.Request',
+    with asynctest.patch('ai.backend.client.asyncio.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         stream = await stream_pty(kernel_id)
         mock_req_cls.assert_called_once_with(
@@ -172,7 +172,7 @@ async def test_stream_pty_raises_error_with_abnormal_status(mocker):
         message='emulated-handshake-error')
     mock_req_obj.connect_websocket = \
         asynctest.MagicMock(side_effect=mock_exception)
-    with asynctest.patch('sorna.asyncio.kernel.Request',
+    with asynctest.patch('ai.backend.client.asyncio.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
-        with pytest.raises(SornaClientError):
+        with pytest.raises(BackendClientError):
             await stream_pty('mykernel')

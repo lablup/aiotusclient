@@ -10,8 +10,8 @@ import requests
 import simplejson as json
 
 from .common import mock_coro, MockAsyncContextManager
-from sorna.exceptions import SornaAPIError
-from sorna.request import Request, Response
+from ai.backend.client.exceptions import BackendAPIError
+from ai.backend.client.request import Request, Response
 
 
 @pytest.fixture
@@ -61,7 +61,7 @@ def test_request_initialization(req_params):
     assert req.path == req_params['path'][1:]
     assert req.content == req_params['content']
     assert 'Date' in req.headers
-    assert 'X-Sorna-Version' in req.headers
+    assert 'X-BackendAI-Version' in req.headers
     assert req._content == json.dumps(req_params['content']).encode('utf8')
 
 
@@ -199,7 +199,7 @@ async def test_asend_with_appropriate_method(mocker, req_params):
             # Ignore exceptions in `async with` statement. We're only
             # interested in request call here.
             await req.asend()
-        except SornaAPIError:
+        except BackendAPIError:
             pass
         mock_reqfunc.assert_called_once_with(
             mocker.ANY, req.build_url(), data=req._content, headers=req.headers)

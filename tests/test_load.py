@@ -13,9 +13,9 @@ import time
 
 import pytest
 
-from sorna.kernel import create_kernel, destroy_kernel, execute_code, restart_kernel
+from ai.backend.client.kernel import create_kernel, destroy_kernel, execute_code, restart_kernel
 
-log = logging.getLogger('sorna.test.load')
+log = logging.getLogger('ai.backend.client.test.load')
 
 sample_code = '''
 import os

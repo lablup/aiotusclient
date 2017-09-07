@@ -1,6 +1,17 @@
 Changes
 =======
 
+1.0.0 (2017-09-07)
+------------------
+
+**CHANGES**
+
+ - Rename the product name "Sorna" to "Backend.AI".
+   - Package import path: "sorna" → "ai.backend.client"
+   - Class names: "SornaError" / "SornaAPIError" → "BackendError" / "BackendAPIError"
+   - Any mention of "Sorna" in the API headers → "BackendAI".
+     e.g., "X-Sorna-Version" API request header → "X-BackendAI-Version"
+
 0.9.7 (2017-08-25)
 ------------------
 

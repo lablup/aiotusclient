@@ -13,7 +13,7 @@ import simplejson as json
 
 from .auth import generate_signature
 from .config import APIConfig, get_config
-from .exceptions import SornaAPIError
+from .exceptions import BackendAPIError
 
 
 class Request:
@@ -39,7 +39,7 @@ class Request:
         self.date = datetime.now(tzutc())
         self.headers = CIMultiDict([
             ('Date', self.date.isoformat()),
-            ('X-Sorna-Version', self.config.version),
+            ('X-BackendAI-Version', self.config.version),
         ])
         self.content = content if content is not None else b''
 
@@ -154,7 +154,7 @@ class Request:
                             resp.headers['content-type'],
                             resp.headers['content-length'])
         except requests.exceptions.RequestException as e:
-            raise SornaAPIError from e
+            raise BackendAPIError from e
 
     async def asend(self, *, sess=None, timeout=10.0):
         '''
@@ -190,7 +190,7 @@ class Request:
                                         resp.content_type,
                                         len(body))
             except Exception as e:
-                raise SornaAPIError from e
+                raise BackendAPIError from e
 
     async def connect_websocket(self, sess=None):
         '''

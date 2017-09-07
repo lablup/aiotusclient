@@ -8,7 +8,7 @@ import warnings
 import aiohttp.web
 
 from .compat import Py36Object
-from .exceptions import SornaAPIError, SornaClientError
+from .exceptions import BackendAPIError, BackendClientError
 from .request import Request
 
 
@@ -32,7 +32,7 @@ class BaseKernel(Py36Object):
     @staticmethod
     def _handle_response(resp, meth_gen):
         if resp.status // 100 != 2:
-            raise SornaAPIError(resp.status, resp.reason, resp.text())
+            raise BackendAPIError(resp.status, resp.reason, resp.text())
         try:
             meth_gen.send(resp)
         except StopIteration as e:
@@ -99,7 +99,7 @@ class BaseKernel(Py36Object):
                 },
             })
         else:
-            raise SornaClientError('Invalid execution mode')
+            raise BackendClientError('Invalid execution mode')
         resp = yield rqst
         return resp.json()['result']
 

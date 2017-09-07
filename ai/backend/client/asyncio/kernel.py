@@ -7,7 +7,7 @@ import warnings
 import aiohttp
 import aiohttp.web
 
-from ..exceptions import SornaClientError
+from ..exceptions import BackendClientError
 from ..request import Request
 from ..kernel import BaseKernel
 
@@ -63,7 +63,7 @@ class AsyncKernel(BaseKernel):
         try:
             sess, ws = await request.connect_websocket()
         except aiohttp.ClientResponseError as e:
-            raise SornaClientError(e.code, e.message)
+            raise BackendClientError(e.code, e.message)
         return StreamPty(self.kernel_id, sess, ws)
 
 
@@ -132,7 +132,7 @@ async def destroy_kernel(kernel):
     elif isinstance(kernel, str):
         await AsyncKernel(kernel).destroy()
     else:
-        raise SornaClientError('Called async API with synchronous Kernel object')
+        raise BackendClientError('Called async API with synchronous Kernel object')
 
 
 async def restart_kernel(kernel):
@@ -142,7 +142,7 @@ async def restart_kernel(kernel):
     elif isinstance(kernel, str):
         await AsyncKernel(kernel).restart()
     else:
-        raise SornaClientError('Called async API with synchronous Kernel object')
+        raise BackendClientError('Called async API with synchronous Kernel object')
 
 
 async def get_kernel_info(kernel):
@@ -152,7 +152,7 @@ async def get_kernel_info(kernel):
     elif isinstance(kernel, str):
         return await AsyncKernel(kernel).get_info()
     else:
-        raise SornaClientError('Called async API with synchronous Kernel object')
+        raise BackendClientError('Called async API with synchronous Kernel object')
 
 
 async def execute_code(kernel, code: Optional[str]=None,
@@ -164,7 +164,7 @@ async def execute_code(kernel, code: Optional[str]=None,
     elif isinstance(kernel, str):
         return await AsyncKernel(kernel).execute(code, mode, opts)
     else:
-        raise SornaClientError('Called async API with synchronous Kernel object')
+        raise BackendClientError('Called async API with synchronous Kernel object')
 
 
 async def stream_pty(kernel):
@@ -174,4 +174,4 @@ async def stream_pty(kernel):
     elif isinstance(kernel, str):
         return await AsyncKernel(kernel).stream_pty()
     else:
-        raise SornaClientError('Called async API with synchronous Kernel object')
+        raise BackendClientError('Called async API with synchronous Kernel object')

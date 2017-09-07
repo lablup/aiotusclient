@@ -2,7 +2,7 @@ from datetime import datetime
 
 from dateutil.tz import tzutc
 
-from sorna.auth import generate_signature
+from ai.backend.client.auth import generate_signature
 
 
 def test_generate_signature(defconfig):

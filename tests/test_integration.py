@@ -1,5 +1,5 @@
 '''
-Integration Test Suite for Sorna Client API Library.
+Integration Test Suite for Backend Client API Library.
 
 You should be running the API service on http://localhost:8081 to run this test
 suite.  Of course, the service must be fully configured as follows:
@@ -13,20 +13,20 @@ suite.  Of course, the service must be fully configured as follows:
               -p 5432:5432 -d \
               --name sorna-db \
               postgres
-   python -m sorna.gateway.models \
+   python -m ai.backend.client.gateway.models \
           --create-tables --populate-fixtures
    docker run -p 6379:6379 -d \
               --name sorna-redis \
               redis
-   python -m sorna.agent.server --volume-root=`pwd`/volume-temp --max-kernels 3
-   python -m sorna.gateway.server --service-port=8081
+   python -m ai.backend.client.agent.server --volume-root=`pwd`/volume-temp --max-kernels 3
+   python -m ai.backend.client.gateway.server --service-port=8081
 
  - The agent should have access to a Docker daemon and the
    "lablup/kernel-python3" docker image.
 
  - The gateway must have access to a test database that has pre-populated
    fixture data.
-   (Check out `python -m sorna.gateway.models --populate-fixtures`)
+   (Check out `python -m ai.backend.client.gateway.models --populate-fixtures`)
 '''
 
 import textwrap
@@ -35,10 +35,12 @@ import uuid
 
 import pytest
 
-from sorna.request import Request
-from sorna.kernel import create_kernel, destroy_kernel, restart_kernel, \
-                         get_kernel_info, execute_code
-from sorna.exceptions import SornaAPIError
+from ai.backend.client.request import Request
+from ai.backend.client.kernel import (
+    create_kernel, destroy_kernel, restart_kernel,
+    get_kernel_info, execute_code,
+)
+from ai.backend.client.exceptions import BackendAPIError
 
 
 def aggregate_console(c):
@@ -143,7 +145,7 @@ def test_kernel_lifecycles(defconfig):
     destroy_kernel(kernel_id)
     # kernel destruction is no longer synchronous!
     time.sleep(2.0)
-    with pytest.raises(SornaAPIError) as e:
+    with pytest.raises(BackendAPIError) as e:
         info = get_kernel_info(kernel_id)
     assert e.value.args[0] == 404
 

@@ -1,14 +1,14 @@
-class SornaError(BaseException):
-    '''Exception type to catch all Sorna-related errors.'''
+class BackendError(BaseException):
+    '''Exception type to catch all ai.backend-related errors.'''
     pass
 
 
-class SornaAPIError(SornaError):
+class BackendAPIError(BackendError):
     '''Exceptions returned by the API gateway.'''
     pass
 
 
-class SornaClientError(SornaError):
+class BackendClientError(BackendError):
     '''
     Exceptions from the client library, such as argument validation
     errors.
