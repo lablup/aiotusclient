@@ -1,28 +1,28 @@
-# Always prefer setuptools over distutils
 from setuptools import setup
-from os import path
-import pip
+from pathlib import Path
 
-here = path.abspath(path.dirname(__file__))
-
-try:
-    import pypandoc
-    long_description = pypandoc.convert('README.md', 'rst')
-except (IOError, ImportError):
-    long_description = ""
-
-requires = []
-links = []
-requirements = pip.req.parse_requirements(
-    'requirements.txt', session=pip.download.PipSession()
-)
-for item in requirements:
-    if getattr(item, 'url', None):  # older pip has url
-        links.append(str(item.url))
-    if getattr(item, 'link', None):  # newer pip has link
-        links.append(str(item.link))
-    if item.req:
-        requires.append(str(item.req))  # always the package name
+install_requires = [
+    'aiohttp>=2.2.0',
+    'namedlist>=1.6',
+    'python-dateutil>=2.5',
+    'requests>=2.12',
+    'simplejson',
+    'ConfigArgParse>=0.12.0',
+]
+dev_requires = [
+]
+ci_requires = [
+    'wheel',
+    'twine',
+]
+test_requires = [
+    'pytest>=3.1',
+    'pytest-cov',
+    'pytest-mock',
+    'pytest-asyncio',
+    'asynctest',
+    'codecov',
+]
 
 
 setup(
@@ -31,9 +31,9 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.9.7',
+    version='0.9.8',
     description='Sorna API Client Library',
-    long_description=long_description,
+    long_description=Path('README.rst').read_text(),
     url='https://github.com/lablup/sorna-client',
     author='Lablup Inc.',
     author_email='joongi@lablup.com',
@@ -52,15 +52,13 @@ setup(
         'Topic :: Scientific/Engineering',
         'Topic :: Software Development',
     ],
-
     packages=['sorna', 'sorna.asyncio', 'sorna.cli'],
-
     python_requires='>=3.5',
-    install_requires=requires,
-    dependency_links=links,
+    install_requires=install_requires,
     extras_require={
-        'dev': ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-asyncio', 'asynctest', 'codecov'],
-        'test': ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-asyncio', 'asynctest', 'codecov'],
+        'dev': dev_requires + ci_requires + test_requires,
+        'test': test_requires,
+        'ci': ci_requires + test_requires,
     },
     data_files=[],
     entry_points={

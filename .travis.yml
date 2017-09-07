@@ -7,10 +7,8 @@ os:
   - linux
   # - osx  # not supported yet
 install:
-  - pip install -U pip
-  - pip install -U wheel setuptools
-  - pip install -U -r requirements-dev.txt
-  - pip install -e .
+  - pip install -U pip setuptools
+  - pip install -U -r requirements-ci.txt
 script:
   - pytest --cov=sorna -m "not integration"
 after_success:
