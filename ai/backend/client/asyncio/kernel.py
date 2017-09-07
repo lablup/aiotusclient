@@ -11,6 +11,11 @@ from ..exceptions import BackendClientError
 from ..request import Request
 from ..kernel import BaseKernel
 
+__all__ = [
+    'AsyncKernel',
+    'StreamPty',
+]
+
 
 class AsyncKernel(BaseKernel):
     '''

@@ -11,6 +11,11 @@ from .compat import Py36Object
 from .exceptions import BackendAPIError, BackendClientError
 from .request import Request
 
+__all__ = [
+    'BaseKernel',
+    'Kernel',
+]
+
 
 class BaseKernel(Py36Object):
 

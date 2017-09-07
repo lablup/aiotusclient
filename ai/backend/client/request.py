@@ -15,6 +15,11 @@ from .auth import generate_signature
 from .config import APIConfig, get_config
 from .exceptions import BackendAPIError
 
+__all__ = [
+    'Request',
+    'Response',
+]
+
 
 class Request:
 

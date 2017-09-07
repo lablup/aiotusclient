@@ -101,7 +101,7 @@ Synchronous API
 
 .. code-block:: python
 
-   from sorna.kernel import Kernel
+   from ai.backend.client import Kernel
 
    kern = Kernel.get_or_create('lua5', client_token='abc')
    result = kern.execute('print("hello world")', mode='query')
@@ -120,7 +120,7 @@ Asynchronous API
 .. code-block:: python
 
    import asyncio
-   from sorna.asyncio.kernel import AsyncKernel
+   from ai.backend.client.asyncio import AsyncKernel
 
    async def main():
        kern = await AsyncKernel.get_or_create('lua5', client_token='abc')

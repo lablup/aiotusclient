@@ -1,3 +1,10 @@
+__all__ = [
+    'BackendError',
+    'BackendAPIError',
+    'BackendClientError',
+]
+
+
 class BackendError(BaseException):
     '''Exception type to catch all ai.backend-related errors.'''
     pass
