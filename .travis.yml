@@ -10,7 +10,7 @@ install:
   - pip install -U pip setuptools
   - pip install -U -r requirements-ci.txt
 script:
-  - pytest --cov=sorna -m "not integration"
+  - pytest --cov=ai.backend.client -m "not integration"
 after_success:
   - codecov
 notifications:
