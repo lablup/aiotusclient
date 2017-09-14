@@ -13,6 +13,8 @@ def get_env(name, default=None):
     if v is None:
         v = os.environ.get('BACKEND_' + name)
     if v is None:
+        if default is None:
+            raise KeyError(name)
         v = default
     return v
 

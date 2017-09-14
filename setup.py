@@ -22,6 +22,7 @@ test_requires = [
     'pytest-asyncio',
     'asynctest',
     'codecov',
+    'flake8',
 ]
 
 

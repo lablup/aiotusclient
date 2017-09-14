@@ -3,7 +3,7 @@ import re
 import traceback
 
 from . import register_command
-from .pretty import print_info, print_wait, print_done, print_fail
+from .pretty import print_info, print_fail
 from ..request import Request
 
 

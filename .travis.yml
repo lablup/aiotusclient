@@ -10,6 +10,7 @@ install:
   - pip install -U pip setuptools
   - pip install -U -r requirements-ci.txt
 script:
+  - flake8 ai/backend
   - pytest --cov=ai.backend.client -m "not integration"
 after_success:
   - codecov

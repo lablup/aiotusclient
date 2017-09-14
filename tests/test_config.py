@@ -54,24 +54,24 @@ def test_access_and_secret_key_should_be_set_to_get_default_config(
     with pytest.raises(KeyError) as e:
         get_config()
     err_key = str(e.value)
-    assert 'SORNA_ACCESS_KEY' in err_key or 'SORNA_SECRET_KEY' in err_key
+    assert 'ACCESS_KEY' in err_key or 'SECRET_KEY' in err_key
 
     # SORNA_ACCESS_KEY exists, but not SORNA_SECRET_KEY
-    mocker.patch('os.environ', {'SORNA_ACCESS_KEY': cfg_params['access_key']})
+    mocker.patch('os.environ', {'BACKEND_ACCESS_KEY': cfg_params['access_key']})
     with pytest.raises(KeyError) as e:
         get_config()
-    assert 'SORNA_SECRET_KEY' in str(e.value)
+    assert 'SECRET_KEY' in str(e.value)
 
     # SORNA_SECRET_KEY exists, but not SORNA_ACCESS_KEY
-    mocker.patch('os.environ', {'SORNA_SECRET_KEY': cfg_params['secret_key']})
+    mocker.patch('os.environ', {'BACKEND_SECRET_KEY': cfg_params['secret_key']})
     with pytest.raises(KeyError) as e:
         get_config()
-    assert 'SORNA_ACCESS_KEY' in str(e.value)
+    assert 'ACCESS_KEY' in str(e.value)
 
     # Both keys exist. No exception should be raised.
     mocker.patch('os.environ', {
-        'SORNA_ACCESS_KEY': cfg_params['access_key'],
-        'SORNA_SECRET_KEY': cfg_params['secret_key']
+        'BACKEND_ACCESS_KEY': cfg_params['access_key'],
+        'BACKEND_SECRET_KEY': cfg_params['secret_key']
     })
     get_config()
 
@@ -80,8 +80,8 @@ def test_get_config_return_default_config_when_config_is_none(
         mocker, cfg_params):
     mocker.patch('ai.backend.client.config._config', None)
     mocker.patch('os.environ', {
-        'SORNA_ACCESS_KEY': cfg_params['access_key'],
-        'SORNA_SECRET_KEY': cfg_params['secret_key']
+        'BACKEND_ACCESS_KEY': cfg_params['access_key'],
+        'BACKEND_SECRET_KEY': cfg_params['secret_key']
     })
 
     cfg = get_config()

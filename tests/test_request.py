@@ -30,7 +30,7 @@ def mock_sorna_resp():
     conf = {
         'status_code': 900,
         'reason': 'this is a test',
-        'text': b'{"test1": 1, "test2": 2}',
+        'content': b'{"test1": 1, "test2": 2}',
         'headers': {
             'content-type': 'application/json',
             'content-length': len(b'{"test1": 1, "test2": 2}')
@@ -46,7 +46,7 @@ def mock_sorna_aresp():
     conf = {
         'status': 900,
         'reason': 'this is a test',
-        'text': mock_coro(b'{"test1": 1, "test2": 2}'),
+        'read': mock_coro(b'{"test1": 1, "test2": 2}'),
         'content_type': 'application/json',
     }
 
@@ -171,8 +171,8 @@ def test_send_returns_appropriate_sorna_response(
         assert resp.reason == conf['reason']
         assert resp.content_type == conf['headers']['content-type']
         assert resp.content_length == conf['headers']['content-length']
-        assert resp.text() == conf['text']
-        assert resp.json() == json.loads(conf['text'])
+        assert resp.text() == conf['content'].decode()
+        assert resp.json() == json.loads(conf['content'])
 
 
 @pytest.mark.asyncio
@@ -225,15 +225,15 @@ async def test_asend_returns_appropriate_sorna_response(mocker, req_params,
         assert resp.status == conf['status']
         assert resp.reason == conf['reason']
         assert resp.content_type == conf['content_type']
-        body = await conf['text']()
+        body = await conf['read']()
         assert resp.content_length == len(body)
-        assert resp.text() == body
+        assert resp.text() == body.decode()
         assert resp.json() == json.loads(body)
 
 
 def test_response_initialization(mock_sorna_resp):
     _, conf = mock_sorna_resp
-    resp = Response(conf['status_code'], conf['reason'], conf['text'],
+    resp = Response(conf['status_code'], conf['reason'], conf['content'],
                     conf['headers']['content-type'],
                     conf['headers']['content-length'])
 
@@ -241,5 +241,5 @@ def test_response_initialization(mock_sorna_resp):
     assert resp.reason == conf['reason']
     assert resp.content_type == conf['headers']['content-type']
     assert resp.content_length == conf['headers']['content-length']
-    assert resp.text() == conf['text']
-    assert resp.json() == json.loads(conf['text'])
+    assert resp.text() == conf['content'].decode()
+    assert resp.json() == json.loads(conf['content'])
