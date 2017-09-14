@@ -1,7 +1,20 @@
 import os
 from typing import Optional
 
+__all__ = [
+    'APIConfig',
+]
+
 _config = None
+
+
+def get_env(name, default=None):
+    v = os.environ.get('SORNA_' + name)
+    if v is None:
+        v = os.environ.get('BACKEND_' + name)
+    if v is None:
+        v = default
+    return v
 
 
 class APIConfig:
@@ -19,16 +32,15 @@ class APIConfig:
                  secret_key: Optional[str]=None,
                  hash_type: Optional[str]=None) -> None:
         self._endpoint = \
-            endpoint if endpoint else os.environ.get('SORNA_ENDPOINT',
-                                                     self.DEFAULTS['endpoint'])
+            endpoint if endpoint else get_env('ENDPOINT', self.DEFAULTS['endpoint'])
         self._version = \
             version if version else self.DEFAULTS['version']
         self._user_agent = \
             user_agent if user_agent else self.DEFAULTS['user_agent']
         self._access_key = \
-            access_key if access_key else os.environ['SORNA_ACCESS_KEY']
+            access_key if access_key else get_env('ACCESS_KEY')
         self._secret_key = \
-            secret_key if secret_key else os.environ['SORNA_SECRET_KEY']
+            secret_key if secret_key else get_env('SECRET_KEY')
         self._hash_type = \
             hash_type.lower() if hash_type else 'sha256'
 
