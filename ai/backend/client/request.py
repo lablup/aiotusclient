@@ -155,7 +155,7 @@ class Request:
                            data=self._content,
                            headers=self.headers)
         try:
-            return Response(resp.status_code, resp.reason, resp.text,
+            return Response(resp.status_code, resp.reason, resp.content,
                             resp.headers['content-type'],
                             resp.headers['content-length'])
         except requests.exceptions.RequestException as e:
@@ -190,7 +190,7 @@ class Request:
                                          data=data,
                                          headers=self.headers)
                     async with resp:
-                        body = await resp.text()
+                        body = await resp.read()
                         return Response(resp.status, resp.reason, body,
                                         resp.content_type,
                                         len(body))
@@ -216,7 +216,9 @@ class Response:
                  '_content_type', '_content_length',
                  '_body']
 
-    def __init__(self, status, reason, body,
+    def __init__(self, status: int,
+                 reason: str,
+                 body: bytes,
                  content_type='text/plain',
                  content_length=None):
         self._status = status
@@ -243,8 +245,13 @@ class Response:
     def content_length(self):
         return self._content_length
 
-    def text(self):
+    @property
+    def content(self) -> bytes:
         return self._body
+
+    def text(self) -> str:
+        # TODO: get encoding from underlying response obj
+        return self._body.decode('utf8')
 
     def json(self):
         return json.loads(self._body)

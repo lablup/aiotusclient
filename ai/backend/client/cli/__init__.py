@@ -44,6 +44,7 @@ def register_command(handler: Callable[[argparse.Namespace], None],
 def main():
 
     import ai.backend.client.cli.run  # noqa
+    import ai.backend.client.cli.proxy  # noqa
 
     mode = Path(sys.argv[0]).stem
 
