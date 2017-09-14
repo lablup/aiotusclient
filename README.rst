@@ -31,11 +31,11 @@ Grab your keypair from `cloud.backend.ai <https://cloud.backend.ai>`_ or your cl
 
 .. code-block:: sh
 
-   export BAI_ACCESS_KEY=...
-   export BAI_SECRET_KEY=...
+   export BACKEND_ACCESS_KEY=...
+   export BACKEND_SECRET_KEY=...
 
    # optional (for local clusters)
-   export BAI_ENDPOINT="https://my-precious-cluster/"
+   export BACKEND_ENDPOINT="https://my-precious-cluster/"
 
 
 Command-line Interface
@@ -94,6 +94,14 @@ Python module path like:
 .. code-block:: console
 
    $ lcc main.c mylib.c mylib.h
+
+To use API development tools such as GraphiQL for the admin API, run an insecure local API proxy.
+This will attach all the necessary authorization headers to your vanilla HTTP API requests.
+
+.. code-block:: console
+
+   $ python -m ai.backend.client.cli proxy
+   ∙ Starting an insecure API proxy at http://localhost:8084
 
 
 Synchronous API
