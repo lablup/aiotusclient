@@ -3,9 +3,13 @@ from datetime import datetime
 from typing import Any, Mapping, Optional, Sequence, Union
 from urllib.parse import urljoin
 
-import aiohttp
-import aiohttp.web
-from async_timeout import timeout as _timeout
+try:
+    import aiohttp
+    import aiohttp.web
+    from async_timeout import timeout as _timeout
+    aiohttp_available = True
+except ImportError:
+    aiohttp_available = False
 from dateutil.tz import tzutc
 from multidict import CIMultiDict
 import requests
@@ -21,7 +25,7 @@ __all__ = [
 ]
 
 
-class Request:
+class BaseRequest:
 
     __slots__ = ['config', 'method', 'path',
                  'date', 'headers',
@@ -71,7 +75,7 @@ class Request:
     @content.setter
     def content(self, value: Union[bytes, bytearray,
                                    Mapping[str, Any],
-                                   Sequence[aiohttp.web.FileField],
+                                   Sequence[Any],
                                    None]):
         '''
         Sets the content of the request.
@@ -161,6 +165,8 @@ class Request:
         except requests.exceptions.RequestException as e:
             raise BackendAPIError from e
 
+
+class AsyncRequestMixin:
     async def asend(self, *, sess=None, timeout=10.0):
         '''
         Sends the request to the server.
@@ -208,6 +214,17 @@ class Request:
             assert isinstance(sess, aiohttp.ClientSession)
         ws = await sess.ws_connect(self.build_url(), headers=self.headers)
         return sess, ws
+
+
+if aiohttp_available:
+
+    class Request(AsyncRequestMixin, BaseRequest):
+        pass
+
+else:
+
+    class Request(BaseRequest):
+        pass
 
 
 class Response:
