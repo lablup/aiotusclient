@@ -1,49 +1,25 @@
-from abc import abstractmethod
-import functools
-import inspect
 from typing import Iterable, Optional, Sequence
 import uuid
-import warnings
 
 import aiohttp.web
 
-from .compat import Py36Object
-from .exceptions import BackendAPIError, BackendClientError
+from .base import BaseFunction, SyncFunctionMixin
+from .exceptions import BackendClientError
 from .request import Request
 
-__all__ = [
+__all__ = (
     'BaseKernel',
     'Kernel',
-]
+)
 
 
-class BaseKernel(Py36Object):
+class BaseKernel(BaseFunction):
 
     '''
     Implements the request creation and response handling logic,
     while delegating the process of request sending to the subclasses
     via the generator protocol.
     '''
-
-    @abstractmethod
-    def _call_base_method(self, meth):
-        raise NotImplementedError
-
-    @classmethod
-    @abstractmethod
-    def _call_base_clsmethod(cls, meth):
-        raise NotImplementedError
-
-    @staticmethod
-    def _handle_response(resp, meth_gen):
-        if resp.status // 100 != 2:
-            raise BackendAPIError(resp.status, resp.reason, resp.text())
-        try:
-            meth_gen.send(resp)
-        except StopIteration as e:
-            return e.value
-        else:
-            raise RuntimeError('Invalid state')
 
     @classmethod
     def _get_or_create(cls, lang: str,
@@ -119,40 +95,7 @@ class BaseKernel(Py36Object):
         cls.get_or_create = cls._call_base_clsmethod(cls._get_or_create)
 
 
-class Kernel(BaseKernel):
-    '''
-    Synchronous request sender kernel using requests.
-    '''
-
-    @staticmethod
-    def _make_request(gen):
-        rqst = next(gen)
-        resp = rqst.send()
-        return resp
-
-    @classmethod
-    def _call_base_clsmethod(cls, meth):
-        assert inspect.ismethod(meth)
-
-        @classmethod
-        @functools.wraps(meth)
-        def _caller(cls, *args, **kwargs):
-            gen = meth(*args, **kwargs)
-            resp = cls._make_request(gen)
-            return cls._handle_response(resp, gen)
-
-        return _caller
-
-    def _call_base_method(self, meth):
-        assert inspect.ismethod(meth)
-
-        @functools.wraps(meth)
-        def _caller(*args, **kwargs):
-            gen = meth(*args, **kwargs)
-            resp = self._make_request(gen)
-            return self._handle_response(resp, gen)
-
-        return _caller
+class Kernel(SyncFunctionMixin, BaseKernel):
 
     def upload(self, files: Sequence[str]):
         rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id))

@@ -1,56 +1,22 @@
-import functools
-import inspect
 import json
-from typing import Iterable, Optional, Sequence
-import warnings
+from typing import Sequence
 
 import aiohttp
 import aiohttp.web
 
+from ..base import AsyncFunctionMixin
 from ..exceptions import BackendClientError
 from ..request import Request
 from ..kernel import BaseKernel
 
-__all__ = [
+__all__ = (
+    'Kernel',
     'AsyncKernel',
     'StreamPty',
-]
+)
 
 
-class AsyncKernel(BaseKernel):
-    '''
-    Asynchronous request sender kernel using aiohttp.
-    '''
-
-    @staticmethod
-    async def _make_request(gen):
-        rqst = next(gen)
-        resp = await rqst.asend()
-        return resp
-
-    @classmethod
-    def _call_base_clsmethod(cls, meth):
-        assert inspect.ismethod(meth)
-
-        @classmethod
-        @functools.wraps(meth)
-        async def _caller(cls, *args, **kwargs):
-            gen = meth(*args, **kwargs)
-            resp = await cls._make_request(gen)
-            return cls._handle_response(resp, gen)
-
-        return _caller
-
-    def _call_base_method(self, meth):
-        assert inspect.ismethod(meth)
-
-        @functools.wraps(meth)
-        async def _caller(*args, **kwargs):
-            gen = meth(*args, **kwargs)
-            resp = await self._make_request(gen)
-            return self._handle_response(resp, gen)
-
-        return _caller
+class Kernel(AsyncFunctionMixin, BaseKernel):
 
     async def upload(self, files: Sequence[str]):
         rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id))
