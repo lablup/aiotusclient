@@ -36,10 +36,7 @@ import uuid
 import pytest
 
 from ai.backend.client.request import Request
-from ai.backend.client.kernel import (
-    create_kernel, destroy_kernel, restart_kernel,
-    get_kernel_info, execute_code,
-)
+from ai.backend.client.kernel import Kernel
 from ai.backend.client.exceptions import BackendAPIError
 
 
@@ -83,7 +80,6 @@ def test_auth(defconfig):
     request = Request('GET', '/authorize', {
         'echo': random_msg,
     })
-    request.sign()
     resp = request.send()
     assert resp.status == 200
     data = resp.json()
@@ -97,6 +93,8 @@ def test_auth_missing_signature(defconfig):
     request = Request('GET', '/authorize', {
         'echo': random_msg,
     })
+    # let it bypass actual signing
+    request._sign = lambda *args, **kwargs: None
     resp = request.send()
     assert resp.status == 401
 
@@ -105,7 +103,6 @@ def test_auth_missing_signature(defconfig):
 def test_auth_malformed(defconfig):
     request = Request('GET', '/authorize')
     request.content = b'<this is not json>'
-    request.sign()
     resp = request.send()
     assert resp.status == 400
 
@@ -113,7 +110,6 @@ def test_auth_malformed(defconfig):
 @pytest.mark.integration
 def test_auth_missing_body(defconfig):
     request = Request('GET', '/authorize')
-    request.sign()
     resp = request.send()
     assert resp.status == 400
 
@@ -125,7 +121,6 @@ async def test_async_auth(defconfig):
     request = Request('GET', '/authorize', {
         'echo': random_msg,
     })
-    request.sign()
     resp = await request.asend()
     assert resp.status == 200
     data = resp.json()
@@ -135,43 +130,56 @@ async def test_async_auth(defconfig):
 
 @pytest.mark.integration
 def test_kernel_lifecycles(defconfig):
-    kernel_id = create_kernel('python3')
-    info = get_kernel_info(kernel_id)
+    kernel = Kernel.get_or_create('python3')
+    kernel_id = kernel.kernel_id
+    info = kernel.get_info()
     assert info['lang'] == 'python3'
     assert info['age'] > 0
-    assert info['numQueriesExecuted'] == 0
-    info = get_kernel_info(kernel_id)
     assert info['numQueriesExecuted'] == 1
-    destroy_kernel(kernel_id)
+    info = kernel.get_info()
+    assert info['numQueriesExecuted'] == 2
+    kernel.destroy()
     # kernel destruction is no longer synchronous!
     time.sleep(2.0)
     with pytest.raises(BackendAPIError) as e:
-        info = get_kernel_info(kernel_id)
+        info = Kernel(kernel_id).get_info()
     assert e.value.args[0] == 404
 
 
 @pytest.yield_fixture
 def py3_kernel():
-    kernel_id = create_kernel('python3')
-    yield kernel_id
-    destroy_kernel(kernel_id)
+    kernel = Kernel.get_or_create('python3')
+    yield kernel
+    kernel.destroy()
+
+
+def exec_loop(kernel, code):
+    # The server may return continuation if kernel preparation
+    # takes a little longer time (a few seconds).
+    console = []
+    num_queries = 0
+    while True:
+        result = kernel.execute(code if num_queries == 0 else '')
+        num_queries += 1
+        console.extend(result['console'])
+        if result['status'] == 'finished':
+            break
+    return aggregate_console(console), num_queries
 
 
 @pytest.mark.integration
 def test_kernel_execution(defconfig, py3_kernel):
-    kernel_id = py3_kernel
-    result = execute_code(kernel_id, 'print("hello world")')
-    console = aggregate_console(result['console'])
+    console, n = exec_loop(py3_kernel, 'print("hello world")')
     assert 'hello world' in console['stdout']
     assert console['stderr'] == ''
     assert len(console['media']) == 0
-    info = get_kernel_info(kernel_id)
-    assert info['numQueriesExecuted'] == 1
+    info = py3_kernel.get_info()
+    assert info['numQueriesExecuted'] == n + 1
 
 
 @pytest.mark.integration
 def test_kernel_restart(defconfig, py3_kernel):
-    kernel_id = py3_kernel
+    num_queries = 1  # first query is done by py3_kernel fixture (creation)
     first_code = textwrap.dedent('''
     a = "first"
     with open("test.txt", "w") as f:
@@ -185,21 +193,22 @@ def test_kernel_restart(defconfig, py3_kernel):
     with open("test.txt", "r") as f:
         print(f.read())
     ''').strip()
-    result = execute_code(kernel_id, first_code)
-    console = aggregate_console(result['console'])
+    console, n = exec_loop(py3_kernel, first_code)
+    num_queries += n
     assert 'first' in console['stdout']
     assert console['stderr'] == ''
     assert len(console['media']) == 0
-    restart_kernel(kernel_id)
-    result = execute_code(kernel_id, second_code_name_error)
-    console = aggregate_console(result['console'])
+    py3_kernel.restart()
+    num_queries += 1
+    console, n = exec_loop(py3_kernel, second_code_name_error)
+    num_queries += n
     assert 'NameError' in console['stderr']
     assert len(console['media']) == 0
-    result = execute_code(kernel_id, second_code_file_check)
-    console = aggregate_console(result['console'])
+    console, n = exec_loop(py3_kernel, second_code_file_check)
+    num_queries += n
     assert 'helloo?' in console['stdout']
     assert console['stderr'] == ''
     assert len(console['media']) == 0
-    info = get_kernel_info(kernel_id)
+    info = py3_kernel.get_info()
     # FIXME: this varies between 2~4
-    assert 2 <= info['numQueriesExecuted'] <= 4
+    assert info['numQueriesExecuted'] == num_queries

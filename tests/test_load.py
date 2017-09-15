@@ -13,7 +13,7 @@ import time
 
 import pytest
 
-from ai.backend.client.kernel import create_kernel, destroy_kernel, execute_code, restart_kernel
+from ai.backend.client.kernel import Kernel
 
 log = logging.getLogger('ai.backend.client.test.load')
 
@@ -38,7 +38,7 @@ def print_stat(msg, times_taken):
 def run_create_kernel(_idx):
     begin = time.monotonic()
     try:
-        kid = create_kernel('python3')
+        kid = Kernel.get_or_create('python3')
     except:
         log.exception('run_create_kernel')
         kid = None
@@ -72,7 +72,7 @@ def run_execute_code(kid):
     # 2nd params is currently ignored.
     if kid is not None:
         begin = time.monotonic()
-        result = execute_code(kid, sample_code)
+        result = Kernel(kid).execute(sample_code)
         print(result['stdout'])
         end = time.monotonic()
         return end - begin
@@ -101,7 +101,7 @@ def run_restart_kernel(kid):
     # 2nd params is currently ignored.
     if kid is not None:
         begin = time.monotonic()
-        restart_kernel(kid)
+        Kernel(kid).restart()
         end = time.monotonic()
         return end - begin
     return None
@@ -128,7 +128,7 @@ def restart_kernels(kernel_ids, parallel=False):
 def run_destroy_kernel(kid):
     if kid is not None:
         begin = time.monotonic()
-        destroy_kernel(kid)
+        Kernel(kid).destroy()
         end = time.monotonic()
         return end - begin
     return None
