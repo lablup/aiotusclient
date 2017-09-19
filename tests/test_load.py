@@ -38,14 +38,15 @@ def print_stat(msg, times_taken):
 def run_create_kernel(_idx):
     begin = time.monotonic()
     try:
-        kid = Kernel.get_or_create('python3')
+        k = Kernel.get_or_create('python3')
+        ret = k.kernel_id
     except:
         log.exception('run_create_kernel')
-        kid = None
+        ret = None
     finally:
         end = time.monotonic()
     t = end - begin
-    return t, kid
+    return t, ret
 
 
 def create_kernels(concurrency, parallel=False):
@@ -72,9 +73,15 @@ def run_execute_code(kid):
     # 2nd params is currently ignored.
     if kid is not None:
         begin = time.monotonic()
-        result = Kernel(kid).execute(sample_code)
-        print(result['stdout'])
+        console = []
+        while True:
+            result = Kernel(kid).execute(sample_code)
+            console.extend(result['console'])
+            if result['status'] == 'finished':
+                break
+        stdout = ''.join(rec[1] for rec in console if rec[0] == 'stdout')
         end = time.monotonic()
+        print(stdout)
         return end - begin
     return None
 
@@ -160,8 +167,27 @@ def destroy_kernels(kernel_ids, parallel=False):
     (5, True,  True),
 ])
 def test_high_load_requests(capsys, defconfig, concurrency, parallel, restart):
+    '''
+    Tests creation and use of multiple concurrent kernels in various ways.
+
+    NOTE: This test may fail if your system has too less cores compared to the
+    given concurrency.  The exact number of cores required is determined by the
+    Python3 kernel's resource requirements (CPU slots).
+
+    NOTE: This test may occasionally fail if it takes too long time to destroy
+    Docker containers in the manager because the resources occupation is
+    restored after container destruction but the destroy API returns after
+    stopping containers but before they are actually destroyed.
+    We have inserted some small delay to work-around this.
+    Running this tests with different parameters without no delays between
+    parameter sets would cause "503 Service Unavailable" errors as it will
+    quickly saturate the resource limit of the developer's PC.
+    '''
+
     # Show stdout for timing statistics
     with capsys.disabled():
+        print('waiting for previous asynchronous kernel destruction for 5 secs...')
+        time.sleep(5)
         kids = create_kernels(concurrency, parallel)
         execute_codes(kids, parallel)
         if restart:
