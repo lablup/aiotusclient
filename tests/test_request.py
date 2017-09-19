@@ -10,7 +10,7 @@ import requests
 import simplejson as json
 
 from .common import mock_coro, MockAsyncContextManager
-from ai.backend.client.exceptions import BackendAPIError
+from ai.backend.client.exceptions import BackendClientError
 from ai.backend.client.request import Request, Response
 
 
@@ -199,7 +199,7 @@ async def test_asend_with_appropriate_method(mocker, req_params):
             # Ignore exceptions in `async with` statement. We're only
             # interested in request call here.
             await req.asend()
-        except BackendAPIError:
+        except BackendClientError:
             pass
         mock_reqfunc.assert_called_once_with(
             mocker.ANY, req.build_url(), data=req._content, headers=req.headers)

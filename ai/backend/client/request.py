@@ -17,7 +17,7 @@ import simplejson as json
 
 from .auth import generate_signature
 from .config import APIConfig, get_config
-from .exceptions import BackendAPIError
+from .exceptions import BackendClientError
 
 __all__ = [
     'Request',
@@ -163,7 +163,8 @@ class BaseRequest:
                             resp.headers['content-type'],
                             resp.headers['content-length'])
         except requests.exceptions.RequestException as e:
-            raise BackendAPIError from e
+            msg = 'Request to the API endpoint has failed.'
+            raise BackendClientError(msg) from e
 
 
 class AsyncRequestMixin:
@@ -201,7 +202,8 @@ class AsyncRequestMixin:
                                         resp.content_type,
                                         len(body))
             except Exception as e:
-                raise BackendAPIError from e
+                msg = 'Request to the API endpoint has failed.'
+                raise BackendClientError(msg) from e
 
     async def connect_websocket(self, sess=None):
         '''
@@ -212,8 +214,12 @@ class AsyncRequestMixin:
             sess = aiohttp.ClientSession()
         else:
             assert isinstance(sess, aiohttp.ClientSession)
-        ws = await sess.ws_connect(self.build_url(), headers=self.headers)
-        return sess, ws
+        try:
+            ws = await sess.ws_connect(self.build_url(), headers=self.headers)
+            return sess, ws
+        except Exception as e:
+            msg = 'Request to the API endpoint has failed.'
+            raise BackendClientError(msg) from e
 
 
 if aiohttp_available:
