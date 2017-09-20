@@ -36,6 +36,7 @@ import uuid
 import pytest
 
 from ai.backend.client.request import Request
+from ai.backend.client.admin import Admin
 from ai.backend.client.kernel import Kernel
 from ai.backend.client.exceptions import BackendAPIError
 
@@ -212,3 +213,19 @@ def test_kernel_restart(defconfig, py3_kernel):
     info = py3_kernel.get_info()
     # FIXME: this varies between 2~4
     assert info['numQueriesExecuted'] == num_queries
+
+
+@pytest.mark.integration
+def test_admin_api(defconfig, py3_kernel):
+    q = '''
+    query($ak: String!) {
+        compute_sessions(access_key: $ak, status: "RUNNING") {
+            lang
+        }
+    }'''
+    resp = Admin.query(q, {
+        'ak': defconfig.access_key,
+    })
+    assert 'compute_sessions' in resp
+    assert len(resp['compute_sessions']) >= 1
+    assert resp['compute_sessions'][0]['lang'] == 'python3'

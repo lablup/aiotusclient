@@ -12,10 +12,10 @@ __all__ = (
 class BaseAdmin(BaseFunction):
 
     @classmethod
-    def _query(cls, query: str, values: Optional[Mapping[str, Any]]=None):
+    def _query(cls, query: str, variables: Optional[Mapping[str, Any]]=None):
         gql_query = {
             'query': query,
-            'values': values if values else {},
+            'variables': variables if variables else {},
         }
         resp = yield Request('POST', '/admin/graphql', gql_query)
         return resp.json()
