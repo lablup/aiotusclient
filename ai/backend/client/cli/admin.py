@@ -33,7 +33,9 @@ def sessions(args):
     if args.access_key is None:
         q = 'query($status:String) { compute_sessions(status:$status) { $fields } }'
     else:
-        q = 'query($ak:String, $status:String) { compute_sessions(access_key:$ak, status:$status) { $fields } }'
+        q = 'query($ak:String, $status:String) {' \
+            '  compute_sessions(access_key:$ak, status:$status) { $fields }' \
+            '}'
     q = q.replace('$fields', ' '.join(item[1] for item in fields))
     v = {
         'status': args.status if args.status != 'ALL' else None,
