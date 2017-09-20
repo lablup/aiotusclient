@@ -1,7 +1,7 @@
 Changes
 =======
 
-1.0.0 (2017-09-07)
+1.0.0 (2017-09-20)
 ------------------
 
 **CHANGES**
@@ -11,6 +11,11 @@ Changes
    - Class names: "SornaError" / "SornaAPIError" → "BackendError" / "BackendAPIError"
    - Any mention of "Sorna" in the API headers → "BackendAI".
      e.g., "X-Sorna-Version" API request header → "X-BackendAI-Version"
+
+ - Refactor the internal structure for sync/async API functions.
+
+ - Add support for the Admin API based on GraphQL both in the CLI and the functions.
+   Now you can list up details of your compute sessions with ease.
 
 0.9.7 (2017-08-25)
 ------------------
