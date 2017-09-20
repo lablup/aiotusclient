@@ -7,6 +7,7 @@ install_requires = [
     'requests>=2.12',
     'simplejson',
     'ConfigArgParse>=0.12.0',
+    'tabulate>=0.7.7',
 ]
 dev_requires = [
 ]
