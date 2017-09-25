@@ -47,21 +47,41 @@ class BaseKernel(BaseFunction):
     def _restart(self):
         yield Request('PATCH', '/kernel/{}'.format(self.kernel_id))
 
+    def _interrupt(self):
+        yield Request('POST', '/kernel/{}/interrupt'.format(self.kernel_id))
+
+    def _complete(self, code: str, opts: Optional[dict]=None):
+        opts = {} if opts is None else opts
+        rqst = Request('POST', '/kernel/{}/complete'.format(self.kernel_id), {
+            'code': code,
+            'options': {
+                'row': int(opts.get('row', 0)),
+                'col': int(opts.get('col', 0)),
+                'line': opts.get('line', ''),
+                'post': opts.get('post', ''),
+            },
+        })
+        resp = yield rqst
+        return resp.json()
+
     def _get_info(self):
         resp = yield Request('GET', '/kernel/{}'.format(self.kernel_id))
         return resp.json()
 
-    def _execute(self, code: str=None, mode: str='query', opts: dict=None):
+    def _execute(self, run_id: str, code: str=None, mode: str='query', opts: Optional[dict]=None):
+        opts = {} if opts is None else opts
         if mode == 'query':
             assert code is not None  # but maybe empty due to continuation
             rqst = Request('POST', '/kernel/{}'.format(self.kernel_id), {
                 'mode': mode,
                 'code': code,
+                'runId': run_id,
             })
         elif mode == 'batch':
             rqst = Request('POST', '/kernel/{}'.format(self.kernel_id), {
                 'mode': mode,
                 'code': code,
+                'runId': run_id,
                 'options': {
                     'build': opts.get('build', None),
                     'buildLog': bool(opts.get('buildLog', False)),
@@ -69,8 +89,7 @@ class BaseKernel(BaseFunction):
                 },
             })
         elif mode == 'complete':
-            rqst = Request('POST', '/kernel/{}'.format(self.kernel_id), {
-                'mode': mode,
+            rqst = Request('POST', '/kernel/{}/complete'.format(self.kernel_id), {
                 'code': code,
                 'options': {
                     'row': int(opts.get('row', 0)),
@@ -88,6 +107,8 @@ class BaseKernel(BaseFunction):
         self.kernel_id = kernel_id
         self.destroy  = self._call_base_method(self._destroy)
         self.restart  = self._call_base_method(self._restart)
+        self.interrupt = self._call_base_method(self._interrupt)
+        self.complete  = self._call_base_method(self._complete)
         self.get_info = self._call_base_method(self._get_info)
         self.execute  = self._call_base_method(self._execute)
 

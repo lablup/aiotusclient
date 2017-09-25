@@ -4,18 +4,19 @@ import sys
 import traceback
 
 from . import register_command
+from ..compat import token_hex
 from .pretty import print_info, print_wait, print_done, print_fail
 from ..kernel import Kernel
-from ..compat import token_hex
 
 
 def exec_loop(kernel, code, mode, opts=None,
               vprint_wait=print_wait, vprint_done=print_done):
     opts = opts if opts else {}
+    run_id = token_hex(8)
     if mode == 'batch':
         vprint_wait('Building your code...')
     while True:
-        result = kernel.execute(code, mode=mode, opts=opts)
+        result = kernel.execute(run_id, code, mode=mode, opts=opts)
         if result['status'] == 'build-finished':
             vprint_done('Build finished.')
         for rec in result['console']:
@@ -57,7 +58,6 @@ def run(args):
     if not args.client_token:
         args.client_token = token_hex(16)
         attach_to_existing = False
-        vprint_info('Client session token: {0}'.format(args.client_token))
         vprint_wait('Creating a temporary kernel...')
     else:
         vprint_info('Client session token: {0}'.format(args.client_token))
