@@ -122,10 +122,11 @@ def test_execute_code_url(mocker):
 
     kernel_id = token_hex(12)
     k = Kernel(kernel_id)
-    k.execute('hello')
+    run_id = token_hex(8)
+    k.execute(run_id, 'hello')
 
     mock_req.assert_called_once_with('POST', '/kernel/{}'.format(kernel_id),
-                                     {'mode': 'query', 'code': 'hello'})
+                                     {'mode': 'query', 'runId': run_id, 'code': 'hello'})
     mock_req_obj.send.assert_called_once_with()
     mock_req_obj.send.return_value.json.assert_called_once_with()
 
@@ -136,6 +137,7 @@ def test_execute_code_raises_err_with_abnormal_status(mocker):
     mocker.patch('ai.backend.client.kernel.Request', return_value=mock_req_obj)
 
     kernel_id = token_hex(12)
+    run_id = token_hex(8)
     with pytest.raises(BackendAPIError):
         k = Kernel(kernel_id)
-        k.execute('hello')
+        k.execute(run_id, 'hello')

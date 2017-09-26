@@ -35,6 +35,7 @@ import uuid
 
 import pytest
 
+from ai.backend.client.compat import token_hex
 from ai.backend.client.request import Request
 from ai.backend.client.admin import Admin
 from ai.backend.client.kernel import Kernel
@@ -159,8 +160,9 @@ def exec_loop(kernel, code):
     # takes a little longer time (a few seconds).
     console = []
     num_queries = 0
+    run_id = token_hex(8)
     while True:
-        result = kernel.execute(code if num_queries == 0 else '')
+        result = kernel.execute(run_id, code if num_queries == 0 else '')
         num_queries += 1
         console.extend(result['console'])
         if result['status'] == 'finished':
@@ -170,9 +172,9 @@ def exec_loop(kernel, code):
 
 @pytest.mark.integration
 def test_kernel_execution(defconfig, py3_kernel):
-    console, n = exec_loop(py3_kernel, 'print("hello world")')
+    console, n = exec_loop(py3_kernel, 'print("hello world"); raise RuntimeError()')
     assert 'hello world' in console['stdout']
-    assert console['stderr'] == ''
+    assert 'RuntimeError' in console['stderr']
     assert len(console['media']) == 0
     info = py3_kernel.get_info()
     assert info['numQueriesExecuted'] == n + 1

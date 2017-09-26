@@ -13,6 +13,7 @@ import time
 
 import pytest
 
+from ai.backend.client.compat import token_hex
 from ai.backend.client.kernel import Kernel
 
 log = logging.getLogger('ai.backend.client.test.load')
@@ -70,12 +71,12 @@ def create_kernels(concurrency, parallel=False):
 
 
 def run_execute_code(kid):
-    # 2nd params is currently ignored.
     if kid is not None:
         begin = time.monotonic()
         console = []
+        run_id = token_hex(8)
         while True:
-            result = Kernel(kid).execute(sample_code)
+            result = Kernel(kid).execute(run_id, sample_code)
             console.extend(result['console'])
             if result['status'] == 'finished':
                 break

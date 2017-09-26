@@ -126,22 +126,24 @@ async def test_execute_code_url():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=200)
     kernel_id = token_hex(12)
+    run_id = token_hex(8)
     with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
-        await Kernel(kernel_id).execute('hello')
+        await Kernel(kernel_id).execute(run_id, 'hello')
         mock_req_cls.assert_called_once_with(
             'POST', '/kernel/{}'.format(kernel_id),
-            {'mode': 'query', 'code': 'hello'})
+            {'mode': 'query', 'runId': run_id, 'code': 'hello'})
 
 
 @pytest.mark.asyncio
 async def test_execute_code_raises_err_with_abnormal_status():
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=400)
+    run_id = token_hex(8)
     with asynctest.patch('ai.backend.client.kernel.Request',
                          return_value=mock_req_obj) as mock_req_cls:
         with pytest.raises(BackendAPIError):
-            await Kernel('mykernel').execute('hello')
+            await Kernel('mykernel').execute(run_id, 'hello')
 
 
 @pytest.mark.asyncio
