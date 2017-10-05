@@ -1,6 +1,18 @@
 Changes
 =======
 
+1.0.1 (2017-09-20)
+------------------
+
+**FIXES**
+
+ - Include missing dependencies: multidict
+ - Improve Windows platform supports (#12)
+
+**CHANGES**
+
+ - Install asyncio-based dependencies by default (aiohttp and async_timeout)
+
 1.0.0 (2017-09-20)
 ------------------
 
