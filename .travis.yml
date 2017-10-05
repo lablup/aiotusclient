@@ -6,14 +6,39 @@ cache: pip
 os:
   - linux
   # - osx  # not supported yet
-install:
-  - pip install -U pip setuptools
-  - pip install -U -r requirements-ci.txt
-script:
-  - flake8 ai/backend
-  - pytest --cov=ai.backend.client -m "not integration"
-after_success:
-  - codecov
+
+_helpers:
+- &_skip_steps
+  before_install: skip
+  install: skip
+  before_script: skip
+  script: skip
+  after_script: skip
+  after_success: skip
+
+jobs:
+    - stage: test
+      <<: *_skip_steps
+      install:
+        - pip install -U pip setuptools
+        - pip install -r requirements-ci.txt
+      script:
+        - python -m flake8 ai/backend
+        - python -m pytest --cov=ai.backend.client -m "not integration"
+      after_success:
+        - codecov
+
+    - stage: deploy
+      if: tag IS present
+      <<: *_skip_steps
+      deploy:
+        provider: pypi
+        distributions: sdist bdist_wheel
+        user: joongi
+        password:
+          secure: "FPAxXNSLhmuF3vYjjZ36n/LLyygiDze0620S0x4l5gYASuZUpVdzGfFw8/gUTNxKFFjnmM5hOaa95NJ+L5pt7FjFy1BQi8bxoIMopZaNMarb+mbrUk30xJ7WCKdQxyL6Z9Jz0oA1PPq+QhDOhFAsHTU9YAuGahoeTDFlaLL3m2EBlrCRy032dL/Dj5GP3rZJKlUYxjwXtbWphEZJSRROTi07F6V6E+urzHsqyNHcQ5iweFAXW+Fc36tQi9pO55/zlrYqNNO0H+OmrRSHdiGHbVQzagClvCWUg5abFzg57K68k6mud4a+zfEefUXVJRzci6UWNtLJcP0PEymTmdO7NaNpnJrqbnlocQtHNyVHVKurlr+gZ/in9ZfPwcwBHOxMSUHSxu3nkkelvvPE7VWK5lugPL1vR/6Ab2dQownWBY4ai9nGS5/Mve97y5l5dPskztC7qDswYtrSrgF+r4EFKmFMRqItME15OCqDTBNpF1ShECZdGMFWqC99YlO2aV1/R1MqU9eS5EDh0+MbnTGzfFdtaGNInvmhxTIhL63pWFMU0D96JkEwGhI3mp1aHjzidOOVkyXWzRAMAtzHvJig/QVJnJVlGV1Lm9FzGEh0cqZb5YvaI2hGnnxf/9caD6+cKscGv4Sf5NGlJeP+qszoHSqY5HGX1FPACSZA4vzTe1s="
+        skip_upload_docs: true
+
 notifications:
   webhooks:
     secure: "u7Ylvc6HV9HUTS5e4E+BHeIJLMmR4EBH0mk45psBGBZn81TAmcJ65Xzcus9vGO3HZalBNzIq8YxJJJk6Dan9YY5wBnxsdwTbh8+dcS/9UFLbkc5Erh4C9B/4gPVd5HxfQc2hDBIfQUup5kWiSJlTgxGO0QDDspSoeBQYmIYJkfa7Sb6UQc3t6KHi1j9Hn5h1ycqsHOnPrPrG6u0EqwUvBuk+rGdZYGeilgwK5MrlhHmnB9vn60EQZr0mesYBDEXnF4+sVXswY+0AV+PYBcZkxwFNl3mZ2IyMMp6/YIwogLtzGwlS2XTXnTRgrjj7oPDLOBQnwv4BzQ0HJGbbNocl5K+cy1GmxOFOm0XNxiK3T3hbZIl5OY7Sger9JNgBM61Lx5tfW6S9r3bHyzx1ZsUgEJyYwGRl0KYTP3qI1blgyJlU7qvXensTFSRtTJq3PD+ri8o6GjRseEqZWIw5IkqR6FfFpATEOAqoOS/6925YQ5nSFHoLYq+tB6XhY20+p5cJKY9ZrPSsMR5OK5yrchmm/z0e3lpw7i94oA9qcW4M6qvWW45syNtnB9qa88pqR/j03CDv0eAFp1fzcPd4z4YZKUX43V0ziLl0ybcORkEHujwSO4xMckMC6gG7vqFV/2rS+Mq+kaD4GCtMajiC0DDal14jqpJFBKHp0nEEvC+vtQc="
