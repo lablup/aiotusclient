@@ -4,6 +4,8 @@ from pathlib import Path
 install_requires = [
     'colorama',
     'multidict',
+    'aiohttp>=2.2',
+    'async_timeout',
     'namedlist>=1.6',
     'python-dateutil>=2.5',
     'requests>=2.12',
@@ -25,10 +27,6 @@ test_requires = [
     'asynctest',
     'codecov',
     'flake8',
-]
-async_requires = [
-    'aiohttp>=2.2',
-    'async_timeout',
 ]
 
 
@@ -70,7 +68,6 @@ setup(
         'dev': dev_requires + ci_requires + test_requires,
         'test': test_requires,
         'ci': ci_requires + test_requires,
-        'async': async_requires,
     },
     data_files=[],
     entry_points={
