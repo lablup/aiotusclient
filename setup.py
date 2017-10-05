@@ -2,6 +2,7 @@ from setuptools import setup
 from pathlib import Path
 
 install_requires = [
+    'multidict',
     'namedlist>=1.6',
     'python-dateutil>=2.5',
     'requests>=2.12',
