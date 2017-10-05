@@ -1,4 +1,11 @@
 language: python
+
+stages:
+  - name: test
+  - name: deploy
+    if: tag IS present
+
+# build matrix for test stage
 python:
   - "3.5"
   - "3.6"
@@ -7,33 +14,22 @@ os:
   - linux
   # - osx  # not supported yet
 
-_helpers:
-- &_skip_steps
-  before_install: skip
-  install: skip
-  before_script: skip
-  script: skip
-  after_script: skip
-  after_success: skip
+# test stage
+install:
+  - pip install -U pip setuptools
+  - pip install -r requirements-ci.txt
+script:
+  - python -m flake8 ai/backend
+  - python -m pytest --cov=ai.backend.client -m "not integration"
+after_success:
+  - codecov
 
+# other stages
 jobs:
   fast_finish: true
   include:
-    - stage: test
-      <<: *_skip_steps
-      install:
-        - pip install -U pip setuptools
-        - pip install -r requirements-ci.txt
-      script:
-        - python -m flake8 ai/backend
-        - python -m pytest --cov=ai.backend.client -m "not integration"
-      after_success:
-        - codecov
-
     - stage: deploy
       python: "3.6"
-      if: tag IS present
-      <<: *_skip_steps
       deploy:
         provider: pypi
         distributions: sdist bdist_wheel
