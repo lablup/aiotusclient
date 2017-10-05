@@ -17,6 +17,8 @@ _helpers:
   after_success: skip
 
 jobs:
+  fast_finish: true
+  include:
     - stage: test
       <<: *_skip_steps
       install:
@@ -29,6 +31,7 @@ jobs:
         - codecov
 
     - stage: deploy
+      python: "3.6"
       if: tag IS present
       <<: *_skip_steps
       deploy:
