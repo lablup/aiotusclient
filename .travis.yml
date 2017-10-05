@@ -31,6 +31,8 @@ jobs:
     - stage: deploy
       python: "3.6"
       deploy:
+        on:
+          tags: true
         provider: pypi
         distributions: sdist bdist_wheel
         user: joongi
