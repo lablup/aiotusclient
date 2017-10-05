@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 from typing import Callable, Optional, Union
 
+import colorama
 import configargparse
 
 from .pretty import print_fail
@@ -42,6 +43,8 @@ def register_command(handler: Callable[[argparse.Namespace], None],
 
 
 def main():
+
+    colorama.init(strip=True, convert=True)
 
     import ai.backend.client.cli.run    # noqa
     import ai.backend.client.cli.proxy  # noqa

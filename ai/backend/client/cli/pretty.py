@@ -30,7 +30,8 @@ def print_pretty(msg, *, status=PrintStatus.NONE, file=sys.stderr):
         indicator = '\x1b[91m\u2718' if file.isatty() else '\u2718'
     else:
         raise ValueError
-    print('{0}\r'.format(' ' * _last_width), end='', file=file)
+    if file.isatty():
+        print('{0}\r'.format(' ' * _last_width), end='', file=file)
     text = '{0} {1}'.format(indicator, msg)
     if file.isatty():
         text += '\x1b[0m'
