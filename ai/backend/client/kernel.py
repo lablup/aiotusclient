@@ -68,7 +68,10 @@ class BaseKernel(BaseFunction):
         resp = yield Request('GET', '/kernel/{}'.format(self.kernel_id))
         return resp.json()
 
-    def _execute(self, run_id: str, code: str=None, mode: str='query', opts: Optional[dict]=None):
+    def _execute(self, run_id: str,
+                 code: str=None,
+                 mode: str='query',
+                 opts: Optional[dict]=None):
         opts = {} if opts is None else opts
         if mode == 'query':
             assert code is not None  # but maybe empty due to continuation
