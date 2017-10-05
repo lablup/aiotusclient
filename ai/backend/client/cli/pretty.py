@@ -7,9 +7,6 @@ __all__ = (
     'print_done', 'print_fail',
 )
 
-_last_width = 1
-_last_printed = False
-
 
 class PrintStatus(enum.Enum):
     NONE = 0
@@ -19,7 +16,6 @@ class PrintStatus(enum.Enum):
 
 
 def print_pretty(msg, *, status=PrintStatus.NONE, file=sys.stderr):
-    global _last_width, _last_printed, _color_init
     if status == PrintStatus.NONE:
         indicator = '\x1b[96m\u2219' if file.isatty() else '\u2219'
     elif status == PrintStatus.WAITING:
@@ -31,11 +27,10 @@ def print_pretty(msg, *, status=PrintStatus.NONE, file=sys.stderr):
     else:
         raise ValueError
     if file.isatty():
-        print('{0}\r'.format(' ' * _last_width), end='', file=file)
+        print('\x1b[2K', end='', file=file)
     text = '{0} {1}'.format(indicator, msg)
     if file.isatty():
         text += '\x1b[0m'
-    _last_width = len(text) or 1
     print('{0}\r'.format(text), end='', file=file)
     file.flush()
     if status != PrintStatus.WAITING:
