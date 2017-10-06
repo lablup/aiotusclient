@@ -1,7 +1,14 @@
 Changes
 =======
 
-1.0.1 (2017-09-20)
+1.0.2 (2017-10-07)
+------------------
+
+**FIX**
+
+ - Make the colored terminal output working on Windows (#12)
+
+1.0.1 (2017-10-06)
 ------------------
 
 **FIXES**
