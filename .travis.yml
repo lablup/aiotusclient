@@ -1,4 +1,5 @@
 language: python
+cache: pip
 
 stages:
   - name: test
@@ -9,7 +10,6 @@ stages:
 python:
   - "3.5"
   - "3.6"
-cache: pip
 os:
   - linux
   # - osx  # not supported yet
