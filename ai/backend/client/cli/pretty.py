@@ -15,7 +15,9 @@ class PrintStatus(enum.Enum):
     FAILED = 3
 
 
-def print_pretty(msg, *, status=PrintStatus.NONE, file=sys.stderr):
+def print_pretty(msg, *, status=PrintStatus.NONE, file=None):
+    if file is None:
+        file = sys.stderr
     if status == PrintStatus.NONE:
         indicator = '\x1b[96m\u2219' if file.isatty() else '\u2219'
     elif status == PrintStatus.WAITING:
