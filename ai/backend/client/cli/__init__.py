@@ -56,6 +56,7 @@ def main():
 
     colorama.init()
 
+    import ai.backend.client.cli.config # noqa
     import ai.backend.client.cli.run    # noqa
     import ai.backend.client.cli.proxy  # noqa
     import ai.backend.client.cli.admin  # noqa
