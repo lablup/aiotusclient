@@ -47,6 +47,9 @@ def sessions(args):
         print_fail('Failed to query the gateway!')
         traceback.print_exc()
         return
+    if len(resp['compute_sessions']) == 0:
+        print('There is no compute sessions currently running.')
+        return
     print(tabulate((item.values() for item in resp['compute_sessions']),
                    headers=(item[0] for item in fields)))
 

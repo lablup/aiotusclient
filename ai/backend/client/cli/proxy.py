@@ -56,6 +56,7 @@ def proxy(args):
         httpd = http.server.HTTPServer(addr, APIProxyHandler)
         httpd.serve_forever()
     except (KeyboardInterrupt, SystemExit):
+        print()
         print_info('Terminated.')
     except:
         print_fail('Unexpected error!')
