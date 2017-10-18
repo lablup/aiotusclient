@@ -27,7 +27,8 @@ Usage
 -----
 
 You should set the access key and secret key as environment variables to use the API.
-Grab your keypair from `cloud.backend.ai <https://cloud.backend.ai>`_ or your cluster admin.
+Grab your keypair from `cloud.backend.ai <https://cloud.backend.ai>`_ or your cluster
+admin.
 
 .. code-block:: sh
 
@@ -41,14 +42,19 @@ Grab your keypair from `cloud.backend.ai <https://cloud.backend.ai>`_ or your cl
 Command-line Interface
 ----------------------
 
-Use ``ai.backend.client.cli`` module with ``run`` command.
+``backend.ai`` command is the entry point of all sub commands.
+(Alternatively you can use a verbosely long version: ``python -m
+ai.backend.client.cli``)
+
+Highlight: ``run`` command
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To run the code specified in the command line directly,
-use ``-c`` option to pass the code string.
+use ``-c`` option to pass the code string (like a shell).
 
 .. code-block:: console
 
-   $ python -m ai.backend.client.cli run python3 -c "print('hello world')"
+   $ backend.ai run python3 -c "print('hello world')"
    ∙ Client session token: d3694dda6e5a9f1e5c718e07bba291a9
    ✔ Kernel (ID: zuF1OzMIhFknyjUl7Apbvg) is ready.
    hello world
@@ -60,7 +66,7 @@ actual newlines.)
 
 .. code-block:: console
 
-   $ python -m ai.backend.client.cli run c -c $'#include <stdio.h>\nint main() {printf("hello world\\n");}'
+   $ backend.ai run c -c $'#include <stdio.h>\nint main() {printf("hello world\\n");}'
    ∙ Client session token: abc06ee5e03fce60c51148c6d2dd6126
    ✔ Kernel (ID: d1YXvee-uAJTx4AKYyeksA) is ready.
    hello world
@@ -76,7 +82,7 @@ them.  The below is a simple example to run `a sample C program
    Cloning into 'c-example'...
    Unpacking objects: 100% (5/5), done.
    $ cd c-example
-   $ python -m ai.backend.client.cli run c main.c mylib.c mylib.h
+   $ backend.ai run c main.c mylib.c mylib.h
    ∙ Client session token: 1c352a572bc751a81d1f812186093c47
    ✔ Kernel (ID: kJ6CgWR7Tz3_v2WsDHOwLQ) is ready.
    ✔ Uploading done.
@@ -95,13 +101,22 @@ Python module path like:
 
    $ lcc main.c mylib.c mylib.h
 
-To use API development tools such as GraphiQL for the admin API, run an insecure local API proxy.
-This will attach all the necessary authorization headers to your vanilla HTTP API requests.
+Highlight: ``proxy`` command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To use API development tools such as GraphiQL for the admin API, run an insecure
+local API proxy.  This will attach all the necessary authorization headers to your
+vanilla HTTP API requests.
 
 .. code-block:: console
 
-   $ python -m ai.backend.client.cli proxy
+   $ backend.ai proxy
    ∙ Starting an insecure API proxy at http://localhost:8084
+
+More commands?
+~~~~~~~~~~~~~~
+
+Please run ``backend.ai --help`` to see more commands.
 
 
 Synchronous API
