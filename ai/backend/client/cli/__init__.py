@@ -44,6 +44,14 @@ def register_command(handler: Callable[[argparse.Namespace], None],
     return wrapped
 
 
+@register_command
+def help(args):
+    '''
+    Shows the help.
+    '''
+    global_argparser.print_help()
+
+
 def main():
 
     colorama.init()
