@@ -9,10 +9,14 @@ def test_pretty_output():
     # using "-s" option in pytest and check it manually with your eyes.
 
     pprint = print_pretty
-    colorama.init(strip=True, convert=True)
+    colorama.init()
 
     print('normal print')
+    pprint('wow wow wow!')
+    print('just print')
     pprint('wow!')
+    pprint('some long loading.... zzzzzzzzzzzzz', status=PrintStatus.WAITING)
+    time.sleep(0.3)
     pprint('doing something...', status=PrintStatus.WAITING)
     time.sleep(0.3)
     pprint('done!', status=PrintStatus.DONE)

@@ -44,7 +44,7 @@ def register_command(handler: Callable[[argparse.Namespace], None],
 
 def main():
 
-    colorama.init(strip=True, convert=True)
+    colorama.init()
 
     import ai.backend.client.cli.run    # noqa
     import ai.backend.client.cli.proxy  # noqa
