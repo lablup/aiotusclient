@@ -11,7 +11,9 @@ from .pretty import print_fail
 
 ArgParserType = Union[argparse.ArgumentParser, configargparse.ArgumentParser]
 
-global_argparser = configargparse.ArgumentParser()
+global_argparser = configargparse.ArgumentParser(
+    prog='backend.ai',
+    description='Backend.AI command line interface')
 _subparsers = dict()
 
 
@@ -50,6 +52,10 @@ def main():
     import ai.backend.client.cli.proxy  # noqa
     import ai.backend.client.cli.admin  # noqa
     import ai.backend.client.cli.ps     # noqa
+
+    if len(sys.argv) <= 1:
+        global_argparser.print_help()
+        return
 
     mode = Path(sys.argv[0]).stem
 

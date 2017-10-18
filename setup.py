@@ -72,6 +72,7 @@ setup(
     data_files=[],
     entry_points={
         'console_scripts': [
+            'backend.ai = ai.backend.client.cli:main',
             'lcc = ai.backend.client.cli:main',
             'lpython = ai.backend.client.cli:main',
         ],
