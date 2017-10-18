@@ -1,6 +1,23 @@
 Changes
 =======
 
+1.0.3 (2017-10-18)
+------------------
+
+**NEW**
+
+ - Now you can run the CLI commands using "backend.ai"
+   instead of "python -m ai.backend.client.cli"
+
+ - Add a few new CLI commands: config, help, ps
+
+ - Running "backend.ai" without any args shows the help message
+   instead of an error.
+
+**FIX**
+
+ - Fix colored terminal output in *NIX (#12)
+
 1.0.2 (2017-10-07)
 ------------------
 
@@ -132,7 +149,7 @@ Changes
 ------------------
 
 **FIXES**
- 
+
  - Add missing proxy method for exception() to StreamPty.
 
  - Fix broken async_timeout checks due to pre-mature optimization,
