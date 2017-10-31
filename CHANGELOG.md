@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.0.4 (2017-10-31)
+------------------
+
+**NEW**
+
+ - Add "-s" / "--stats" option to the CLI "run" command.
+   When specified, the CLI shows resource usage statistics after session termination.
+
 1.0.3 (2017-10-18)
 ------------------
 
