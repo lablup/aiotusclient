@@ -42,7 +42,9 @@ class BaseKernel(BaseFunction):
         return cls(resp.json()['kernelId'])  # type: ignore
 
     def _destroy(self):
-        yield Request('DELETE', '/kernel/{}'.format(self.kernel_id))
+        resp = yield Request('DELETE', '/kernel/{}'.format(self.kernel_id))
+        if resp.status == 200:
+            return resp.json()
 
     def _restart(self):
         yield Request('PATCH', '/kernel/{}'.format(self.kernel_id))

@@ -12,6 +12,7 @@ install_requires = [
     'simplejson',
     'ConfigArgParse>=0.12.0',
     'tabulate>=0.7.7',
+    'humanize',
 ]
 dev_requires = [
 ]

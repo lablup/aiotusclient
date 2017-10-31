@@ -3,6 +3,9 @@ from pathlib import Path
 import sys
 import traceback
 
+from humanize import naturalsize
+from tabulate import tabulate
+
 from . import register_command
 from ..compat import token_hex
 from .pretty import print_info, print_wait, print_done, print_fail
@@ -43,6 +46,20 @@ def exec_loop(kernel, code, mode, opts=None,
 
 def _noop(*args, **kwargs):
     pass
+
+
+def _format_stats(stats):
+    formatted = []
+    for k, v in stats.items():
+        if k.endswith('_size') or k.endswith('_bytes'):
+            v = naturalsize(v, binary=True)
+        elif k == 'cpu_used':
+            k += '_msec'
+            v = '{0:,}'.format(int(v))
+        else:
+            v = '{0:,}'.format(int(v))
+        formatted.append((k, v))
+    return tabulate(formatted)
 
 
 @register_command
@@ -103,8 +120,14 @@ def run(args):
     finally:
         if not attach_to_existing:
             vprint_wait('Cleaning up the temporary kernel...')
-            kernel.destroy()
+            ret = kernel.destroy()
             vprint_done('Cleaned up the kernel.')
+            if args.stats:
+                stats = ret.get('stats', None) if ret else None
+                if stats:
+                    print(_format_stats(stats))
+                else:
+                    print('Statistics is not available.')
 
 
 run.add_argument('lang',
@@ -120,6 +143,8 @@ run.add_argument('-b', '--build',
                  help='Custom build command')
 run.add_argument('-e', '--exec',
                  help='Custom execute command')
+run.add_argument('-s', '--stats', action='store_true', default=False,
+                 help='Show resource usage statistics after termination')
 run.add_argument('-q', '--quiet', action='store_true', default=False,
                  help='Hide execution details but show only the kernel'
                       'outputs.')
