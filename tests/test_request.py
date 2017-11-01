@@ -7,7 +7,7 @@ import aiohttp
 import asynctest
 import pytest
 import requests
-import simplejson as json
+import json
 
 from .common import mock_coro, MockAsyncContextManager
 from ai.backend.client.exceptions import BackendClientError

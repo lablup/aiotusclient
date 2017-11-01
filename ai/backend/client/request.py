@@ -13,7 +13,7 @@ except ImportError:
 from dateutil.tz import tzutc
 from multidict import CIMultiDict
 import requests
-import simplejson as json
+import json
 
 from .auth import generate_signature
 from .config import APIConfig, get_config
