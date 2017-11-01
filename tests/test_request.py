@@ -27,13 +27,14 @@ def req_params(defconfig):
 @pytest.fixture
 def mock_sorna_resp():
     resp = mock.Mock(spec=requests.Response)
+    content = b'{"test1": 1, "test2": 2}'
     conf = {
         'status_code': 900,
         'reason': 'this is a test',
-        'content': b'{"test1": 1, "test2": 2}',
+        'content': content,
         'headers': {
             'content-type': 'application/json',
-            'content-length': len(b'{"test1": 1, "test2": 2}')
+            'content-length': len(content),
         }
     }
     resp.configure_mock(**conf)
@@ -172,7 +173,7 @@ def test_send_returns_appropriate_sorna_response(
         assert resp.content_type == conf['headers']['content-type']
         assert resp.content_length == conf['headers']['content-length']
         assert resp.text() == conf['content'].decode()
-        assert resp.json() == json.loads(conf['content'])
+        assert resp.json() == json.loads(conf['content'].decode())
 
 
 @pytest.mark.asyncio
@@ -228,7 +229,7 @@ async def test_asend_returns_appropriate_sorna_response(mocker, req_params,
         body = await conf['read']()
         assert resp.content_length == len(body)
         assert resp.text() == body.decode()
-        assert resp.json() == json.loads(body)
+        assert resp.json() == json.loads(body.decode())
 
 
 def test_response_initialization(mock_sorna_resp):
@@ -242,4 +243,4 @@ def test_response_initialization(mock_sorna_resp):
     assert resp.content_type == conf['headers']['content-type']
     assert resp.content_length == conf['headers']['content-length']
     assert resp.text() == conf['content'].decode()
-    assert resp.json() == json.loads(conf['content'])
+    assert resp.json() == json.loads(conf['content'].decode())
