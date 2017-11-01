@@ -169,8 +169,12 @@ as well as resize the terminal.
 Troubleshooting (FAQ)
 ---------------------
 
-* If you are using Anaconda on Windows, installiing this package may break your
-  Python installation due to simplejson crashing.
-  In that case, uninstall the simplejson package manually and reinstall it by
-  downloading `a pre-built binary wheel from here
+* There are error reports related to ``simplejson`` with Anaconda on Windows.
+  This package no longer depends on simplejson since v1.0.5, so you may uninstall it
+  safely since Python 3.5+ offers almost identical ``json`` module in the standard
+  library.
+
+  If you really need to keep the ``simplejson`` package, uninstall the existing
+  simplejson package manually and try reinstallation of it by downloading `a
+  pre-built binary wheel from here
   <https://www.lfd.uci.edu/%7Egohlke/pythonlibs/#simplejson>`_.

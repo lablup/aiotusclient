@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.0.5 (2017-11-02)
+------------------
+
+**CHANGE**
+
+ - Remove `simplejson` from our dependencies.
+
 1.0.4 (2017-10-31)
 ------------------
 
