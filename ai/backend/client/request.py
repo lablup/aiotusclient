@@ -277,4 +277,4 @@ class Response:
         return self._body.decode('utf8')
 
     def json(self):
-        return json.loads(self._body)
+        return json.loads(self._body.decode('utf8'))
