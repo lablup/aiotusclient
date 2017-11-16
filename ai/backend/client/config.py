@@ -9,9 +9,9 @@ _config = None
 
 
 def get_env(name, default=None):
-    v = os.environ.get('SORNA_' + name)
+    v = os.environ.get('BACKEND_' + name)
     if v is None:
-        v = os.environ.get('BACKEND_' + name)
+        v = os.environ.get('SORNA_' + name)
     if v is None:
         if default is None:
             raise KeyError(name)
@@ -22,8 +22,8 @@ def get_env(name, default=None):
 class APIConfig:
 
     DEFAULTS = {
-        'endpoint': 'https://api.sorna.io',
-        'user_agent': 'Sorna Client Library (Python/v0.1)',
+        'endpoint': 'https://api.backend.ai',
+        'user_agent': 'Backend.AI Client Library (Python/v1.0)',
         'version': 'v2.20170315',
     }
 
