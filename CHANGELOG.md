@@ -1,6 +1,16 @@
 Changes
 =======
 
+1.0.6 (2017-11-16)
+------------------
+
+**CHANGES**
+
+ - Now it uses "api.backend.ai" as the default endpoint.
+
+ - It also searches `BACKEND_`-prefixed environment variables first and then
+   falls back to `SORNA_`-prefixed environment variables as legacy.
+
 1.0.5 (2017-11-02)
 ------------------
 
@@ -46,6 +56,7 @@ Changes
 **FIXES**
 
  - Include missing dependencies: multidict
+
  - Improve Windows platform supports (#12)
 
 **CHANGES**
