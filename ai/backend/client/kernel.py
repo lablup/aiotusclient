@@ -36,10 +36,10 @@ class BaseKernel(BaseFunction):
             'config': {
                 'mounts': tuple(mounts) if mounts else tuple(),
             },
-            #'limits': {
-            #    'maxMem': max_mem,
-            #    'execTimeout': exec_timeout,
-            #},
+            # 'limits': {
+            #     'maxMem': max_mem,
+            #     'execTimeout': exec_timeout,
+            # },
         })
         return cls(resp.json()['kernelId'])  # type: ignore
 
