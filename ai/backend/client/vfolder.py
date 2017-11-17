@@ -13,7 +13,7 @@ _rx_slug = re.compile(r'^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?$')
 
 class BaseVFolder(BaseFunction):
     @classmethod
-    def _create(name: str):
+    def _create(cls, name: str):
         assert _rx_slug.search(name) is not None
         resp = yield Request('POST', '/folders/', {
             'name': name,
@@ -21,12 +21,12 @@ class BaseVFolder(BaseFunction):
         return resp.json()
 
     @classmethod
-    def _list():
+    def _list(cls):
         resp = yield Request('GET', '/folders/')
         return resp.json()
 
     @classmethod
-    def _get(name: str):
+    def _get(cls, name: str):
         return cls(name)
 
     def _info(self):
@@ -41,8 +41,8 @@ class BaseVFolder(BaseFunction):
     def __init__(self, name: str):
         assert _rx_slug.search(name) is not None
         self.name = name
-        self.delete = self._call_base_method(slef._delete)
-        self.info = self._call_base_method(slef._info)
+        self.delete = self._call_base_method(self._delete)
+        self.info = self._call_base_method(self._info)
 
     def __init_subclass__(cls):
         cls.create = cls._call_base_clsmethod(cls._create)
