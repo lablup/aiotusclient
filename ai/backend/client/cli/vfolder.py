@@ -39,3 +39,13 @@ def info(args):
     print(result)
 
 info.add_argument('name', type=str, help='The name of a virtual folder.')
+
+
+@vfolder.register_command
+def upload(args):
+    '''Upload a file to the virtual folder.'''
+    result = VFolder(args.name).upload(args.filename)
+    print(result.status)
+
+upload.add_argument('name', type=str, help='The name of a virtual folder.')
+upload.add_argument('filename', type=str, help='Path to the uploaded file.')

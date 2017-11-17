@@ -1,4 +1,8 @@
+import os
+from pathlib import Path
 import re
+
+import aiohttp
 
 from .base import BaseFunction, SyncFunctionMixin
 from .request import Request
@@ -51,4 +55,15 @@ class BaseVFolder(BaseFunction):
 
 
 class VFolder(SyncFunctionMixin, BaseVFolder):
-    pass
+
+    def upload(self, filename):
+        rqst = Request('POST', '/folders/{0}/upload'.format(self.name))
+        rel_path = Path(filename).resolve().relative_to(Path(os.getcwd()).resolve())
+        rqst.content = [
+            # name filename file content_type headers
+            aiohttp.web.FileField(
+                'src', str(rel_path), open(rel_path, 'rb'),
+                'application/octet-stream', None
+            )
+        ]
+        return rqst.send()
