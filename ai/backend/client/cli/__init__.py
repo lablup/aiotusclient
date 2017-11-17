@@ -60,6 +60,7 @@ def main():
     import ai.backend.client.cli.run    # noqa
     import ai.backend.client.cli.proxy  # noqa
     import ai.backend.client.cli.admin  # noqa
+    import ai.backend.client.cli.vfolder # noqa
     import ai.backend.client.cli.ps     # noqa
 
     if len(sys.argv) <= 1:
