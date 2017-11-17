@@ -33,11 +33,13 @@ class BaseKernel(BaseFunction):
         resp = yield Request('POST', '/kernel/create', {
             'lang': lang,
             'clientSessionToken': client_token,
-            'limits': {
-                'maxMem': max_mem,
-                'execTimeout': exec_timeout,
+            'config': {
+                'mounts': tuple(mounts) if mounts else tuple(),
             },
-            'mounts': tuple(mounts) if mounts else tuple(),
+            #'limits': {
+            #    'maxMem': max_mem,
+            #    'execTimeout': exec_timeout,
+            #},
         })
         return cls(resp.json()['kernelId'])  # type: ignore
 

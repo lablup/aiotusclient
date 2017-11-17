@@ -79,7 +79,11 @@ def run(args):
     else:
         vprint_info('Client session token: {0}'.format(args.client_token))
         vprint_wait('Connecting to the kernel...')
-    kernel = Kernel.get_or_create(args.lang, args.client_token)
+    if args.mounts:
+        mounts = args.mounts.split(',')
+    else:
+        mounts = None
+    kernel = Kernel.get_or_create(args.lang, args.client_token, mounts=mounts)
     vprint_done('Kernel (ID: {0}) is ready.'.format(kernel.kernel_id))
 
     try:
@@ -143,6 +147,8 @@ run.add_argument('-b', '--build',
                  help='Custom build command')
 run.add_argument('-e', '--exec',
                  help='Custom execute command')
+run.add_argument('-m', '--mounts', type=str,
+                 help='User-owned virtual folder names')
 run.add_argument('-s', '--stats', action='store_true', default=False,
                  help='Show resource usage statistics after termination')
 run.add_argument('-q', '--quiet', action='store_true', default=False,
