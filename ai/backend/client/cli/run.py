@@ -79,11 +79,14 @@ def run(args):
     else:
         vprint_info('Client session token: {0}'.format(args.client_token))
         vprint_wait('Connecting to the kernel...')
-    if args.mounts:
-        mounts = args.mounts.split(',')
+    if args.env is not None:
+        envs = {k: v for k, v in map(lambda s: s.split('=', 1), args.env)}
     else:
-        mounts = None
-    kernel = Kernel.get_or_create(args.lang, args.client_token, mounts=mounts)
+        envs = {}
+    kernel = Kernel.get_or_create(
+        args.lang, args.client_token,
+        mounts=args.mount,
+        envs=envs)
     vprint_done('Kernel (ID: {0}) is ready.'.format(kernel.kernel_id))
 
     try:
@@ -143,11 +146,13 @@ run.add_argument('-t', '--client-token',
                       'token [default: use a temporary kernel]')
 run.add_argument('-c', '--code',
                  help='The code snippet in a single line.')
-run.add_argument('-b', '--build',
+run.add_argument('--build',
                  help='Custom build command')
-run.add_argument('-e', '--exec',
+run.add_argument('--exec',
                  help='Custom execute command')
-run.add_argument('-m', '--mounts', type=str,
+run.add_argument('-e', '--env', type=str, action='append',
+                 help='Environment variable in KEY=VALUE format')
+run.add_argument('-m', '--mount', type=str, action='append',
                  help='User-owned virtual folder names')
 run.add_argument('-s', '--stats', action='store_true', default=False,
                  help='Show resource usage statistics after termination')

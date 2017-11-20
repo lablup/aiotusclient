@@ -1,4 +1,4 @@
-from typing import Iterable, Optional, Sequence
+from typing import Iterable, Mapping, Optional, Sequence
 import uuid
 
 import aiohttp.web
@@ -25,6 +25,7 @@ class BaseKernel(BaseFunction):
     def _get_or_create(cls, lang: str,
                        client_token: Optional[str]=None,
                        mounts: Optional[Iterable[str]]=None,
+                       envs: Optional[Mapping[str, str]]=None,
                        max_mem: int=0, exec_timeout: int=0) -> str:
         if client_token:
             assert len(client_token) > 8
@@ -34,7 +35,8 @@ class BaseKernel(BaseFunction):
             'lang': lang,
             'clientSessionToken': client_token,
             'config': {
-                'mounts': tuple(mounts) if mounts else tuple(),
+                'mounts': mounts,
+                'envs': envs,
             },
             # 'limits': {
             #     'maxMem': max_mem,
