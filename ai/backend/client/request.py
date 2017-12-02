@@ -64,7 +64,8 @@ class BaseRequest:
         if self.content_type == 'application/octet-stream':
             return self._content
         elif self.content_type == 'application/json':
-            return json.loads(self._content.decode('utf-8'))
+            return json.loads(self._content.decode('utf-8'),
+                              object_pairs_hook=OrderedDict)
         elif self.content_type == 'text/plain':
             return self._content.decode('utf-8')
         elif self.content_type == 'multipart/form-data':
@@ -276,5 +277,5 @@ class Response:
         # TODO: get encoding from underlying response obj
         return self._body.decode('utf8')
 
-    def json(self):
-        return json.loads(self._body.decode('utf8'))
+    def json(self, loads=json.loads):
+        return loads(self._body.decode('utf8'), object_pairs_hook=OrderedDict)
