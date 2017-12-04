@@ -1,6 +1,16 @@
 Changes
 =======
 
+1.1.1 (2017-12-04)
+------------------
+
+ - Add mount ("-m"), environment variable ("-e") arguments to CLI "run" command
+   which can be specified multiple times.
+   This deprecates "-b" and "-e" abbreviations for "--build" and "--exec".
+
+ - Fix garbled tabular outputs of CLI commands in Python versions less than 3.6
+   due to non-preserved dictionary ordering.
+
 1.1.0 (2017-11-17)
 ------------------
 

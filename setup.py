@@ -4,7 +4,7 @@ from pathlib import Path
 install_requires = [
     'colorama',
     'multidict',
-    'aiohttp>=2.2',
+    'aiohttp~=2.3.5',
     'async_timeout',
     'namedlist>=1.6',
     'python-dateutil>=2.5',
@@ -36,7 +36,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.1.0',
+    version='1.1.1',
     description='Backend.AI API Client Library',
     long_description=Path('README.rst').read_text(),
     url='https://github.com/lablup/backend.ai-client-py',
