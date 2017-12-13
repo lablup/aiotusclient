@@ -35,11 +35,13 @@ def exec_loop(kernel, code, mode, opts=None,
         if result['status'] == 'finished':
             break
         elif result['status'] == 'waiting-input':
+            mode = 'input'
             if result['options'].get('is_password', False):
                 code = getpass.getpass()
             else:
                 code = input()
         elif result['status'] == 'continued':
+            mode = 'continue'
             code = ''
             continue
 

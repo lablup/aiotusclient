@@ -79,7 +79,7 @@ class BaseKernel(BaseFunction):
                  mode: str='query',
                  opts: Optional[dict]=None):
         opts = {} if opts is None else opts
-        if mode == 'query':
+        if mode in {'query', 'continue', 'input'}:
             assert code is not None  # but maybe empty due to continuation
             rqst = Request('POST', '/kernel/{}'.format(self.kernel_id), {
                 'mode': mode,
