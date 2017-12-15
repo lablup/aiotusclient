@@ -71,7 +71,6 @@ def run(args):
     Depending on the session ID you give (default is random),
     it may reuse an existing session or create a new one.
     '''
-    attach_to_existing = True
     if args.quiet:
         vprint_info = vprint_wait = vprint_done = _noop
     else:
@@ -80,7 +79,6 @@ def run(args):
         vprint_done = print_done
     if not args.client_token:
         args.client_token = token_hex(16)
-        attach_to_existing = False
         vprint_wait('Creating a temporary kernel...')
     else:
         vprint_info('Client session token: {0}'.format(args.client_token))
