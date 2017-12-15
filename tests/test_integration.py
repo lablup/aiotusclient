@@ -22,7 +22,7 @@ suite.  Of course, the service must be fully configured as follows:
    python -m ai.backend.client.gateway.server --service-port=8081
 
  - The agent should have access to a Docker daemon and the
-   "lablup/kernel-python3" docker image.
+   "lablup/kernel-python:latest" docker image.
 
  - The gateway must have access to a test database that has pre-populated
    fixture data.
@@ -132,11 +132,10 @@ async def test_async_auth(defconfig):
 
 @pytest.mark.integration
 def test_kernel_lifecycles(defconfig):
-    kernel = Kernel.get_or_create('python3')
+    kernel = Kernel.get_or_create('python:latest')
     kernel_id = kernel.kernel_id
     info = kernel.get_info()
-    assert info['lang'] == 'python3'
-    assert info['age'] > 0
+    assert info['lang'] == 'python:latest'
     assert info['numQueriesExecuted'] == 1
     info = kernel.get_info()
     assert info['numQueriesExecuted'] == 2
@@ -150,7 +149,7 @@ def test_kernel_lifecycles(defconfig):
 
 @pytest.yield_fixture
 def py3_kernel():
-    kernel = Kernel.get_or_create('python3')
+    kernel = Kernel.get_or_create('python:latest')
     yield kernel
     kernel.destroy()
 
@@ -230,4 +229,4 @@ def test_admin_api(defconfig, py3_kernel):
     })
     assert 'compute_sessions' in resp
     assert len(resp['compute_sessions']) >= 1
-    assert resp['compute_sessions'][0]['lang'] == 'python3'
+    assert resp['compute_sessions'][0]['lang'] == 'python:latest'
