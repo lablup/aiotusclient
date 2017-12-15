@@ -4,6 +4,9 @@ Changes
 1.1.2 (to be released)
 ----------------------
 
+ - "ps" and "admin session" commands now correctly show the client-given session ID
+   token instead of the master kernel ID of the session.
+
  - Add "terminate" command.
 
  - Add more "run" command options.  Now it does NOT terminate the session after
