@@ -43,7 +43,10 @@ class BaseKernel(BaseFunction):
             #     'execTimeout': exec_timeout,
             # },
         })
-        return cls(resp.json()['kernelId'])  # type: ignore
+        data = resp.json()
+        o = cls(data['kernelId'])  # type: ignore
+        o.created = data.get('created', True)  # True is for legacy
+        return o
 
     def _destroy(self):
         resp = yield Request('DELETE', '/kernel/{}'.format(self.kernel_id))

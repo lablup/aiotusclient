@@ -91,7 +91,10 @@ def run(args):
         args.lang, args.client_token,
         mounts=args.mount,
         envs=envs)
-    vprint_done('Kernel (ID: {0}) is ready.'.format(kernel.kernel_id))
+    if kernel.created:
+        vprint_done('Session {0} is ready.'.format(kernel.kernel_id))
+    else:
+        vprint_done('Reusing session {0}...'.format(kernel.kernel_id))
 
     try:
         if args.files:
