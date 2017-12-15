@@ -4,6 +4,11 @@ Changes
 1.1.2 (to be released)
 ----------------------
 
+ - Add "terminate" command.
+
+ - Add more "run" command options.  Now it does NOT terminate the session after
+   execution by default, and you can force it using "--rm" option.
+
 1.1.1 (2017-12-04)
 ------------------
 

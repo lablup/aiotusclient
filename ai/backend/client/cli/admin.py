@@ -21,7 +21,7 @@ def sessions(args):
     List your compute sessions.
     '''
     fields = [
-        ('Session ID', 'id'),
+        ('Session ID', 'sess_id'),
         ('Lang/runtime', 'lang'),
         ('Created At', 'created_at',),
         ('Termianted At', 'terminated_at'),

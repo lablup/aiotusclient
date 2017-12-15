@@ -66,7 +66,11 @@ def _format_stats(stats):
 
 @register_command
 def run(args):
-    '''Run the code.'''
+    '''
+    Run the given code snippet or files in a session.
+    Depending on the session ID you give (default is random),
+    it may reuse an existing session or create a new one.
+    '''
     attach_to_existing = True
     if args.quiet:
         vprint_info = vprint_wait = vprint_done = _noop
@@ -123,16 +127,14 @@ def run(args):
                 return
             exec_loop(kernel, args.code, 'query',
                       vprint_wait=vprint_wait, vprint_done=vprint_done)
-    except:
+    except Exception:
         print_fail('Execution failed!')
         traceback.print_exc()
     finally:
-        if args.detached:
-            return
-        if not attach_to_existing:
-            vprint_wait('Cleaning up the temporary kernel...')
+        if args.rm:
+            vprint_wait('Cleaning up the session...')
             ret = kernel.destroy()
-            vprint_done('Cleaned up the kernel.')
+            vprint_done('Cleaned up the session.')
             if args.stats:
                 stats = ret.get('stats', None) if ret else None
                 if stats:
@@ -145,45 +147,55 @@ run.add_argument('lang',
                  help='The runtime or programming language name')
 run.add_argument('files', nargs='*',
                  help='The code file(s). Can be added multiple times')
-run.add_argument('-t', '--client-token',
-                 help='Attach to existing kernel using the given client-side '
-                      'token [default: use a temporary kernel]')
-run.add_argument('-c', '--code',
-                 help='The code snippet in a single line.')
-run.add_argument('--build',
-                 help='Custom build command')
-run.add_argument('--exec',
-                 help='Custom execute command')
-run.add_argument('-d', '--detached', action='store_true', default=False,
-                 help='The session remains running after executing the command. '
-                      'You should destroy it later manually.')
-run.add_argument('-e', '--env', type=str, action='append',
-                 help='Environment variable in KEY=VALUE format')
+run.add_argument('-t', '--client-token', metavar='SESSID',
+                 help='Specify a human-readable session ID or name '
+                      '[default: a random hex-string]')
+run.add_argument('-c', '--code', metavar='CODE',
+                 help='The code snippet as a single string')
+run.add_argument('--build', metavar='CMD',
+                 help='Custom shell command for building the given files')
+run.add_argument('--exec', metavar='CMD',
+                 help='Custom shell command for executing the given files')
+run.add_argument('--rm', action='store_true', default=False,
+                 help='Terminate the session immediately after running '
+                      'the given code or files [default: False]')
+run.add_argument('-e', '--env', metavar='KEY=VAL', type=str, action='append',
+                 help='Environment variable '
+                      '(may appear multiple times)')
 run.add_argument('-m', '--mount', type=str, action='append',
-                 help='User-owned virtual folder names')
+                 help='User-owned virtual folder names to mount')
 run.add_argument('-s', '--stats', action='store_true', default=False,
-                 help='Show resource usage statistics after termination')
+                 help='Show resource usage statistics after termination '
+                      '(only works if "--rm" is given)')
 run.add_argument('-q', '--quiet', action='store_true', default=False,
                  help='Hide execution details but show only the kernel'
-                      'outputs.')
+                      'outputs')
 
 
 @register_command
 def terminate(args):
     '''
-    Destroy the given session.
+    Terminate the given session.
     '''
     print_wait('Terminating the session...')
     try:
-        kernel = Kernel(args.client_sess_id)
-        kernel.destroy()
+        kernel = Kernel(args.sess_id_or_alias)
+        ret = kernel.destroy()
     except Exception:
         print_fail('Termination failed!')
         traceback.print_exc()
     else:
         print_done('Done.')
+        if args.stats:
+            stats = ret.get('stats', None) if ret else None
+            if stats:
+                print(_format_stats(stats))
+            else:
+                print('Statistics is not available.')
 
 
-terminate.add_argument('client_sess_id',
-                       help='The client session token '
+terminate.add_argument('sess_id_or_alias', metavar='NAME',
+                       help='The session ID or its alias '
                             'given when creating the session.')
+terminate.add_argument('-s', '--stats', action='store_true', default=False,
+                       help='Show resource usage statistics after termination')
