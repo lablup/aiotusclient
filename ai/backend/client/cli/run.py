@@ -127,6 +127,8 @@ def run(args):
         print_fail('Execution failed!')
         traceback.print_exc()
     finally:
+        if args.detached:
+            return
         if not attach_to_existing:
             vprint_wait('Cleaning up the temporary kernel...')
             ret = kernel.destroy()
@@ -152,6 +154,9 @@ run.add_argument('--build',
                  help='Custom build command')
 run.add_argument('--exec',
                  help='Custom execute command')
+run.add_argument('-d', '--detached', action='store_true', default=False,
+                 help='The session remains running after executing the command. '
+                      'You should destroy it later manually.')
 run.add_argument('-e', '--env', type=str, action='append',
                  help='Environment variable in KEY=VALUE format')
 run.add_argument('-m', '--mount', type=str, action='append',
@@ -161,3 +166,24 @@ run.add_argument('-s', '--stats', action='store_true', default=False,
 run.add_argument('-q', '--quiet', action='store_true', default=False,
                  help='Hide execution details but show only the kernel'
                       'outputs.')
+
+
+@register_command
+def terminate(args):
+    '''
+    Destroy the given session.
+    '''
+    print_wait('Terminating the session...')
+    try:
+        kernel = Kernel(args.client_sess_id)
+        kernel.destroy()
+    except Exception:
+        print_fail('Termination failed!')
+        traceback.print_exc()
+    else:
+        print_done('Done.')
+
+
+terminate.add_argument('client_sess_id',
+                       help='The client session token '
+                            'given when creating the session.')
