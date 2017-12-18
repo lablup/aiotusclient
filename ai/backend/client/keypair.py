@@ -1,7 +1,7 @@
 from typing import Optional, Iterable
 
 from .base import BaseFunction, SyncFunctionMixin
-from .admin import Admin
+from .request import Request
 
 __all__ = (
     'BaseKeyPair',
@@ -12,13 +12,13 @@ __all__ = (
 class BaseKeyPair(BaseFunction):
 
     @classmethod
-    def create(cls, user_id: int,
-               is_active: bool=True,
-               is_admin: bool=False,
-               resource_policy: Optional[str]=None,
-               rate_limit: Optional[int]=None,
-               concurrency_limit: Optional[int]=None,
-               fields: Optional[Iterable[str]]=None):
+    def _create(cls, user_id: int,
+                is_active: bool=True,
+                is_admin: bool=False,
+                resource_policy: Optional[str]=None,
+                rate_limit: Optional[int]=None,
+                concurrency_limit: Optional[int]=None,
+                fields: Optional[Iterable[str]]=None):
         if fields is None:
             fields = ('access_key', 'secret_key')
         q = 'mutation($user_id: Int!, $input: KeyPairInput!) {' \
@@ -27,7 +27,7 @@ class BaseKeyPair(BaseFunction):
             '  }' \
             '}'
         q = q.replace('$fields', ' '.join(fields))
-        data = Admin.query(q, {
+        vars = {
             'user_id': user_id,
             'input': {
                 'is_active': is_active,
@@ -36,13 +36,18 @@ class BaseKeyPair(BaseFunction):
                 'rate_limit': rate_limit,
                 'concurrency_limit': concurrency_limit,
             },
+        }
+        resp = yield Request('POST', '/admin/graphql', {
+            'query': q,
+            'variables': vars,
         })
+        data = resp.json()
         return data['create_keypair']
 
     @classmethod
-    def list(cls, user_id: int,
-             is_active: Optional[bool]=None,
-             fields: Optional[Iterable[str]]=None):
+    def _list(cls, user_id: int,
+              is_active: Optional[bool]=None,
+              fields: Optional[Iterable[str]]=None):
         if fields is None:
             fields = (
                 'access_key', 'secret_key',
@@ -54,10 +59,15 @@ class BaseKeyPair(BaseFunction):
             '  }' \
             '}'
         q = q.replace('$fields', ' '.join(fields))
-        data = Admin.query(q, {
+        vars = {
             'user_id': user_id,
             'is_active': is_active,
+        }
+        resp = yield Request('POST', '/admin/graphql', {
+            'query': q,
+            'variables': vars,
         })
+        data = resp.json()
         return data['keypairs']
 
     @classmethod
@@ -67,6 +77,10 @@ class BaseKeyPair(BaseFunction):
     @classmethod
     def deactivate(cls, access_key: str):
         raise NotImplementedError
+
+    def __init_subclass__(cls):
+        cls.create = cls._call_base_clsmethod(cls._create)
+        cls.list = cls._call_base_clsmethod(cls._list)
 
 
 class KeyPair(SyncFunctionMixin, BaseKeyPair):

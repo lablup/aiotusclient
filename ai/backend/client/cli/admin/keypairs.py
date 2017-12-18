@@ -24,7 +24,7 @@ def keypairs(args):
     items = KeyPair.list(args.user_id, args.is_active,
                          fields=(item[1] for item in fields))
     if len(items) == 0:
-        print('There is no matching keypairs associated '
+        print('There are no matching keypairs associated '
               'with the user ID {0}'.format(args.user_id))
         return
     print(tabulate((item.values() for item in items),

@@ -40,7 +40,7 @@ def sessions(args):
         traceback.print_exc()
         return
     if len(resp['compute_sessions']) == 0:
-        print('There is no compute sessions currently running.')
+        print('There are no compute sessions currently running.')
         return
     print(tabulate((item.values() for item in resp['compute_sessions']),
                    headers=(item[0] for item in fields)))
