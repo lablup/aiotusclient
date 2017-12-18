@@ -1,7 +1,7 @@
 from argparse import Namespace
 
 from . import register_command
-from .admin import sessions
+from .admin.sessions import sessions
 
 
 @register_command

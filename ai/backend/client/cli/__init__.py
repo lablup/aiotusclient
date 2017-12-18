@@ -60,6 +60,10 @@ def main():
     import ai.backend.client.cli.run    # noqa
     import ai.backend.client.cli.proxy  # noqa
     import ai.backend.client.cli.admin  # noqa
+    import ai.backend.client.cli.admin.keypairs  # noqa
+    import ai.backend.client.cli.admin.sessions  # noqa
+    import ai.backend.client.cli.admin.agents    # noqa
+    import ai.backend.client.cli.admin.vfolders  # noqa
     import ai.backend.client.cli.vfolder # noqa
     import ai.backend.client.cli.ps     # noqa
 
