@@ -23,8 +23,7 @@ class BaseKeyPair(BaseFunction):
             fields = ('access_key', 'secret_key')
         q = 'mutation($user_id: Int!, $input: KeyPairInput!) {' \
             '  create_keypair(user_id: $user_id, props: $input) {' \
-            '    ok msg' \
-            '    keypair { $fields }' \
+            '    ok msg keypair { $fields }' \
             '  }' \
             '}'
         q = q.replace('$fields', ' '.join(fields))
@@ -38,9 +37,7 @@ class BaseKeyPair(BaseFunction):
                 'concurrency_limit': concurrency_limit,
             },
         })
-        if not data['ok']:
-            raise RuntimeError(data['msg'])
-        return data['keypair']
+        return data['create_keypair']
 
     @classmethod
     def list(cls, user_id: int,
@@ -50,7 +47,6 @@ class BaseKeyPair(BaseFunction):
             fields = (
                 'access_key', 'secret_key',
                 'is_active', 'is_admin',
-                'resource_policy', 'rate_limit', 'concurrency_limit',
             )
         q = 'query($user_id: Int!, $is_active: Boolean) {' \
             '  keypairs(user_id: $user_id, is_active: $is_active) {' \

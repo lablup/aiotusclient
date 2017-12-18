@@ -107,8 +107,13 @@ def add(args):
     if args.user_id is None:
         print('You must set the user ID (-u/--user-id).')
         return
-    ret = KeyPair.create(args.user_id)
-    print(ret)
+    data = KeyPair.create(args.user_id)
+    if not data['ok']:
+        print('KeyPair creation has failed: {0}'.format(data['msg']))
+        return
+    item = data['keypair']
+    print('Access Key: {0}'.format(item['access_key']))
+    print('Secret Key: {0}'.format(item['secret_key']))
 
 
 add.add_argument('-u', '--user-id', type=int, default=None,
