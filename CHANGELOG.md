@@ -4,9 +4,6 @@ Changes
 1.1.2 (to be released)
 ----------------------
 
- - "ps" and "admin session" commands now correctly show the client-given session ID
-   token instead of the master kernel ID of the session.
-
  - Add "terminate" command.
 
  - Add more "run" command options.  Now it does NOT terminate the session after
@@ -15,6 +12,17 @@ Changes
  - Add "admin keypairs" command and its subcommands for managing keypairs.
 
  - Add "admin agents" command to list agent instances.
+
+ - "ps" and "admin session" commands now correctly show the client-given session ID
+   token instead of the master kernel ID of the session.
+
+ - Fix a continuation bug of the "run" command when using the batch-mode, which
+   has caused a mismatch of run ID management of the agent and the internal task
+   queue of the kernel runner, resulting an indefinite hang up with two legitimate
+   subsequent requesting of batch-mode executions.
+
+   As being a reference implementation of the execution loop, all API users are
+   advised to review and fix their client-side codes.
 
 1.1.1 (2017-12-04)
 ------------------
