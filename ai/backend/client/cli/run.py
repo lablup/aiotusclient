@@ -189,7 +189,7 @@ def terminate(args):
     try:
         kernel = Kernel(args.sess_id_or_alias)
         ret = kernel.destroy()
-    except BackendClientError as e:
+    except BackendError as e:
         print_fail(str(e))
         return
     else:

@@ -2,6 +2,7 @@ from tabulate import tabulate
 
 from ...agent import Agent
 from ...exceptions import BackendClientError
+from ..pretty import print_fail
 from . import admin
 
 
