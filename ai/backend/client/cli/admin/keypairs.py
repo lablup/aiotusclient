@@ -1,6 +1,7 @@
 from tabulate import tabulate
 
 from ...keypair import KeyPair
+from ...exceptions import BackendClientError
 from ..pretty import print_fail
 from . import admin
 
@@ -21,8 +22,12 @@ def keypairs(args):
         ('Rate Limit', 'rate_limit'),
         ('Concur.Limit', 'concurrency_limit'),
     ]
-    items = KeyPair.list(args.user_id, args.is_active,
-                         fields=(item[1] for item in fields))
+    try:
+        items = KeyPair.list(args.user_id, args.is_active,
+                             fields=(item[1] for item in fields))
+    except BackendClientError as e:
+        print_fail(str(e))
+        return
     if len(items) == 0:
         print('There are no matching keypairs associated '
               'with the user ID {0}'.format(args.user_id))
@@ -46,9 +51,14 @@ def add(args):
     if args.user_id is None:
         print('You must set the user ID (-u/--user-id).')
         return
-    data = KeyPair.create(args.user_id)
+    try:
+        data = KeyPair.create(args.user_id)
+    except BackendClientError as e:
+        print_fail(str(e))
+        return
     if not data['ok']:
-        print_fail('KeyPair creation has failed: {0}'.format(data['msg']))
+        print_fail('KeyPair creation has failed: {0}'
+                   .format(data['msg']))
         return
     item = data['keypair']
     print('Access Key: {0}'.format(item['access_key']))

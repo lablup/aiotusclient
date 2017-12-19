@@ -8,6 +8,7 @@ from tabulate import tabulate
 
 from . import register_command
 from ..compat import token_hex
+from ..exceptions import BackendClientError
 from .pretty import print_info, print_wait, print_done, print_fail
 from ..kernel import Kernel
 
@@ -87,10 +88,14 @@ def run(args):
         envs = {k: v for k, v in map(lambda s: s.split('=', 1), args.env)}
     else:
         envs = {}
-    kernel = Kernel.get_or_create(
-        args.lang, args.client_token,
-        mounts=args.mount,
-        envs=envs)
+    try:
+        kernel = Kernel.get_or_create(
+            args.lang, args.client_token,
+            mounts=args.mount,
+            envs=envs)
+    except BackendClientError as e:
+        print_fail(str(e))
+        return
     if kernel.created:
         vprint_done('Session {0} is ready.'.format(kernel.kernel_id))
     else:
@@ -182,9 +187,9 @@ def terminate(args):
     try:
         kernel = Kernel(args.sess_id_or_alias)
         ret = kernel.destroy()
-    except Exception:
-        print_fail('Termination failed!')
-        traceback.print_exc()
+    except BackendClientError as e:
+        print_fail(str(e))
+        return
     else:
         print_done('Done.')
         if args.stats:

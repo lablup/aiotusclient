@@ -147,24 +147,25 @@ class BaseRequest:
             assert isinstance(sess, requests.Session)
         self._sign()
         reqfunc = getattr(sess, self.method.lower())
-        if self.content_type == 'multipart/form-data':
-            files = map(lambda f: (f.name,
-                                   (f.filename, f.file, f.content_type)
-                                  ),
-                        self._content)
-            resp = reqfunc(self.build_url(),
-                           files=files,
-                           headers=self.headers)
-        else:
-            resp = reqfunc(self.build_url(),
-                           data=self._content,
-                           headers=self.headers)
         try:
+            if self.content_type == 'multipart/form-data':
+                files = map(lambda f: (f.name,
+                                       (f.filename, f.file, f.content_type)
+                                      ),
+                            self._content)
+                resp = reqfunc(self.build_url(),
+                               files=files,
+                               headers=self.headers)
+            else:
+                resp = reqfunc(self.build_url(),
+                               data=self._content,
+                               headers=self.headers)
             return Response(resp.status_code, resp.reason, resp.content,
                             resp.headers['content-type'],
                             resp.headers['content-length'])
         except requests.exceptions.RequestException as e:
-            msg = 'Request to the API endpoint has failed.'
+            msg = 'Request to the API endpoint has failed.\n' \
+                  'Check your network connection and/or the server status.'
             raise BackendClientError(msg) from e
 
 

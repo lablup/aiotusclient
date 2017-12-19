@@ -1,6 +1,7 @@
 from tabulate import tabulate
 
 from ...agent import Agent
+from ...exceptions import BackendClientError
 from . import admin
 
 
@@ -17,8 +18,12 @@ def agents(args):
         ('CPU Slots', 'cpu_slots'),
         ('GPU Slots', 'gpu_slots'),
     ]
-    items = Agent.list(args.status,
-                       fields=(item[1] for item in fields))
+    try:
+        items = Agent.list(args.status,
+                           fields=(item[1] for item in fields))
+    except BackendClientError as e:
+        print_fail(str(e))
+        return
     if len(items) == 0:
         print('There are no matching agents.')
         return

@@ -1,8 +1,7 @@
-import traceback
-
 from tabulate import tabulate
 
 from ...admin import Admin
+from ...exceptions import BackendClientError
 from ..pretty import print_fail
 from . import admin
 
@@ -35,9 +34,8 @@ def sessions(args):
     }
     try:
         resp = Admin.query(q, v)
-    except Exception:
-        print_fail('API query has failed!')
-        traceback.print_exc()
+    except BackendClientError as e:
+        print_fail(str(e))
         return
     if len(resp['compute_sessions']) == 0:
         print('There are no compute sessions currently running.')

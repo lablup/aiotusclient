@@ -1,8 +1,7 @@
-import traceback
-
 from tabulate import tabulate
 
 from ...admin import Admin
+from ...exceptions import BackendClientError
 from ..pretty import print_fail
 from . import admin
 
@@ -26,9 +25,8 @@ def vfolders(args):
     q = q.replace('$fields', ' '.join(item[1] for item in fields))
     try:
         resp = Admin.query(q)
-    except Exception:
-        print_fail('API query has failed!')
-        traceback.print_exc()
+    except BackendClientError as e:
+        print_fail(str(e))
         return
     print(tabulate((item.values() for item in resp['vfolders']),
                    headers=(item[0] for item in fields)))
