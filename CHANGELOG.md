@@ -12,6 +12,10 @@ Changes
  - Add more "run" command options.  Now it does NOT terminate the session after
    execution by default, and you can force it using "--rm" option.
 
+ - Add "admin keypairs" command and its subcommands for managing keypairs.
+
+ - Add "admin agents" command to list agent instances.
+
 1.1.1 (2017-12-04)
 ------------------
 
