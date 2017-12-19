@@ -8,7 +8,7 @@ from tabulate import tabulate
 
 from . import register_command
 from ..compat import token_hex
-from ..exceptions import BackendClientError
+from ..exceptions import BackendError
 from .pretty import print_info, print_wait, print_done, print_fail
 from ..kernel import Kernel
 
@@ -93,7 +93,7 @@ def run(args):
             args.lang, args.client_token,
             mounts=args.mount,
             envs=envs)
-    except BackendClientError as e:
+    except BackendError as e:
         print_fail(str(e))
         return
     if kernel.created:
@@ -133,6 +133,8 @@ def run(args):
                 return
             exec_loop(kernel, args.code, 'query',
                       vprint_wait=vprint_wait, vprint_done=vprint_done)
+    except BackendError as e:
+        print_fail(str(e))
     except Exception:
         print_fail('Execution failed!')
         traceback.print_exc()

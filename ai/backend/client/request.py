@@ -204,7 +204,8 @@ class AsyncRequestMixin:
                                         resp.content_type,
                                         len(body))
             except Exception as e:
-                msg = 'Request to the API endpoint has failed.'
+                msg = 'Request to the API endpoint has failed.\n' \
+                      'Check your network connection and/or the server status.'
                 raise BackendClientError(msg) from e
 
     async def connect_websocket(self, sess=None):
@@ -220,7 +221,8 @@ class AsyncRequestMixin:
             ws = await sess.ws_connect(self.build_url(), headers=self.headers)
             return sess, ws
         except Exception as e:
-            msg = 'Request to the API endpoint has failed.'
+            msg = 'Request to the API endpoint has failed.\n' \
+                  'Check your network connection and/or the server status.'
             raise BackendClientError(msg) from e
 
 
