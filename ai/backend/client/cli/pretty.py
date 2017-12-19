@@ -1,6 +1,7 @@
 import enum
 import functools
 import sys
+import textwrap
 
 __all__ = (
     'PrintStatus', 'print_pretty', 'print_info', 'print_wait',
@@ -21,6 +22,7 @@ def print_pretty(msg, *, status=PrintStatus.NONE, file=None):
     if status == PrintStatus.NONE:
         indicator = '\x1b[96m\u2219' if file.isatty() else '\u2219'
     elif status == PrintStatus.WAITING:
+        assert '\n' not in msg, 'Waiting message must be a single line.'
         indicator = '\x1b[93m\u22EF' if file.isatty() else '\u22EF'
     elif status == PrintStatus.DONE:
         indicator = '\x1b[92m\u2714' if file.isatty() else '\u2714'
@@ -30,7 +32,8 @@ def print_pretty(msg, *, status=PrintStatus.NONE, file=None):
         raise ValueError
     if file.isatty():
         print('\x1b[2K', end='', file=file)
-    text = '{0} {1}'.format(indicator, msg)
+    text = textwrap.indent(msg, '  ')
+    text = indicator + text[1:]
     if file.isatty():
         text += '\x1b[0m'
     print('{0}\r'.format(text), end='', file=file)
