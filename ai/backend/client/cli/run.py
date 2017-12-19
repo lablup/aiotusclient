@@ -17,12 +17,9 @@ def exec_loop(kernel, code, mode, opts=None,
               vprint_wait=print_wait, vprint_done=print_done):
     opts = opts if opts else {}
     run_id = token_hex(8)
-    if mode == 'batch':
-        vprint_wait('Building your code...')
     while True:
         result = kernel.execute(run_id, code, mode=mode, opts=opts)
-        if result['status'] == 'build-finished':
-            vprint_done('Build finished.')
+        opts.clear()  # used only once
         for rec in result['console']:
             if rec[0] == 'stdout':
                 print(rec[1], end='', file=sys.stdout)
@@ -33,7 +30,11 @@ def exec_loop(kernel, code, mode, opts=None,
                 print(rec[1])
                 print('----- end of record -----')
         sys.stdout.flush()
-        if result['status'] == 'finished':
+        if result['status'] == 'build-finished':
+            vprint_done('Build finished.')
+            mode = 'continue'
+            code = ''
+        elif result['status'] == 'finished':
             break
         elif result['status'] == 'waiting-input':
             mode = 'input'
@@ -44,7 +45,6 @@ def exec_loop(kernel, code, mode, opts=None,
         elif result['status'] == 'continued':
             mode = 'continue'
             code = ''
-            continue
 
 
 def _noop(*args, **kwargs):
