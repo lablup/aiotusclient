@@ -11,3 +11,5 @@ __all__ = [
     vfolder.__all__,  # noqa
     request.__all__,  # noqa
 ]
+
+__version__ = '1.1.2a2'

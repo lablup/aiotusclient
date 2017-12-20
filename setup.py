@@ -1,5 +1,6 @@
 from setuptools import setup
 from pathlib import Path
+import re
 
 install_requires = [
     'colorama',
@@ -30,14 +31,22 @@ test_requires = [
 ]
 
 
+def get_version():
+    path = Path(__file__).parent / 'ai' / 'backend' / 'client' / '__init__.py'
+    src = path.read_text()
+    m = re.search(r"^__version__ = '([^']+)'$", src, re.MULTILINE)
+    assert m is not None, 'Could not read the version information!'
+    return m.group(1)
+
+
 setup(
     name='backend.ai-client',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.1.2a1',
-    description='Backend.AI API Client Library',
+    version=get_version(),
+    description='Backend.AI Client for Python',
     long_description=Path('README.rst').read_text(),
     url='https://github.com/lablup/backend.ai-client-py',
     author='Lablup Inc.',

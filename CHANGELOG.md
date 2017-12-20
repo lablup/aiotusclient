@@ -24,6 +24,9 @@ Changes
    As being a reference implementation of the execution loop, all API users are
    advised to review and fix their client-side codes.
 
+ - Now the client sets a custom User-Agent header value as follows:
+   "Backend.AI Client for Python X.X.X" where X.X.X is the version.
+
 1.1.1 (2017-12-04)
 ------------------
 

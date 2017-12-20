@@ -40,6 +40,7 @@ class BaseRequest:
                  path: Optional[str]=None,
                  content: Optional[Mapping]=None,
                  config: Optional[APIConfig]=None) -> None:
+        from . import __version__ as version  # noqa; to avoid circular imports
         self.config = config if config else get_config()
         self.method = method
         if path.startswith('/'):
@@ -48,6 +49,7 @@ class BaseRequest:
         self.date = datetime.now(tzutc())
         self.headers = CIMultiDict([
             ('Date', self.date.isoformat()),
+            ('User-Agent', 'Backend.AI Client for Python {0}'.format(version)),
             ('X-BackendAI-Version', self.config.version),
         ])
         self.content = content if content is not None else b''
