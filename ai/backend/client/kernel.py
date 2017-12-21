@@ -77,6 +77,10 @@ class BaseKernel(BaseFunction):
         resp = yield Request('GET', '/kernel/{}'.format(self.kernel_id))
         return resp.json()
 
+    def _get_logs(self):
+        resp = yield Request('GET', '/kernel/{}/logs'.format(self.kernel_id))
+        return resp.json()
+
     def _execute(self, run_id: str,
                  code: str=None,
                  mode: str='query',
@@ -122,6 +126,7 @@ class BaseKernel(BaseFunction):
         self.interrupt = self._call_base_method(self._interrupt)
         self.complete  = self._call_base_method(self._complete)
         self.get_info = self._call_base_method(self._get_info)
+        self.get_logs = self._call_base_method(self._get_logs)
         self.execute  = self._call_base_method(self._execute)
 
     def __init_subclass__(cls):
