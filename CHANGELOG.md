@@ -26,6 +26,8 @@ Changes
 
  - Now the client sets a custom User-Agent header value as follows:
    "Backend.AI Client for Python X.X.X" where X.X.X is the version.
+ 
+ - Add "logs" command.
 
 1.1.1 (2017-12-04)
 ------------------
