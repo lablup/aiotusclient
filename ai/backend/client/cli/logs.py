@@ -1,5 +1,5 @@
 from . import register_command
-from .pretty import print_info, print_wait, print_done, print_fail
+from .pretty import print_wait, print_done, print_fail
 from ..exceptions import BackendError
 from ..kernel import Kernel
 
@@ -22,5 +22,5 @@ def logs(args):
 
 
 logs.add_argument('sess_id_or_alias', metavar='NAME',
-                 help='The session ID or its alias '
-                      'given when creating the session.')
+                  help='The session ID or its alias '
+                       'given when creating the session.')
