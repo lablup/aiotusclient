@@ -81,8 +81,8 @@ class BaseKernel(BaseFunction):
         resp = yield Request('GET', '/kernel/{}/logs'.format(self.kernel_id))
         return resp.json()
 
-    def _execute(self, run_id: str,
-                 code: str=None,
+    def _execute(self, run_id: Optional[str]=None,
+                 code: Optional[str]=None,
                  mode: str='query',
                  opts: Optional[dict]=None):
         opts = {} if opts is None else opts

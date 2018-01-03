@@ -16,9 +16,10 @@ from ..kernel import Kernel
 def exec_loop(kernel, code, mode, opts=None,
               vprint_wait=print_wait, vprint_done=print_done):
     opts = opts if opts else {}
-    run_id = token_hex(8)
+    run_id = None  # use server-assigned run ID
     while True:
         result = kernel.execute(run_id, code, mode=mode, opts=opts)
+        run_id = result['runId']
         opts.clear()  # used only once
         for rec in result['console']:
             if rec[0] == 'stdout':
