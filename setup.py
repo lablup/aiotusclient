@@ -51,7 +51,7 @@ setup(
     url='https://github.com/lablup/backend.ai-client-py',
     author='Lablup Inc.',
     author_email='joongi@lablup.com',
-    license='LGPLv3',
+    license='MIT',
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
