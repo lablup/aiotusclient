@@ -1,20 +1,27 @@
 Changes
 =======
 
-1.1.2 (to be released)
-----------------------
+1.1.5 (2018-01-05)
+------------------
 
- - Add "terminate" command.
+ - Relicensed to MIT License to motivate integration with commercial/proprietary
+   software products.
 
- - Add more "run" command options.  Now it does NOT terminate the session after
-   execution by default, and you can force it using "--rm" option.
+ - Lots of CLI improvements!
 
- - Add "admin keypairs" command and its subcommands for managing keypairs.
+   - Add "terminate" command.
 
- - Add "admin agents" command to list agent instances.
+   - Add more "run" command options.  Now it does NOT terminate the session after
+     execution by default, and you can force it using "--rm" option.
 
- - "ps" and "admin session" commands now correctly show the client-given session ID
-   token instead of the master kernel ID of the session.
+   - Add "admin keypairs" command and its subcommands for managing keypairs.
+
+   - Add "admin agents" command to list agent instances.
+
+   - "ps" and "admin session" commands now correctly show the client-given session ID
+     token instead of the master kernel ID of the session.
+
+   - Add "logs" command.
 
  - Fix a continuation bug of the "run" command when using the batch-mode, which
    has caused a mismatch of run ID management of the agent and the internal task
@@ -26,8 +33,6 @@ Changes
 
  - Now the client sets a custom User-Agent header value as follows:
    "Backend.AI Client for Python X.X.X" where X.X.X is the version.
- 
- - Add "logs" command.
 
 1.1.1 (2017-12-04)
 ------------------
