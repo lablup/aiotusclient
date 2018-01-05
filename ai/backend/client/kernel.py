@@ -115,7 +115,7 @@ class BaseKernel(BaseFunction):
                 },
             })
         else:
-            raise BackendClientError(f'Invalid execution mode: {mode}')
+            raise BackendClientError('Invalid execution mode: {0}'.format(mode))
         resp = yield rqst
         return resp.json()['result']
 
