@@ -151,10 +151,9 @@ class BaseRequest:
         reqfunc = getattr(sess, self.method.lower())
         try:
             if self.content_type == 'multipart/form-data':
-                files = map(lambda f: (f.name,
-                                       (f.filename, f.file, f.content_type)
-                                      ),
-                            self._content)
+                files = map(
+                    lambda f: (f.name, (f.filename, f.file, f.content_type)),
+                    self._content)
                 resp = reqfunc(self.build_url(),
                                files=files,
                                headers=self.headers)
