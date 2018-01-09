@@ -25,6 +25,7 @@ test_requires = [
     'pytest-cov',
     'pytest-mock',
     'pytest-asyncio',
+    'pytest-sugar',
     'asynctest',
     'codecov',
     'flake8',
