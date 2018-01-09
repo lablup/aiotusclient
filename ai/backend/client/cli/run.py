@@ -32,10 +32,13 @@ def exec_loop(kernel, code, mode, opts=None,
                 print('----- end of record -----')
         sys.stdout.flush()
         if result['status'] == 'build-finished':
-            vprint_done('Build finished.')
+            exitCode = result.get('exitCode')
+            vprint_done('Build finished. (exit code = {0})'.format(exitCode))
             mode = 'continue'
             code = ''
         elif result['status'] == 'finished':
+            exitCode = result.get('exitCode')
+            vprint_done('Finished. (exit code = {0})'.format(exitCode))
             break
         elif result['status'] == 'waiting-input':
             mode = 'input'
