@@ -219,6 +219,7 @@ class AsyncRequestMixin:
             sess = aiohttp.ClientSession()
         else:
             assert isinstance(sess, aiohttp.ClientSession)
+        self._sign()
         try:
             ws = await sess.ws_connect(self.build_url(), headers=self.headers)
             return sess, ws
