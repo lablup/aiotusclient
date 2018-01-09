@@ -113,7 +113,7 @@ You can see the list of currently running sessions using your API keypair.
    --------------------------------  --------------  --------------------------------  ---------------  --------  -------------  ----------  ----------
    5baafb2136029228ca9d873e1f2b4f6a  python:latest   2018-01-09T04:32:21.962223+00:00                   RUNNING            1024           1           0
 
-If you set `-t` option in the `run` command, it will be used as the session ID — you may use it to assign a human-readable, easy-to-type alias for your sessions.
+If you set ``-t`` option in the ``run`` command, it will be used as the session ID—you may use it to assign a human-readable, easy-to-type alias for your sessions.
 These session IDs can be reused after the current session using the same ID terminates.
 
 To terminate a session,
