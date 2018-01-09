@@ -54,11 +54,10 @@ use ``-c`` option to pass the code string (like a shell).
 
 .. code-block:: console
 
-   $ backend.ai run python3 -c "print('hello world')"
+   $ backend.ai run python -c "print('hello world')"
    ∙ Client session token: d3694dda6e5a9f1e5c718e07bba291a9
    ✔ Kernel (ID: zuF1OzMIhFknyjUl7Apbvg) is ready.
    hello world
-   ✔ Cleaned up the kernel.
 
 You can even run a C code on-the-fly. (Note that we put a dollar sign before
 the single-quoted code argument so that the shell to interpret ``'\n'`` as
@@ -70,7 +69,6 @@ actual newlines.)
    ∙ Client session token: abc06ee5e03fce60c51148c6d2dd6126
    ✔ Kernel (ID: d1YXvee-uAJTx4AKYyeksA) is ready.
    hello world
-   ✔ Cleaned up the kernel.
 
 For larger programs, you may upload multiple files and then build & execute
 them.  The below is a simple example to run `a sample C program
@@ -90,7 +88,6 @@ them.  The below is a simple example to run `a sample C program
    myvalue is 42
    your name? LABLUP
    hello, LABLUP!
-   ✔ Cleaned up the kernel.
 
 Please refer the ``--help`` manual provided by the ``run`` command.
 
@@ -100,6 +97,31 @@ Python module path like:
 .. code-block:: console
 
    $ lcc main.c mylib.c mylib.h
+   
+Since the client version 1.1.5, the sessions are no longer automatically cleaned up.
+To do that, add ``--rm`` option to the ``run`` command, like Docker CLI.
+
+Highlight: ``ps`` and ``terminate`` command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can see the list of currently running sessions using your API keypair.
+
+.. code-block:: console
+
+   $ backend.ai ps
+   Session ID                        Lang/runtime    Created At                        Termianted At    Status      Memory Slot    CPU Slot    GPU Slot
+   --------------------------------  --------------  --------------------------------  ---------------  --------  -------------  ----------  ----------
+   5baafb2136029228ca9d873e1f2b4f6a  python:latest   2018-01-09T04:32:21.962223+00:00                   RUNNING            1024           1           0
+
+If you set `-t` option in the `run` command, it will be used as the session ID — you may use it to assign a human-readable, easy-to-type alias for your sessions.
+These session IDs can be reused after the current session using the same ID terminates.
+
+To terminate a session,
+
+.. code-block:: console
+
+   $ backend.ai terminate 5baafb2136029228ca9d873e1f2b4f6a
+   ✔ Done.
 
 Highlight: ``proxy`` command
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
