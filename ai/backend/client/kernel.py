@@ -28,7 +28,8 @@ class BaseKernel(BaseFunction):
                        envs: Optional[Mapping[str, str]]=None,
                        max_mem: int=0, exec_timeout: int=0) -> str:
         if client_token:
-            assert len(client_token) > 8
+            assert 4 <= len(client_token) <= 64, \
+                   'Client session token should be 4 to 64 characters long.'
         else:
             client_token = uuid.uuid4().hex
         resp = yield Request('POST', '/kernel/create', {
