@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.1.7 (2018-01-09)
+------------------
+
+ - Hotfix: Add missing "ai.backend.client.cli.admin" module in the package.
+
 1.1.6 (2018-01-06)
 ------------------
 

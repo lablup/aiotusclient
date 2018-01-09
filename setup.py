@@ -71,6 +71,7 @@ setup(
         'ai.backend.client',
         'ai.backend.client.asyncio',
         'ai.backend.client.cli',
+        'ai.backend.client.cli.admin',
     ],
     python_requires='>=3.5',
     install_requires=install_requires,
