@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.1.6 (2018-01-06)
+------------------
+
+ - Apply authentication to websocket requests as well.
+
+ - Fix the client-side validation of client token length.
+
 1.1.5 (2018-01-05)
 ------------------
 
