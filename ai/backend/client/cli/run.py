@@ -112,12 +112,7 @@ def run(args):
                       'code snippet.', file=sys.stderr)
                 return
             vprint_wait('Uploading source files...')
-            args.files = [
-                str(Path(path).resolve()
-                    .relative_to(Path('.').resolve()))
-                for path in args.files
-            ]
-            ret = kernel.upload(args.files)
+            ret = kernel.upload(args.files, basedir=args.basedir)
             if ret.status // 100 != 2:
                 print_fail('Uploading source files failed!')
                 print('{0}: {1}\n{2}'.format(
@@ -157,7 +152,7 @@ def run(args):
 
 run.add_argument('lang',
                  help='The runtime or programming language name')
-run.add_argument('files', nargs='*',
+run.add_argument('files', nargs='*', type=Path,
                  help='The code file(s). Can be added multiple times')
 run.add_argument('-t', '--client-token', metavar='SESSID',
                  help='Specify a human-readable session ID or name '
@@ -168,6 +163,9 @@ run.add_argument('--build', metavar='CMD',
                  help='Custom shell command for building the given files')
 run.add_argument('--exec', metavar='CMD',
                  help='Custom shell command for executing the given files')
+run.add_argument('--basedir', metavar='PATH', type=Path, default=None,
+                 help='Base directory path of uploaded files.  '
+                      'All uploaded files must reside inside this directory.')
 run.add_argument('--rm', action='store_true', default=False,
                  help='Terminate the session immediately after running '
                       'the given code or files [default: False]')

@@ -1,4 +1,5 @@
-from typing import Iterable, Mapping, Optional, Sequence
+from typing import Iterable, Mapping, Optional, Sequence, Union
+from pathlib import Path
 import uuid
 
 import aiohttp.web
@@ -136,12 +137,25 @@ class BaseKernel(BaseFunction):
 
 class Kernel(SyncFunctionMixin, BaseKernel):
 
-    def upload(self, files: Sequence[str]):
+    def upload(self, files: Sequence[Union[str, Path]],
+               basedir: Optional[Union[str, Path]]=None):
+        fields = []
+        base_path = (Path.cwd() if basedir is None
+                     else Path(basedir).resolve())
+        for file in files:
+            file_path = Path(file).resolve()
+            try:
+                fields.append(aiohttp.web.FileField(
+                    'src',
+                    str(file_path.relative_to(base_path)),
+                    open(str(file_path), 'rb'),
+                    'application/octet-stream',
+                    None
+                ))
+            except ValueError:
+                msg = 'File "{0}" is outside of the base directory "{1}".' \
+                      .format(file_path, base_path)
+                raise ValueError(msg) from None
         rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id))
-        rqst.content = [
-            # name filename file content_type headers
-            aiohttp.web.FileField(
-                'src', path, open(path, 'rb'), 'application/octet-stream', None
-            ) for path in files
-        ]
+        rqst.content = fields
         return rqst.send()
