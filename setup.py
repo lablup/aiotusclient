@@ -5,12 +5,12 @@ import re
 install_requires = [
     'colorama',
     'multidict',
-    'aiohttp~=2.3.5',
+    'aiohttp~=3.0.1',
     'async_timeout',
     'namedlist>=1.6',
     'python-dateutil>=2.5',
     'requests>=2.12',
-    'ConfigArgParse>=0.12.0',
+    'ConfigArgParse==0.12.0',
     'tabulate>=0.7.7',
     'humanize',
 ]
@@ -21,7 +21,7 @@ ci_requires = [
     'twine',
 ]
 test_requires = [
-    'pytest>=3.3',
+    'pytest>=3.4',
     'pytest-cov',
     'pytest-mock',
     'pytest-asyncio',
@@ -32,7 +32,7 @@ test_requires = [
 ]
 
 
-def get_version():
+def read_src_version():
     path = Path(__file__).parent / 'ai' / 'backend' / 'client' / '__init__.py'
     src = path.read_text()
     m = re.search(r"^__version__ = '([^']+)'$", src, re.MULTILINE)
@@ -46,7 +46,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version=get_version(),
+    version=read_src_version(),
     description='Backend.AI Client for Python',
     long_description=Path('README.rst').read_text(),
     url='https://github.com/lablup/backend.ai-client-py',
