@@ -1,6 +1,16 @@
 Changes
 =======
 
+1.1.8 (2018-03-01)
+------------------
+
+ - Upgrade to use aiohttp v3 series.
+
+ - Improve handling of base directories outside the current working directory
+   when uploading files for the batch mode execution.
+
+ - Display exit code if available in the batch mode execution.
+
 1.1.7 (2018-01-09)
 ------------------
 
