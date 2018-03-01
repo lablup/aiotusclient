@@ -1,1 +1,1 @@
--e .[dev,async]
+-e .[dev]

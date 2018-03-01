@@ -182,7 +182,7 @@ class AsyncRequestMixin:
             sess = aiohttp.ClientSession()
         else:
             assert isinstance(sess, aiohttp.ClientSession)
-        with sess:
+        async with sess:
             if self.content_type == 'multipart/form-data':
                 with aiohttp.MultipartWriter('mixed') as mpwriter:
                     for file in self._content:
@@ -195,11 +195,10 @@ class AsyncRequestMixin:
             self._sign()
             reqfunc = getattr(sess, self.method.lower())
             try:
-                with _timeout(timeout):
-                    resp = await reqfunc(self.build_url(),
-                                         data=data,
-                                         headers=self.headers)
-                    async with resp:
+                async with _timeout(timeout):
+                    async with reqfunc(self.build_url(),
+                                       data=data,
+                                       headers=self.headers) as resp:
                         body = await resp.read()
                         return Response(resp.status, resp.reason, body,
                                         resp.content_type,

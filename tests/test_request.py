@@ -4,6 +4,7 @@ from unittest import mock
 from urllib.parse import urljoin
 
 import aiohttp
+from aioresponses import aioresponses
 import asynctest
 import pytest
 import requests
@@ -211,22 +212,21 @@ async def test_asend_returns_appropriate_sorna_response(mocker, req_params,
                                                         mock_sorna_aresp):
     req = Request(**req_params)
     methods = Request._allowed_methods
+    _, conf = mock_sorna_aresp
     for method in methods:
         req.method = method
+        body = await conf['read']()
 
-        mock_reqfunc = mocker.patch.object(
-            aiohttp.ClientSession, method.lower(),
-            new_callable=asynctest.CoroutineMock
-        )
-        mock_reqfunc.return_value, conf = mock_sorna_aresp
-
-        resp = await req.asend()
+        with aioresponses() as m:
+            getattr(m, method.lower())('http://127.0.0.1:8081/v2/path/to/api/',
+                                       status=conf['status'], body=body)
+            resp = await req.asend()
 
         assert isinstance(resp, Response)
         assert resp.status == conf['status']
-        assert resp.reason == conf['reason']
+        # NOTE: aioresponses does not support mocking this. :(
+        # assert resp.reason == conf['reason']
         assert resp.content_type == conf['content_type']
-        body = await conf['read']()
         assert resp.content_length == len(body)
         assert resp.text() == body.decode()
         assert resp.json() == json.loads(body.decode())
