@@ -18,7 +18,8 @@ suite.  Of course, the service must be fully configured as follows:
    docker run -p 6379:6379 -d \
               --name sorna-redis \
               redis
-   python -m ai.backend.client.agent.server --volume-root=`pwd`/volume-temp --max-kernels 3
+   python -m ai.backend.client.agent.server \
+          --volume-root=`pwd`/volume-temp --max-kernels 3
    python -m ai.backend.client.gateway.server --service-port=8081
 
  - The agent should have access to a Docker daemon and the

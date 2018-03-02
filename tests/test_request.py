@@ -1,5 +1,4 @@
 import asyncio
-from argparse import Namespace
 from collections import OrderedDict
 import io
 import json
@@ -225,7 +224,7 @@ async def test_asend_client_error(mock_request_params, mock_aiohttp_response):
     mock_rqst_ctx = mock_aiohttp_response(side_effect=aiohttp.ClientConnectionError)
     with patch('aiohttp.ClientSession.request', new=mock_rqst_ctx):
         with pytest.raises(BackendClientError):
-            resp = await rqst.asend()
+            await rqst.asend()
 
 
 @pytest.mark.asyncio
@@ -234,7 +233,7 @@ async def test_asend_cancellation(mock_request_params, mock_aiohttp_response):
     mock_rqst_ctx = mock_aiohttp_response(side_effect=asyncio.CancelledError)
     with patch('aiohttp.ClientSession.request', new=mock_rqst_ctx):
         with pytest.raises(asyncio.CancelledError):
-            resp = await rqst.asend()
+            await rqst.asend()
 
 
 @pytest.mark.asyncio
@@ -243,7 +242,7 @@ async def test_asend_timeout(mock_request_params, mock_aiohttp_response):
     mock_rqst_ctx = mock_aiohttp_response(side_effect=asyncio.TimeoutError)
     with patch('aiohttp.ClientSession.request', new=mock_rqst_ctx):
         with pytest.raises(asyncio.TimeoutError):
-            resp = await rqst.asend()
+            await rqst.asend()
 
 
 def test_response_initialization(mock_requests_response):

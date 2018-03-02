@@ -4,11 +4,9 @@ It assumes that you have already configured the access key and secret key
 as environment variables.
 '''
 
-import argparse
 import logging
 import multiprocessing
 from statistics import mean, median, stdev
-import sys
 import time
 
 import pytest

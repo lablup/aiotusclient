@@ -39,7 +39,7 @@ async def test_create_kernel_return_id_only():
     mock_req_obj.asend.return_value = mock_resp
 
     with asynctest.patch('ai.backend.client.kernel.Request',
-                         return_value=mock_req_obj) as mock_req_cls:
+                         return_value=mock_req_obj):
         k = await Kernel.get_or_create('python')
 
         assert k.kernel_id == mock_resp.json()['kernelId']
@@ -141,7 +141,7 @@ async def test_execute_code_raises_err_with_abnormal_status():
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=400)
     run_id = token_hex(8)
     with asynctest.patch('ai.backend.client.kernel.Request',
-                         return_value=mock_req_obj) as mock_req_cls:
+                         return_value=mock_req_obj):
         with pytest.raises(BackendAPIError):
             await Kernel('mykernel').execute(run_id, 'hello')
 
@@ -172,6 +172,6 @@ async def test_stream_pty_raises_error_with_abnormal_status(mocker):
     mock_req_obj.connect_websocket = \
         asynctest.MagicMock(side_effect=mock_exception)
     with asynctest.patch('ai.backend.client.asyncio.kernel.Request',
-                         return_value=mock_req_obj) as mock_req_cls:
+                         return_value=mock_req_obj):
         with pytest.raises(BackendClientError):
             await Kernel('mykernel').stream_pty()

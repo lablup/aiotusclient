@@ -11,7 +11,8 @@ def test_create_kernel_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.send.return_value = mocker.MagicMock(status=201,
                                                       json=mock.MagicMock())
-    mock_req = mocker.patch('ai.backend.client.kernel.Request', return_value=mock_req_obj)
+    mock_req = mocker.patch('ai.backend.client.kernel.Request',
+                            return_value=mock_req_obj)
 
     Kernel.get_or_create('python')
 
@@ -45,7 +46,8 @@ def test_create_kernel_raises_err_with_abnormal_status(mocker):
 def test_destroy_kernel_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.send.return_value = mock.MagicMock(status=204)
-    mock_req = mocker.patch('ai.backend.client.kernel.Request', return_value=mock_req_obj)
+    mock_req = mocker.patch('ai.backend.client.kernel.Request',
+                            return_value=mock_req_obj)
 
     kernel_id = token_hex(12)
     k = Kernel(kernel_id)
@@ -69,7 +71,8 @@ def test_destroy_kernel_raises_err_with_abnormal_status(mocker):
 def test_restart_kernel_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.send.return_value = mock.MagicMock(status=204)
-    mock_req = mocker.patch('ai.backend.client.kernel.Request', return_value=mock_req_obj)
+    mock_req = mocker.patch('ai.backend.client.kernel.Request',
+                            return_value=mock_req_obj)
 
     kernel_id = token_hex(12)
     k = Kernel(kernel_id)
@@ -93,7 +96,8 @@ def test_restart_kernel_raises_err_with_abnormal_status(mocker):
 def test_get_kernel_info_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.send.return_value = mock.MagicMock(status=200)
-    mock_req = mocker.patch('ai.backend.client.kernel.Request', return_value=mock_req_obj)
+    mock_req = mocker.patch('ai.backend.client.kernel.Request',
+                            return_value=mock_req_obj)
 
     kernel_id = token_hex(12)
     k = Kernel(kernel_id)
@@ -118,15 +122,17 @@ def test_get_kernel_info_raises_err_with_abnormal_status(mocker):
 def test_execute_code_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.send.return_value = mock.MagicMock(status=200)
-    mock_req = mocker.patch('ai.backend.client.kernel.Request', return_value=mock_req_obj)
+    mock_req = mocker.patch('ai.backend.client.kernel.Request',
+                            return_value=mock_req_obj)
 
     kernel_id = token_hex(12)
     k = Kernel(kernel_id)
     run_id = token_hex(8)
     k.execute(run_id, 'hello')
 
-    mock_req.assert_called_once_with('POST', '/kernel/{}'.format(kernel_id),
-                                     {'mode': 'query', 'runId': run_id, 'code': 'hello'})
+    mock_req.assert_called_once_with(
+        'POST', '/kernel/{}'.format(kernel_id),
+        {'mode': 'query', 'runId': run_id, 'code': 'hello'})
     mock_req_obj.send.assert_called_once_with()
     mock_req_obj.send.return_value.json.assert_called_once_with()
 
