@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.1.9 (2018-03-02)
+------------------
+
+ - Improve asyncio exception handling.
+   Now it does NOT silently swallow CancelledError/TimeoutError and other
+   non-aiohttp errors!
+
 1.1.8 (2018-03-01)
 ------------------
 
