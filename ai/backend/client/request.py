@@ -1,3 +1,4 @@
+import asyncio
 from collections import OrderedDict
 from datetime import datetime
 from typing import Any, Mapping, Optional, Sequence, Union
@@ -190,14 +191,16 @@ class AsyncRequestMixin:
                 else:
                     data = self._content
                 self._sign()
-                reqfunc = getattr(sess, self.method.lower())
                 async with _timeout(timeout):
-                    async with reqfunc(self.build_url(),
-                                       data=data,
-                                       headers=self.headers) as resp:
+                    rqst_ctx = sess.request(
+                        self.method,
+                        self.build_url(),
+                        data=data,
+                        headers=self.headers)
+                    async with rqst_ctx as resp:
                         body = await resp.read()
-                        return Response(resp.status, resp.reason, body,
-                                        resp.content_type,
+                        return Response(resp.status, resp.reason,
+                                        body, resp.content_type,
                                         len(body))
         except (asyncio.CancelledError, asyncio.TimeoutError):
             # These exceptions must be bubbled up.

@@ -1,22 +1,22 @@
+import asyncio
+from argparse import Namespace
 from collections import OrderedDict
 import io
+import json
 from unittest import mock
 from urllib.parse import urljoin
 
 import aiohttp
-from aioresponses import aioresponses
-import asynctest
+from asynctest import CoroutineMock, MagicMock, patch
 import pytest
 import requests
-import json
 
-from .common import mock_coro, MockAsyncContextManager
 from ai.backend.client.exceptions import BackendClientError
 from ai.backend.client.request import Request, Response
 
 
 @pytest.fixture
-def req_params(defconfig):
+def mock_request_params(defconfig):
     return OrderedDict(
         method='GET',
         path='/path/to/api/',
@@ -26,7 +26,7 @@ def req_params(defconfig):
 
 
 @pytest.fixture
-def mock_sorna_resp():
+def mock_requests_response():
     resp = mock.Mock(spec=requests.Response)
     content = b'{"test1": 1, "test2": 2}'
     conf = {
@@ -39,135 +39,144 @@ def mock_sorna_resp():
         }
     }
     resp.configure_mock(**conf)
-
     return resp, conf
 
 
 @pytest.fixture
-def mock_sorna_aresp():
-    conf = {
-        'status': 900,
-        'reason': 'this is a test',
-        'read': mock_coro(b'{"test1": 1, "test2": 2}'),
-        'content_type': 'application/json',
-    }
+def mock_aiohttp_response():
 
-    return MockAsyncContextManager(**conf), conf
+    def mocker(side_effect=None):
+        ctx = MagicMock()
+        resp = MagicMock()
+        resp.status = 900
+        resp.reason = 'Testing'
+        resp.content_type = 'application/json'
+        resp._test_body = b'{"test1": 1, "test2": 2}'  # for test codes
+        if side_effect is None:
+            resp.read = CoroutineMock(return_value=resp._test_body)
+        else:
+            resp.read = CoroutineMock(side_effect=side_effect)
+        ctx.return_value.__aenter__.return_value = resp
+        ctx._test_response = resp  # for test codes
+        return ctx
 
-
-def test_request_initialization(req_params):
-    req = Request(**req_params)
-
-    assert req.config == req_params['config']
-    assert req.method == req_params['method']
-    assert req.path == req_params['path'][1:]
-    assert req.content == req_params['content']
-    assert 'Date' in req.headers
-    assert 'X-BackendAI-Version' in req.headers
-    assert req._content == json.dumps(req_params['content']).encode('utf8')
+    return mocker
 
 
-def test_content_is_auto_set_to_blank_if_no_data(req_params):
-    req_params = req_params.copy()
-    req_params['content'] = None
-    req = Request(**req_params)
+def test_request_initialization(mock_request_params):
+    rqst = Request(**mock_request_params)
 
-    assert req.content_type == 'application/octet-stream'
-    assert req.content == b''
-
-
-def test_content_is_blank(req_params):
-    req_params['content'] = OrderedDict()
-    req = Request(**req_params)
-
-    assert req.content_type == 'application/json'
-    assert req.content == {}
+    assert rqst.config == mock_request_params['config']
+    assert rqst.method == mock_request_params['method']
+    assert rqst.path == mock_request_params['path'][1:]
+    assert rqst.content == mock_request_params['content']
+    assert 'Date' in rqst.headers
+    assert 'X-BackendAI-Version' in rqst.headers
+    assert rqst._content == json.dumps(mock_request_params['content']).encode('utf8')
 
 
-def test_content_is_bytes(req_params):
-    req_params['content'] = b'\xff\xf1'
-    req = Request(**req_params)
+def test_content_is_auto_set_to_blank_if_no_data(mock_request_params):
+    mock_request_params = mock_request_params.copy()
+    mock_request_params['content'] = None
+    rqst = Request(**mock_request_params)
 
-    assert req.content_type == 'application/octet-stream'
-    assert req.content == b'\xff\xf1'
-
-
-def test_content_is_text(req_params):
-    req_params['content'] = 'hello'
-    req = Request(**req_params)
-
-    assert req.content_type == 'text/plain'
-    assert req.content == 'hello'
+    assert rqst.content_type == 'application/octet-stream'
+    assert rqst.content == b''
 
 
-def test_content_is_files(req_params):
+def test_content_is_blank(mock_request_params):
+    mock_request_params['content'] = OrderedDict()
+    rqst = Request(**mock_request_params)
+
+    assert rqst.content_type == 'application/json'
+    assert rqst.content == {}
+
+
+def test_content_is_bytes(mock_request_params):
+    mock_request_params['content'] = b'\xff\xf1'
+    rqst = Request(**mock_request_params)
+
+    assert rqst.content_type == 'application/octet-stream'
+    assert rqst.content == b'\xff\xf1'
+
+
+def test_content_is_text(mock_request_params):
+    mock_request_params['content'] = 'hello'
+    rqst = Request(**mock_request_params)
+
+    assert rqst.content_type == 'text/plain'
+    assert rqst.content == 'hello'
+
+
+def test_content_is_files(mock_request_params):
     files = [
         ('src', 'test1.txt', io.BytesIO(), 'application/octet-stream'),
         ('src', 'test2.txt', io.BytesIO(), 'application/octet-stream'),
     ]
-    req_params['content'] = files
-    req = Request(**req_params)
+    mock_request_params['content'] = files
+    rqst = Request(**mock_request_params)
 
-    assert req.content_type == 'multipart/form-data'
-    assert req.content == files
+    assert rqst.content_type == 'multipart/form-data'
+    assert rqst.content == files
 
 
-def test_set_content_correctly(req_params):
-    req_params['content'] = OrderedDict()
-    req = Request(**req_params)
+def test_set_content_correctly(mock_request_params):
+    mock_request_params['content'] = OrderedDict()
+    rqst = Request(**mock_request_params)
     new_data = b'new-data'
 
-    assert not req.content
-    req.content = new_data
-    assert req.content == new_data
-    assert req.headers['Content-Length'] == str(len(new_data))
+    assert not rqst.content
+    rqst.content = new_data
+    assert rqst.content == new_data
+    assert rqst.headers['Content-Length'] == str(len(new_data))
 
 
-def test_build_correct_url(req_params):
-    config = req_params['config']
-    req = Request(**req_params)
+def test_build_correct_url(mock_request_params):
+    config = mock_request_params['config']
+    rqst = Request(**mock_request_params)
 
     major_ver = config.version.split('.', 1)[0]
-    path = '/' + req.path if len(req.path) > 0 else ''
+    path = '/' + rqst.path if len(rqst.path) > 0 else ''
 
-    assert req.build_url() == urljoin(config.endpoint, major_ver + path)
+    assert rqst.build_url() == urljoin(config.endpoint, major_ver + path)
 
 
-def test_send_not_allowed_request_raises_error(req_params):
-    req_params['method'] = 'STRANGE'
-    req = Request(**req_params)
+def test_send_not_allowed_request_raises_error(mock_request_params):
+    mock_request_params['method'] = 'STRANGE'
+    rqst = Request(**mock_request_params)
 
     with pytest.raises(AssertionError):
-        req.send()
+        rqst.send()
 
 
-def test_send_with_appropriate_method(mocker, req_params):
-    req = Request(**req_params)
+def test_send(mocker, mock_request_params):
+    rqst = Request(**mock_request_params)
     methods = Request._allowed_methods
     for method in methods:
-        req.method = method
+        rqst.method = method
 
         mock_reqfunc = mocker.patch.object(
             requests.Session, method.lower(), autospec=True)
 
         assert mock_reqfunc.call_count == 0
-        req.send()
+        rqst.send()
         mock_reqfunc.assert_called_once_with(
-            mocker.ANY, req.build_url(), data=req._content, headers=req.headers)
+            mocker.ANY, rqst.build_url(),
+            data=rqst._content, headers=rqst.headers)
 
 
-def test_send_returns_appropriate_sorna_response(
-        mocker, req_params, mock_sorna_resp):
-    req = Request(**req_params)
+def test_send_and_read_response(
+        mocker, mock_request_params, mock_requests_response):
+    rqst = Request(**mock_request_params)
     methods = Request._allowed_methods
     for method in methods:
-        req.method = method
+        rqst.method = method
 
         mock_reqfunc = mocker.patch.object(
             requests.Session, method.lower(), autospec=True)
-        mock_reqfunc.return_value, conf = mock_sorna_resp
+        mock_reqfunc.return_value, conf = mock_requests_response
 
-        resp = req.send()
+        resp = rqst.send()
 
         assert resp.status == conf['status_code']
         assert resp.reason == conf['reason']
@@ -178,62 +187,67 @@ def test_send_returns_appropriate_sorna_response(
 
 
 @pytest.mark.asyncio
-async def test_asend_not_allowed_request_raises_error(req_params):
-    req_params['method'] = 'STRANGE'
-    req = Request(**req_params)
-
+async def test_asend_not_allowed_request_raises_error(mock_request_params):
+    mock_request_params['method'] = 'STRANGE'
+    rqst = Request(**mock_request_params)
     with pytest.raises(AssertionError):
-        await req.asend()
+        await rqst.asend()
 
 
 @pytest.mark.asyncio
-async def test_asend_with_appropriate_method(mocker, req_params):
-    req = Request(**req_params)
+async def test_asend_and_read_response(mocker, mock_request_params,
+                                       mock_aiohttp_response):
+    rqst = Request(**mock_request_params)
     methods = Request._allowed_methods
+    mock_rqst_ctx = mock_aiohttp_response()
+    mock_response = mock_rqst_ctx._test_response
     for method in methods:
-        req.method = method
-
-        mock_reqfunc = mocker.patch.object(
-            aiohttp.ClientSession, method.lower(), autospec=True)
-
-        assert mock_reqfunc.call_count == 0
-        try:
-            # Ignore exceptions in `async with` statement. We're only
-            # interested in request call here.
-            await req.asend()
-        except BackendClientError:
-            pass
-        mock_reqfunc.assert_called_once_with(
-            mocker.ANY, req.build_url(), data=req._content, headers=req.headers)
+        rqst.method = method
+        with patch('aiohttp.ClientSession.request',
+                   new=mock_rqst_ctx) as mock_request:
+            resp = await rqst.asend()
+            mock_request.assert_called_with(
+                method, rqst.build_url(),
+                data=rqst._content, headers=rqst.headers)
+            assert isinstance(resp, Response)
+            body = mock_response._test_body
+            assert resp.status == mock_response.status
+            assert resp.reason == mock_response.reason
+            assert resp.content_type == mock_response.content_type
+            assert resp.content_length == len(body)
+            assert resp.text() == body.decode()
+            assert resp.json() == json.loads(body.decode())
 
 
 @pytest.mark.asyncio
-async def test_asend_returns_appropriate_sorna_response(mocker, req_params,
-                                                        mock_sorna_aresp):
-    req = Request(**req_params)
-    methods = Request._allowed_methods
-    _, conf = mock_sorna_aresp
-    for method in methods:
-        req.method = method
-        body = await conf['read']()
-
-        with aioresponses() as m:
-            getattr(m, method.lower())('http://127.0.0.1:8081/v2/path/to/api/',
-                                       status=conf['status'], body=body)
-            resp = await req.asend()
-
-        assert isinstance(resp, Response)
-        assert resp.status == conf['status']
-        # NOTE: aioresponses does not support mocking this. :(
-        # assert resp.reason == conf['reason']
-        assert resp.content_type == conf['content_type']
-        assert resp.content_length == len(body)
-        assert resp.text() == body.decode()
-        assert resp.json() == json.loads(body.decode())
+async def test_asend_client_error(mock_request_params, mock_aiohttp_response):
+    rqst = Request(**mock_request_params)
+    mock_rqst_ctx = mock_aiohttp_response(side_effect=aiohttp.ClientConnectionError)
+    with patch('aiohttp.ClientSession.request', new=mock_rqst_ctx):
+        with pytest.raises(BackendClientError):
+            resp = await rqst.asend()
 
 
-def test_response_initialization(mock_sorna_resp):
-    _, conf = mock_sorna_resp
+@pytest.mark.asyncio
+async def test_asend_cancellation(mock_request_params, mock_aiohttp_response):
+    rqst = Request(**mock_request_params)
+    mock_rqst_ctx = mock_aiohttp_response(side_effect=asyncio.CancelledError)
+    with patch('aiohttp.ClientSession.request', new=mock_rqst_ctx):
+        with pytest.raises(asyncio.CancelledError):
+            resp = await rqst.asend()
+
+
+@pytest.mark.asyncio
+async def test_asend_timeout(mock_request_params, mock_aiohttp_response):
+    rqst = Request(**mock_request_params)
+    mock_rqst_ctx = mock_aiohttp_response(side_effect=asyncio.TimeoutError)
+    with patch('aiohttp.ClientSession.request', new=mock_rqst_ctx):
+        with pytest.raises(asyncio.TimeoutError):
+            resp = await rqst.asend()
+
+
+def test_response_initialization(mock_requests_response):
+    _, conf = mock_requests_response
     resp = Response(conf['status_code'], conf['reason'], conf['content'],
                     conf['headers']['content-type'],
                     conf['headers']['content-length'])
