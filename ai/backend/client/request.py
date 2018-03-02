@@ -203,6 +203,9 @@ class AsyncRequestMixin:
                         return Response(resp.status, resp.reason, body,
                                         resp.content_type,
                                         len(body))
+            except (asyncio.CancelledError, asyncio.TimeoutError):
+                # These exceptions must be bubbled up.
+                raise
             except Exception as e:
                 msg = 'Request to the API endpoint has failed.\n' \
                       'Check your network connection and/or the server status.'
