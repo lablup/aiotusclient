@@ -3,13 +3,9 @@ from datetime import datetime
 from typing import Any, Mapping, Optional, Sequence, Union
 from urllib.parse import urljoin
 
-try:
-    import aiohttp
-    import aiohttp.web
-    from async_timeout import timeout as _timeout
-    aiohttp_available = True
-except ImportError:
-    aiohttp_available = False
+import aiohttp
+import aiohttp.web
+from async_timeout import timeout as _timeout
 from dateutil.tz import tzutc
 from multidict import CIMultiDict
 import requests
@@ -182,19 +178,19 @@ class AsyncRequestMixin:
             sess = aiohttp.ClientSession()
         else:
             assert isinstance(sess, aiohttp.ClientSession)
-        async with sess:
-            if self.content_type == 'multipart/form-data':
-                with aiohttp.MultipartWriter('mixed') as mpwriter:
-                    for file in self._content:
-                        part = mpwriter.append(file.file)
-                        part.set_content_disposition('attachment',
-                                                     filename=file.filename)
-                data = mpwriter
-            else:
-                data = self._content
-            self._sign()
-            reqfunc = getattr(sess, self.method.lower())
-            try:
+        try:
+            async with sess:
+                if self.content_type == 'multipart/form-data':
+                    with aiohttp.MultipartWriter('mixed') as mpwriter:
+                        for file in self._content:
+                            part = mpwriter.append(file.file)
+                            part.set_content_disposition('attachment',
+                                                         filename=file.filename)
+                    data = mpwriter
+                else:
+                    data = self._content
+                self._sign()
+                reqfunc = getattr(sess, self.method.lower())
                 async with _timeout(timeout):
                     async with reqfunc(self.build_url(),
                                        data=data,
@@ -203,13 +199,13 @@ class AsyncRequestMixin:
                         return Response(resp.status, resp.reason, body,
                                         resp.content_type,
                                         len(body))
-            except (asyncio.CancelledError, asyncio.TimeoutError):
-                # These exceptions must be bubbled up.
-                raise
-            except Exception as e:
-                msg = 'Request to the API endpoint has failed.\n' \
-                      'Check your network connection and/or the server status.'
-                raise BackendClientError(msg) from e
+        except (asyncio.CancelledError, asyncio.TimeoutError):
+            # These exceptions must be bubbled up.
+            raise
+        except aiohttp.ClientError as e:
+            msg = 'Request to the API endpoint has failed.\n' \
+                  'Check your network connection and/or the server status.'
+            raise BackendClientError(msg) from e
 
     async def connect_websocket(self, sess=None):
         '''
@@ -230,15 +226,8 @@ class AsyncRequestMixin:
             raise BackendClientError(msg) from e
 
 
-if aiohttp_available:
-
-    class Request(AsyncRequestMixin, BaseRequest):
-        pass
-
-else:
-
-    class Request(BaseRequest):
-        pass
+class Request(AsyncRequestMixin, BaseRequest):
+    pass
 
 
 class Response:
