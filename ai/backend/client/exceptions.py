@@ -10,7 +10,9 @@ __all__ = (
 
 class BackendError(BaseException):
     '''Exception type to catch all ai.backend-related errors.'''
-    pass
+
+    def __str__(self):
+        return repr(self)
 
 
 class BackendAPIError(BackendError):
@@ -39,4 +41,5 @@ class BackendClientError(BackendError):
     Exceptions from the client library, such as argument validation
     errors.
     '''
+
     pass
