@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.1.10 (2018-03-04)
+-------------------
+
+ - Fix file upload handling in the asyncio version.
+
+ - Stringifying exception classes now use the output of "repr()".
+
 1.1.9 (2018-03-02)
 ------------------
 
