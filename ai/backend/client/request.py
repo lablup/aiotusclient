@@ -182,12 +182,13 @@ class AsyncRequestMixin:
         try:
             async with sess:
                 if self.content_type == 'multipart/form-data':
-                    with aiohttp.MultipartWriter('mixed') as mpwriter:
-                        for file in self._content:
-                            part = mpwriter.append(file.file)
-                            part.set_content_disposition('attachment',
-                                                         filename=file.filename)
-                    data = mpwriter
+                    data = aiohttp.FormData()
+                    for f in self._content:
+                        data.add_field(f.name,
+                                       f.file,
+                                       filename=f.filename,
+                                       content_type=f.content_type)
+                    assert data.is_multipart
                 else:
                     data = self._content
                 self._sign()

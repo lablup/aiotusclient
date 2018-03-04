@@ -1,4 +1,4 @@
-from typing import Iterable, Mapping, Optional, Sequence, Union
+from typing import Iterable, Mapping, Sequence, Union
 from pathlib import Path
 import uuid
 
@@ -24,9 +24,9 @@ class BaseKernel(BaseFunction):
 
     @classmethod
     def _get_or_create(cls, lang: str,
-                       client_token: Optional[str]=None,
-                       mounts: Optional[Iterable[str]]=None,
-                       envs: Optional[Mapping[str, str]]=None,
+                       client_token: str=None,
+                       mounts: Iterable[str]=None,
+                       envs: Mapping[str, str]=None,
                        max_mem: int=0, exec_timeout: int=0) -> str:
         if client_token:
             assert 4 <= len(client_token) <= 64, \
@@ -61,7 +61,7 @@ class BaseKernel(BaseFunction):
     def _interrupt(self):
         yield Request('POST', '/kernel/{}/interrupt'.format(self.kernel_id))
 
-    def _complete(self, code: str, opts: Optional[dict]=None):
+    def _complete(self, code: str, opts: dict=None):
         opts = {} if opts is None else opts
         rqst = Request('POST', '/kernel/{}/complete'.format(self.kernel_id), {
             'code': code,
@@ -83,10 +83,10 @@ class BaseKernel(BaseFunction):
         resp = yield Request('GET', '/kernel/{}/logs'.format(self.kernel_id))
         return resp.json()
 
-    def _execute(self, run_id: Optional[str]=None,
-                 code: Optional[str]=None,
+    def _execute(self, run_id: str=None,
+                 code: str=None,
                  mode: str='query',
-                 opts: Optional[dict]=None):
+                 opts: dict=None):
         opts = {} if opts is None else opts
         if mode in {'query', 'continue', 'input'}:
             assert code is not None  # but maybe empty due to continuation
@@ -121,24 +121,8 @@ class BaseKernel(BaseFunction):
         resp = yield rqst
         return resp.json()['result']
 
-    def __init__(self, kernel_id: str) -> None:
-        self.kernel_id = kernel_id
-        self.destroy  = self._call_base_method(self._destroy)
-        self.restart  = self._call_base_method(self._restart)
-        self.interrupt = self._call_base_method(self._interrupt)
-        self.complete  = self._call_base_method(self._complete)
-        self.get_info = self._call_base_method(self._get_info)
-        self.get_logs = self._call_base_method(self._get_logs)
-        self.execute  = self._call_base_method(self._execute)
-
-    def __init_subclass__(cls):
-        cls.get_or_create = cls._call_base_clsmethod(cls._get_or_create)
-
-
-class Kernel(SyncFunctionMixin, BaseKernel):
-
-    def upload(self, files: Sequence[Union[str, Path]],
-               basedir: Optional[Union[str, Path]]=None):
+    def _upload(self, files: Sequence[Union[str, Path]],
+               basedir: Union[str, Path]=None):
         fields = []
         base_path = (Path.cwd() if basedir is None
                      else Path(basedir).resolve())
@@ -158,4 +142,23 @@ class Kernel(SyncFunctionMixin, BaseKernel):
                 raise ValueError(msg) from None
         rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id))
         rqst.content = fields
-        return rqst.send()
+        resp = yield rqst
+        return resp
+
+    def __init__(self, kernel_id: str) -> None:
+        self.kernel_id = kernel_id
+        self.destroy  = self._call_base_method(self._destroy)
+        self.restart  = self._call_base_method(self._restart)
+        self.interrupt = self._call_base_method(self._interrupt)
+        self.complete  = self._call_base_method(self._complete)
+        self.get_info = self._call_base_method(self._get_info)
+        self.get_logs = self._call_base_method(self._get_logs)
+        self.execute  = self._call_base_method(self._execute)
+        self.upload  = self._call_base_method(self._upload)
+
+    def __init_subclass__(cls):
+        cls.get_or_create = cls._call_base_clsmethod(cls._get_or_create)
+
+
+class Kernel(SyncFunctionMixin, BaseKernel):
+    pass

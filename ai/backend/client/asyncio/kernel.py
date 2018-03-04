@@ -1,5 +1,4 @@
 import json
-from typing import Sequence
 
 import aiohttp
 import aiohttp.web
@@ -17,16 +16,6 @@ __all__ = (
 
 
 class Kernel(AsyncFunctionMixin, BaseKernel):
-
-    async def upload(self, files: Sequence[str]):
-        rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id))
-        rqst.content = [
-            # name filename file content_type headers
-            aiohttp.web.FileField(
-                'src', path, open(path, 'rb'), 'application/octet-stream', None
-            ) for path in files
-        ]
-        return (await rqst.asend())
 
     # only supported in AsyncKernel
     async def stream_pty(self):
