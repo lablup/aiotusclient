@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.1.11 (2018-03-07)
+-------------------
+
+ - Change StreamPty methods to become coroutines to match with aiohttp v3
+   API changes.
+
 1.1.10 (2018-03-04)
 -------------------
 
