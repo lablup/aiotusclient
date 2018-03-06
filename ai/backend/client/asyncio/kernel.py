@@ -54,18 +54,18 @@ class StreamPty:
     def exception(self):
         return self.ws.exception()
 
-    def send_str(self, raw_str):
-        self.ws.send_str(raw_str)
+    async def send_str(self, raw_str):
+        await self.ws.send_str(raw_str)
 
-    def resize(self, rows, cols):
-        self.ws.send_str(json.dumps({
+    async def resize(self, rows, cols):
+        await self.ws.send_str(json.dumps({
             'type': 'resize',
             'rows': rows,
             'cols': cols,
         }))
 
-    def restart(self):
-        self.ws.send_str(json.dumps({
+    async def restart(self):
+        await self.ws.send_str(json.dumps({
             'type': 'restart',
         }))
 
