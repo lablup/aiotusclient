@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from . import register_command
 from ..vfolder import VFolder
 
@@ -47,9 +49,10 @@ info.add_argument('name', type=str, help='The name of a virtual folder.')
 @vfolder.register_command
 def upload(args):
     '''Upload a file to the virtual folder.'''
-    result = VFolder(args.name).upload(args.filename)
+    result = VFolder(args.name).upload(args.filenames)
     print(result.status)
 
 
 upload.add_argument('name', type=str, help='The name of a virtual folder.')
-upload.add_argument('filename', type=str, help='Path to the uploaded file.')
+upload.add_argument('filenames', type=Path, nargs='+',
+                    help='Paths of the files to be uploaded.')

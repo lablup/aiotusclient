@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import re
+from typing import Sequence, Union
 
 import aiohttp
 
@@ -42,11 +43,36 @@ class BaseVFolder(BaseFunction):
         if resp.status == 200:
             return resp.json()
 
+    def _upload(self, files: Sequence[Union[str, Path]],
+               basedir: Union[str, Path]=None):
+        fields = []
+        base_path = (Path.cwd() if basedir is None
+                     else Path(basedir).resolve())
+        for file in files:
+            file_path = Path(file).resolve()
+            try:
+                fields.append(aiohttp.web.FileField(
+                    'src',
+                    str(file_path.relative_to(base_path)),
+                    open(str(file_path), 'rb'),
+                    'application/octet-stream',
+                    None
+                ))
+            except ValueError:
+                msg = 'File "{0}" is outside of the base directory "{1}".' \
+                      .format(file_path, base_path)
+                raise ValueError(msg) from None
+        rqst = Request('POST', '/folders/{}/upload'.format(self.name))
+        rqst.content = fields
+        resp = yield rqst
+        return resp
+
     def __init__(self, name: str):
         assert _rx_slug.search(name) is not None
         self.name = name
         self.delete = self._call_base_method(self._delete)
         self.info = self._call_base_method(self._info)
+        self.upload = self._call_base_method(self._upload)
 
     def __init_subclass__(cls):
         cls.create = cls._call_base_clsmethod(cls._create)
@@ -55,15 +81,4 @@ class BaseVFolder(BaseFunction):
 
 
 class VFolder(SyncFunctionMixin, BaseVFolder):
-
-    def upload(self, filename):
-        rqst = Request('POST', '/folders/{0}/upload'.format(self.name))
-        rel_path = Path(filename).resolve().relative_to(Path(os.getcwd()).resolve())
-        rqst.content = [
-            # name filename file content_type headers
-            aiohttp.web.FileField(
-                'src', str(rel_path), open(rel_path, 'rb'),
-                'application/octet-stream', None
-            )
-        ]
-        return rqst.send()
+    pass
