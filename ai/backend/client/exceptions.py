@@ -8,7 +8,7 @@ __all__ = (
 )
 
 
-class BackendError(BaseException):
+class BackendError(Exception):
     '''Exception type to catch all ai.backend-related errors.'''
 
     def __str__(self):
