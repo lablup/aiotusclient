@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.2.0 (2018-03-07)
+------------------
+
+ - Fixed vfolder upload API to work with aiohttp v3.
+
+ - "vfolder upload" command can now upload multiple files.
+
 1.1.11 (2018-03-07)
 -------------------
 
