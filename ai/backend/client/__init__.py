@@ -12,4 +12,4 @@ __all__ = [
     request.__all__,  # noqa
 ]
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'

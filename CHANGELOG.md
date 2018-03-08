@@ -1,7 +1,13 @@
 Changes
 =======
 
-1.2.0 (2018-03-07)
+1.2.1 (2018-03-08)
+------------------
+
+ - BackendError is now normal Exception, not BaseException.
+   This was a mistake in the early stage of development.
+
+1.2.0 (2018-03-08)
 ------------------
 
  - Fixed vfolder upload API to work with aiohttp v3.
