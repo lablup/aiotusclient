@@ -13,6 +13,7 @@ install_requires = [
     'ConfigArgParse==0.12.0',
     'tabulate>=0.7.7',
     'humanize',
+    'yarl>=1.1.1',
 ]
 dev_requires = [
 ]
