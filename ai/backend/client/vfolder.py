@@ -5,6 +5,7 @@ from typing import Sequence, Union
 import aiohttp
 
 from .base import BaseFunction, SyncFunctionMixin
+from .config import APIConfig
 from .request import Request
 
 __all__ = (
@@ -17,28 +18,31 @@ _rx_slug = re.compile(r'^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?$')
 
 class BaseVFolder(BaseFunction):
     @classmethod
-    def _create(cls, name: str):
+    def _create(cls, name: str, *,
+                config: APIConfig=None):
         assert _rx_slug.search(name) is not None
         resp = yield Request('POST', '/folders/', {
             'name': name,
-        })
+        }, config=config)
         return resp.json()
 
     @classmethod
-    def _list(cls):
-        resp = yield Request('GET', '/folders/')
+    def _list(cls, *, config: APIConfig=None):
+        resp = yield Request('GET', '/folders/', config=config)
         return resp.json()
 
     @classmethod
-    def _get(cls, name: str):
-        return cls(name)
+    def _get(cls, name: str, *, config: APIConfig=None):
+        return cls(name, config=config)
 
     def _info(self):
-        resp = yield Request('GET', '/folders/{0}'.format(self.name))
+        resp = yield Request('GET', '/folders/{0}'.format(self.name),
+                             config=self.config)
         return resp.json()
 
     def _delete(self):
-        resp = yield Request('DELETE', '/folders/{0}'.format(self.name))
+        resp = yield Request('DELETE', '/folders/{0}'.format(self.name),
+                             config=self.config)
         if resp.status == 200:
             return resp.json()
 
@@ -61,14 +65,16 @@ class BaseVFolder(BaseFunction):
                 msg = 'File "{0}" is outside of the base directory "{1}".' \
                       .format(file_path, base_path)
                 raise ValueError(msg) from None
-        rqst = Request('POST', '/folders/{}/upload'.format(self.name))
+        rqst = Request('POST', '/folders/{}/upload'.format(self.name),
+                       config=self.config)
         rqst.content = fields
         resp = yield rqst
         return resp
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, *, config: APIConfig=None):
         assert _rx_slug.search(name) is not None
         self.name = name
+        self.config = config
         self.delete = self._call_base_method(self._delete)
         self.info = self._call_base_method(self._info)
         self.upload = self._call_base_method(self._upload)

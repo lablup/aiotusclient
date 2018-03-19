@@ -1,7 +1,7 @@
 import asyncio
 from collections import OrderedDict
 from datetime import datetime
-from typing import Any, Mapping, Optional, Sequence, Union
+from typing import Any, Mapping, Sequence, Union
 from urllib.parse import urljoin
 
 import aiohttp
@@ -34,9 +34,21 @@ class BaseRequest:
         'OPTIONS'])
 
     def __init__(self, method: str='GET',
-                 path: Optional[str]=None,
-                 content: Optional[Mapping]=None,
-                 config: Optional[APIConfig]=None) -> None:
+                 path: str=None,
+                 content: Mapping=None,
+                 config: APIConfig=None) -> None:
+        '''
+        Initialize an API request.
+
+        :param str path: The query path. When performing requests, the version number
+                         prefix will be automatically perpended if required.
+
+        :param Mapping content: The API query body which will be encoded as JSON.
+
+        :param APIConfig config: The API configuration.  If set to ``None``, it will
+                                 use the global configuration which is read from the
+                                 environment variables.
+        '''
         from . import __version__ as version  # noqa; to avoid circular imports
         self.config = config if config else get_config()
         self.method = method

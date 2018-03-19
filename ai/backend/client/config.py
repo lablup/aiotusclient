@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 __all__ = [
     'APIConfig',
@@ -27,12 +26,12 @@ class APIConfig:
         'version': 'v2.20170315',
     }
 
-    def __init__(self, endpoint: Optional[str]=None,
+    def __init__(self, endpoint: str=None,
                  version: str='v2.20170315',
-                 user_agent: Optional[str]=None,
-                 access_key: Optional[str]=None,
-                 secret_key: Optional[str]=None,
-                 hash_type: Optional[str]=None) -> None:
+                 user_agent: str=None,
+                 access_key: str=None,
+                 secret_key: str=None,
+                 hash_type: str=None) -> None:
         self._endpoint = \
             endpoint if endpoint else get_env('ENDPOINT', self.DEFAULTS['endpoint'])
         self._version = \

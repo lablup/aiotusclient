@@ -1,6 +1,7 @@
-from typing import Optional, Iterable
+from typing import Iterable
 
 from .base import BaseFunction, SyncFunctionMixin
+from .config import APIConfig
 from .request import Request
 
 __all__ = (
@@ -15,10 +16,11 @@ class BaseKeyPair(BaseFunction):
     def _create(cls, user_id: int,
                 is_active: bool=True,
                 is_admin: bool=False,
-                resource_policy: Optional[str]=None,
-                rate_limit: Optional[int]=None,
-                concurrency_limit: Optional[int]=None,
-                fields: Optional[Iterable[str]]=None):
+                resource_policy: str=None,
+                rate_limit: int=None,
+                concurrency_limit: int=None,
+                fields: Iterable[str]=None,
+                config: APIConfig=None):
         if fields is None:
             fields = ('access_key', 'secret_key')
         q = 'mutation($user_id: Int!, $input: KeyPairInput!) {' \
@@ -40,14 +42,15 @@ class BaseKeyPair(BaseFunction):
         resp = yield Request('POST', '/admin/graphql', {
             'query': q,
             'variables': vars,
-        })
+        }, config=config)
         data = resp.json()
         return data['create_keypair']
 
     @classmethod
     def _list(cls, user_id: int,
-              is_active: Optional[bool]=None,
-              fields: Optional[Iterable[str]]=None):
+              is_active: bool=None,
+              fields: Iterable[str]=None,
+              config: APIConfig=None):
         if fields is None:
             fields = (
                 'access_key', 'secret_key',
@@ -66,7 +69,7 @@ class BaseKeyPair(BaseFunction):
         resp = yield Request('POST', '/admin/graphql', {
             'query': q,
             'variables': vars,
-        })
+        }, config=config)
         data = resp.json()
         return data['keypairs']
 

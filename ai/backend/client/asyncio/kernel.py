@@ -19,7 +19,8 @@ class Kernel(AsyncFunctionMixin, BaseKernel):
 
     # only supported in AsyncKernel
     async def stream_pty(self):
-        request = Request('GET', '/stream/kernel/{}/pty'.format(self.kernel_id))
+        request = Request('GET', '/stream/kernel/{}/pty'.format(self.kernel_id),
+                          config=self.config)
         try:
             sess, ws = await request.connect_websocket()
         except aiohttp.ClientResponseError as e:

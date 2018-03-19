@@ -5,6 +5,7 @@ import uuid
 import aiohttp.web
 
 from .base import BaseFunction, SyncFunctionMixin
+from .config import APIConfig
 from .exceptions import BackendClientError
 from .request import Request
 
@@ -27,7 +28,8 @@ class BaseKernel(BaseFunction):
                        client_token: str=None,
                        mounts: Iterable[str]=None,
                        envs: Mapping[str, str]=None,
-                       max_mem: int=0, exec_timeout: int=0) -> str:
+                       max_mem: int=0, exec_timeout: int=0,
+                       config: APIConfig=None) -> str:
         if client_token:
             assert 4 <= len(client_token) <= 64, \
                    'Client session token should be 4 to 64 characters long.'
@@ -40,26 +42,25 @@ class BaseKernel(BaseFunction):
                 'mounts': mounts,
                 'envs': envs,
             },
-            # 'limits': {
-            #     'maxMem': max_mem,
-            #     'execTimeout': exec_timeout,
-            # },
-        })
+        }, config=config)
         data = resp.json()
-        o = cls(data['kernelId'])  # type: ignore
-        o.created = data.get('created', True)  # True is for legacy
+        o = cls(data['kernelId'], config=config)  # type: ignore
+        o.created = data.get('created', True)     # True is for legacy
         return o
 
     def _destroy(self):
-        resp = yield Request('DELETE', '/kernel/{}'.format(self.kernel_id))
+        resp = yield Request('DELETE', '/kernel/{}'.format(self.kernel_id),
+                             config=self.config)
         if resp.status == 200:
             return resp.json()
 
     def _restart(self):
-        yield Request('PATCH', '/kernel/{}'.format(self.kernel_id))
+        yield Request('PATCH', '/kernel/{}'.format(self.kernel_id),
+                      config=self.config)
 
     def _interrupt(self):
-        yield Request('POST', '/kernel/{}/interrupt'.format(self.kernel_id))
+        yield Request('POST', '/kernel/{}/interrupt'.format(self.kernel_id),
+                      config=self.config)
 
     def _complete(self, code: str, opts: dict=None):
         opts = {} if opts is None else opts
@@ -71,16 +72,18 @@ class BaseKernel(BaseFunction):
                 'line': opts.get('line', ''),
                 'post': opts.get('post', ''),
             },
-        })
+        }, config=self.config)
         resp = yield rqst
         return resp.json()
 
     def _get_info(self):
-        resp = yield Request('GET', '/kernel/{}'.format(self.kernel_id))
+        resp = yield Request('GET', '/kernel/{}'.format(self.kernel_id),
+                             config=self.config)
         return resp.json()
 
     def _get_logs(self):
-        resp = yield Request('GET', '/kernel/{}/logs'.format(self.kernel_id))
+        resp = yield Request('GET', '/kernel/{}/logs'.format(self.kernel_id),
+                             config=self.config)
         return resp.json()
 
     def _execute(self, run_id: str=None,
@@ -94,7 +97,7 @@ class BaseKernel(BaseFunction):
                 'mode': mode,
                 'code': code,
                 'runId': run_id,
-            })
+            }, config=self.config)
         elif mode == 'batch':
             rqst = Request('POST', '/kernel/{}'.format(self.kernel_id), {
                 'mode': mode,
@@ -105,7 +108,7 @@ class BaseKernel(BaseFunction):
                     'buildLog': bool(opts.get('buildLog', False)),
                     'exec': opts.get('exec', None),
                 },
-            })
+            }, config=self.config)
         elif mode == 'complete':
             rqst = Request('POST', '/kernel/{}/complete'.format(self.kernel_id), {
                 'code': code,
@@ -115,7 +118,7 @@ class BaseKernel(BaseFunction):
                     'line': opts.get('line', ''),
                     'post': opts.get('post', ''),
                 },
-            })
+            }, config=self.config)
         else:
             raise BackendClientError('Invalid execution mode: {0}'.format(mode))
         resp = yield rqst
@@ -140,21 +143,23 @@ class BaseKernel(BaseFunction):
                 msg = 'File "{0}" is outside of the base directory "{1}".' \
                       .format(file_path, base_path)
                 raise ValueError(msg) from None
-        rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id))
+        rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id),
+                       config=self.config)
         rqst.content = fields
         resp = yield rqst
         return resp
 
-    def __init__(self, kernel_id: str) -> None:
+    def __init__(self, kernel_id: str, *, config: APIConfig=None) -> None:
         self.kernel_id = kernel_id
-        self.destroy  = self._call_base_method(self._destroy)
-        self.restart  = self._call_base_method(self._restart)
+        self.config    = config
+        self.destroy   = self._call_base_method(self._destroy)
+        self.restart   = self._call_base_method(self._restart)
         self.interrupt = self._call_base_method(self._interrupt)
         self.complete  = self._call_base_method(self._complete)
-        self.get_info = self._call_base_method(self._get_info)
-        self.get_logs = self._call_base_method(self._get_logs)
-        self.execute  = self._call_base_method(self._execute)
-        self.upload  = self._call_base_method(self._upload)
+        self.get_info  = self._call_base_method(self._get_info)
+        self.get_logs  = self._call_base_method(self._get_logs)
+        self.execute   = self._call_base_method(self._execute)
+        self.upload    = self._call_base_method(self._upload)
 
     def __init_subclass__(cls):
         cls.get_or_create = cls._call_base_clsmethod(cls._get_or_create)
