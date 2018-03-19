@@ -11,7 +11,7 @@ from ai.backend.client.request import Request
 
 
 @pytest.mark.asyncio
-async def test_create_kernel_url():
+async def test_create_kernel_url(mocker):
     mock_resp = asynctest.MagicMock(spec=aiohttp.ClientResponse)
     mock_resp.status = 201
     mock_resp.json = asynctest.MagicMock()
@@ -24,7 +24,7 @@ async def test_create_kernel_url():
         await Kernel.get_or_create('python')
 
         mock_req_cls.assert_called_once_with(
-            'POST', '/kernel/create', mock.ANY, config=None)
+            'POST', '/kernel/create', mock.ANY, config=mocker.ANY)
         mock_req_obj.asend.assert_called_once_with()
         mock_req_obj.asend.return_value.json.assert_called_once_with()
 
@@ -56,7 +56,7 @@ async def test_create_kernel_raises_err_with_abnormal_status():
 
 
 @pytest.mark.asyncio
-async def test_destroy_kernel_url():
+async def test_destroy_kernel_url(mocker):
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=204)
     kernel_id = token_hex(12)
@@ -64,7 +64,7 @@ async def test_destroy_kernel_url():
                          return_value=mock_req_obj) as mock_req_cls:
         await Kernel(kernel_id).destroy()
         mock_req_cls.assert_called_once_with(
-            'DELETE', '/kernel/{}'.format(kernel_id), config=None)
+            'DELETE', '/kernel/{}'.format(kernel_id), config=mocker.ANY)
 
 
 @pytest.mark.asyncio
@@ -78,7 +78,7 @@ async def test_destroy_kernel_raises_err_with_abnormal_status():
 
 
 @pytest.mark.asyncio
-async def test_restart_kernel_url():
+async def test_restart_kernel_url(mocker):
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=204)
     kernel_id = token_hex(12)
@@ -86,7 +86,7 @@ async def test_restart_kernel_url():
                          return_value=mock_req_obj) as mock_req_cls:
         await Kernel(kernel_id).restart()
         mock_req_cls.assert_called_once_with(
-            'PATCH', '/kernel/{}'.format(kernel_id), config=None)
+            'PATCH', '/kernel/{}'.format(kernel_id), config=mocker.ANY)
 
 
 @pytest.mark.asyncio
@@ -100,7 +100,7 @@ async def test_restart_kernel_raises_err_with_abnormal_status():
 
 
 @pytest.mark.asyncio
-async def test_get_kernel_info_url():
+async def test_get_kernel_info_url(mocker):
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=200)
     kernel_id = token_hex(12)
@@ -108,7 +108,7 @@ async def test_get_kernel_info_url():
                          return_value=mock_req_obj) as mock_req_cls:
         await Kernel(kernel_id).get_info()
         mock_req_cls.assert_called_once_with(
-            'GET', '/kernel/{}'.format(kernel_id), config=None)
+            'GET', '/kernel/{}'.format(kernel_id), config=mocker.ANY)
 
 
 @pytest.mark.asyncio
@@ -122,7 +122,7 @@ async def test_get_kernel_info_raises_err_with_abnormal_status():
 
 
 @pytest.mark.asyncio
-async def test_execute_code_url():
+async def test_execute_code_url(mocker):
     mock_req_obj = asynctest.MagicMock(spec=Request)
     mock_req_obj.asend.return_value = asynctest.MagicMock(status=200)
     kernel_id = token_hex(12)
@@ -133,7 +133,7 @@ async def test_execute_code_url():
         mock_req_cls.assert_called_once_with(
             'POST', '/kernel/{}'.format(kernel_id),
             {'mode': 'query', 'runId': run_id, 'code': 'hello'},
-            config=None)
+            config=mocker.ANY)
 
 
 @pytest.mark.asyncio
@@ -157,7 +157,7 @@ async def test_stream_pty(mocker):
                          return_value=mock_req_obj) as mock_req_cls:
         stream = await Kernel(kernel_id).stream_pty()
         mock_req_cls.assert_called_once_with(
-            'GET', '/stream/kernel/{}/pty'.format(kernel_id), config=None)
+            'GET', '/stream/kernel/{}/pty'.format(kernel_id), config=mocker.ANY)
         mock_req_obj.connect_websocket.assert_called_once_with()
         assert isinstance(stream, StreamPty)
         assert stream.sess is sess

@@ -5,7 +5,7 @@ import uuid
 import aiohttp.web
 
 from .base import BaseFunction, SyncFunctionMixin
-from .config import APIConfig
+from .config import APIConfig, get_config
 from .exceptions import BackendClientError
 from .request import Request
 
@@ -35,6 +35,11 @@ class BaseKernel(BaseFunction):
                    'Client session token should be 4 to 64 characters long.'
         else:
             client_token = uuid.uuid4().hex
+        if config is None:
+            config = get_config()
+        if mounts is None:
+            mounts = []
+        mounts.extend(config.vfolder_mounts)
         resp = yield Request('POST', '/kernel/create', {
             'lang': lang,
             'clientSessionToken': client_token,
