@@ -27,7 +27,7 @@ def list(args):
         if not resp:
             print('There is no virtual folders created yet.')
             return
-        rows = ((vf[key] for _, key in fields) for vf in resp)
+        rows = (tuple(vf[key] for _, key in fields) for vf in resp)
         hdrs = (display_name for display_name, _ in fields)
         print(tabulate(rows, hdrs))
     except BackendError as e:
