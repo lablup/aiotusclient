@@ -1,6 +1,23 @@
 Changes
 =======
 
+1.3.0 (2018-03-20)
+------------------
+
+ - Add support for BACKEND_VFOLDER_MOUNTS environment variable. (#21)
+   This allows use of auto-mounted vfolders when using 3rd-party integrations such as
+   Jupyter notebook.  The format is a list of comma-separated strings for the vfolder
+   names.
+
+ - Individual API Function objects such as Kernel can now have individual
+   APIConfig objects via optional "config" parameters to static/class methods
+   and the per-instance config attribute. (#20)
+
+ - Improve vfolder CLI command outputs.
+
+ - Improve scripting support: all CLI commands that fail now return exit code 1
+   explicitly.
+
 1.2.1 (2018-03-08)
 ------------------
 
