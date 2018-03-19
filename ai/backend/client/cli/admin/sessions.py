@@ -1,7 +1,9 @@
+import sys
+
 from tabulate import tabulate
 
 from ...admin import Admin
-from ...exceptions import BackendClientError
+from ...exceptions import BackendError
 from ..pretty import print_fail
 from . import admin
 
@@ -34,9 +36,9 @@ def sessions(args):
     }
     try:
         resp = Admin.query(q, v)
-    except BackendClientError as e:
+    except BackendError as e:
         print_fail(str(e))
-        return
+        sys.exit(1)
     if len(resp['compute_sessions']) == 0:
         print('There are no compute sessions currently running.')
         return

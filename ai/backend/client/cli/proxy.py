@@ -58,9 +58,10 @@ def proxy(args):
     except (KeyboardInterrupt, SystemExit):
         print()
         print_info('Terminated.')
-    except:
+    except Exception:
         print_fail('Unexpected error!')
         traceback.print_exc()
+        sys.exit(1)
 
 
 proxy.add_argument('--bind', type=str, default='localhost',

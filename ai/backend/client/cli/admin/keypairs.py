@@ -1,7 +1,9 @@
+import sys
+
 from tabulate import tabulate
 
 from ...keypair import KeyPair
-from ...exceptions import BackendClientError
+from ...exceptions import BackendError
 from ..pretty import print_fail
 from . import admin
 
@@ -25,9 +27,9 @@ def keypairs(args):
     try:
         items = KeyPair.list(args.user_id, args.is_active,
                              fields=(item[1] for item in fields))
-    except BackendClientError as e:
+    except BackendError as e:
         print_fail(str(e))
-        return
+        sys.exit(1)
     if len(items) == 0:
         print('There are no matching keypairs associated '
               'with the user ID {0}'.format(args.user_id))

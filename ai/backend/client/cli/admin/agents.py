@@ -1,7 +1,9 @@
+import sys
+
 from tabulate import tabulate
 
 from ...agent import Agent
-from ...exceptions import BackendClientError
+from ...exceptions import BackendError
 from ..pretty import print_fail
 from . import admin
 
@@ -22,9 +24,9 @@ def agents(args):
     try:
         items = Agent.list(args.status,
                            fields=(item[1] for item in fields))
-    except BackendClientError as e:
+    except BackendError as e:
         print_fail(str(e))
-        return
+        sys.exit(1)
     if len(items) == 0:
         print('There are no matching agents.')
         return

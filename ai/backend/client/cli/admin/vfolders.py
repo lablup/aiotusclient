@@ -1,7 +1,9 @@
+import sys
+
 from tabulate import tabulate
 
 from ...admin import Admin
-from ...exceptions import BackendClientError
+from ...exceptions import BackendError
 from ..pretty import print_fail
 from . import admin
 
@@ -25,9 +27,9 @@ def vfolders(args):
     q = q.replace('$fields', ' '.join(item[1] for item in fields))
     try:
         resp = Admin.query(q)
-    except BackendClientError as e:
+    except BackendError as e:
         print_fail(str(e))
-        return
+        sys.exit(1)
     print(tabulate((item.values() for item in resp['vfolders']),
                    headers=(item[0] for item in fields)))
 

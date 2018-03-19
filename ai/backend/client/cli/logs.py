@@ -18,7 +18,7 @@ def logs(args):
         print_done('End of logs.')
     except BackendError as e:
         print_fail(str(e))
-        return
+        sys.exit(1)
 
 
 logs.add_argument('sess_id_or_alias', metavar='NAME',

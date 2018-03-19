@@ -134,9 +134,11 @@ def run(args):
                       vprint_wait=vprint_wait, vprint_done=vprint_done)
     except BackendError as e:
         print_fail(str(e))
+        sys.exit(1)
     except Exception:
         print_fail('Execution failed!')
         traceback.print_exc()
+        sys.exit(1)
     finally:
         if args.rm:
             vprint_wait('Cleaning up the session...')
@@ -193,7 +195,7 @@ def terminate(args):
         ret = kernel.destroy()
     except BackendError as e:
         print_fail(str(e))
-        return
+        sys.exit(1)
     else:
         print_done('Done.')
         if args.stats:
