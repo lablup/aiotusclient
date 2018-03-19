@@ -19,11 +19,13 @@ def test_create_with_config(mocker):
         endpoint='https://localhost:9999',
         access_key='1234',
         secret_key='asdf',
+        user_agent='BAIClientTest'
     )
     k = Kernel.get_or_create('python', config=myconfig)
     mock_req.assert_called_once_with('POST', '/kernel/create', mocker.ANY,
                                      config=myconfig)
     assert k.config.endpoint == 'https://localhost:9999'
+    assert k.config.user_agent == 'BAIClientTest'
     assert k.config.access_key == '1234'
     assert k.config.secret_key == 'asdf'
 

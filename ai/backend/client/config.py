@@ -22,7 +22,6 @@ class APIConfig:
 
     DEFAULTS = {
         'endpoint': 'https://api.backend.ai',
-        'user_agent': 'Backend.AI Client Library (Python/v1.0)',
         'version': 'v2.20170315',
     }
 
@@ -32,12 +31,13 @@ class APIConfig:
                  access_key: str=None,
                  secret_key: str=None,
                  hash_type: str=None) -> None:
+        from . import get_user_agent  # noqa; to avoid circular imports
         self._endpoint = \
             endpoint if endpoint else get_env('ENDPOINT', self.DEFAULTS['endpoint'])
         self._version = \
             version if version else self.DEFAULTS['version']
         self._user_agent = \
-            user_agent if user_agent else self.DEFAULTS['user_agent']
+            user_agent if get_user_agent() else self.DEFAULTS['user_agent']
         self._access_key = \
             access_key if access_key else get_env('ACCESS_KEY')
         self._secret_key = \
