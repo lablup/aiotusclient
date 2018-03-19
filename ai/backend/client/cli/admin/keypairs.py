@@ -55,13 +55,13 @@ def add(args):
         return
     try:
         data = KeyPair.create(args.user_id)
-    except BackendClientError as e:
+    except BackendError as e:
         print_fail(str(e))
-        return
+        sys.exit(1)
     if not data['ok']:
         print_fail('KeyPair creation has failed: {0}'
                    .format(data['msg']))
-        return
+        sys.exit(1)
     item = data['keypair']
     print('Access Key: {0}'.format(item['access_key']))
     print('Secret Key: {0}'.format(item['secret_key']))

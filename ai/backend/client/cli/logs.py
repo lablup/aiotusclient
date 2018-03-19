@@ -1,3 +1,5 @@
+import sys
+
 from . import register_command
 from .pretty import print_wait, print_done, print_fail
 from ..exceptions import BackendError

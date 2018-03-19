@@ -34,6 +34,7 @@ def list(args):
         print_fail(str(e))
         sys.exit(1)
 
+
 @vfolder.register_command
 def create(args):
     '''Create a new virtual folder.'''
@@ -80,7 +81,7 @@ info.add_argument('name', type=str, help='The name of a virtual folder.')
 def upload(args):
     '''Upload a file to the virtual folder.'''
     try:
-        result = VFolder(args.name).upload(args.filenames)
+        VFolder(args.name).upload(args.filenames)
         print_done('Done.')
     except BackendError as e:
         print_fail(str(e))

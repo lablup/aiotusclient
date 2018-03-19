@@ -1,5 +1,6 @@
 import http.server
 import re
+import sys
 import traceback
 
 from . import register_command
