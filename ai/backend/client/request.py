@@ -138,10 +138,10 @@ class BaseRequest:
         self.headers.update(hdrs)
 
     def build_url(self):
+        base_url = self.config.endpoint.path.rstrip('/')
         major_ver = self.config.version.split('.', 1)[0]
-        path = '{0}/{1}/{2}'.format(self.config.endpoint.path.rstrip('/'),
-                                    major_ver,
-                                    self.path.lstrip('/') if len(self.path) > 0 else '')
+        query_path = self.path.lstrip('/') if len(self.path) > 0 else ''
+        path = '{0}/{1}/{2}'.format(base_url, major_ver, query_path)
         canonical_url = self.config.endpoint.with_path(path)
         return str(canonical_url)
 
