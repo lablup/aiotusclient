@@ -39,13 +39,14 @@ def test_api_config_initialization(cfg_params):
 
 
 def test_validation():
+    mandatory_args = {'access_key': 'a', 'secret_key': 's'}
     with pytest.raises(ValueError):
-        APIConfig(endpoint='/mylocalpath')
-    cfg = APIConfig(vfolder_mounts='abc')
+        APIConfig(endpoint='/mylocalpath', **mandatory_args)
+    cfg = APIConfig(vfolder_mounts='abc', **mandatory_args)
     assert cfg.vfolder_mounts == ('abc',)
-    cfg = APIConfig(vfolder_mounts='')
+    cfg = APIConfig(vfolder_mounts='', **mandatory_args)
     assert cfg.vfolder_mounts == tuple()
-    cfg = APIConfig(vfolder_mounts=['abc', 'def'])
+    cfg = APIConfig(vfolder_mounts=['abc', 'def'], **mandatory_args)
     assert cfg.vfolder_mounts == ('abc', 'def')
 
 
