@@ -54,10 +54,9 @@ class BaseRequest:
         if path.startswith('/'):
             path = path[1:]
         self.path = path
-        self.date = datetime.now(tzutc())
+        self.date = None
         self.headers = CIMultiDict([
-            ('Date', self.date.isoformat()),
-            ('User-Agent', config.user_agent),
+            ('User-Agent', self.config.user_agent),
             ('X-BackendAI-Version', self.config.version),
         ])
         self.content = content if content is not None else b''
@@ -151,6 +150,8 @@ class BaseRequest:
         Sends the request to the server.
         '''
         assert self.method in self._allowed_methods
+        self.date = datetime.now(tzutc())
+        self.headers['Date'] = self.date.isoformat()
         if sess is None:
             sess = requests.Session()
         else:
@@ -186,6 +187,8 @@ class AsyncRequestMixin:
         This method is a coroutine.
         '''
         assert self.method in self._allowed_methods
+        self.date = datetime.now(tzutc())
+        self.headers['Date'] = self.date.isoformat()
         if sess is None:
             sess = aiohttp.ClientSession()
         else:

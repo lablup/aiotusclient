@@ -69,7 +69,6 @@ def test_request_initialization(mock_request_params):
     assert rqst.method == mock_request_params['method']
     assert rqst.path == mock_request_params['path'][1:]
     assert rqst.content == mock_request_params['content']
-    assert 'Date' in rqst.headers
     assert 'X-BackendAI-Version' in rqst.headers
     assert rqst._content == json.dumps(mock_request_params['content']).encode('utf8')
 
