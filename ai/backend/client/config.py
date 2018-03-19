@@ -44,8 +44,9 @@ class APIConfig:
         'vfolder_mounts': [],
     }
 
-    def __init__(self, endpoint: Union[URL, str]=None,
-                 version: str='v2.20170315',
+    def __init__(self, *,
+                 endpoint: Union[URL, str]=None,
+                 version: str=None,
                  user_agent: str=None,
                  access_key: str=None,
                  secret_key: str=None,
