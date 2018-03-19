@@ -3,7 +3,6 @@ from collections import OrderedDict
 import io
 import json
 from unittest import mock
-from urllib.parse import urljoin
 
 import aiohttp
 from asynctest import CoroutineMock, MagicMock, patch
@@ -136,7 +135,8 @@ def test_build_correct_url(mock_request_params):
     major_ver = config.version.split('.', 1)[0]
     path = '/' + rqst.path if len(rqst.path) > 0 else ''
 
-    assert rqst.build_url() == urljoin(config.endpoint, major_ver + path)
+    canonical_url = 'http://127.0.0.1:8081/path/{0}{1}'.format(major_ver, path)
+    assert rqst.build_url() == canonical_url
 
 
 def test_send_not_allowed_request_raises_error(mock_request_params):

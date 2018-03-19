@@ -35,5 +35,5 @@ def vfolders(args):
 
 
 vfolders.add_argument('--access-key', type=str, default=None,
-                      help='Get vfolders for a specific access key '
+                      help='Get vfolders for the given access key '
                            '(only works if you are a super-admin)')

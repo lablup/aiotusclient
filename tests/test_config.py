@@ -1,4 +1,5 @@
 import pytest
+from yarl import URL
 
 from ai.backend.client.config import APIConfig, get_config, set_config
 
@@ -12,6 +13,7 @@ def cfg_params():
         'access_key': 'AKIAIOSFODNN7EXAMPLE',
         'secret_key': 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
         'hash_type': 'md5',
+        'vfolder_mounts': ['abc', 'def'],
     }
 
 
@@ -19,19 +21,32 @@ def test_api_config_initialization(cfg_params):
     params = cfg_params
     cfg = APIConfig(**params)
 
-    assert cfg.endpoint == params['endpoint']
+    assert str(cfg.endpoint) == params['endpoint']
     assert cfg.version == params['version']
     assert cfg.user_agent == params['user_agent']
     assert cfg.access_key == params['access_key']
     assert cfg.secret_key == params['secret_key']
     assert cfg.hash_type == params['hash_type']
+    assert cfg.vfolder_mounts == tuple(params['vfolder_mounts'])
 
-    assert isinstance(cfg.endpoint, str)
+    assert isinstance(cfg.endpoint, URL)
     assert isinstance(cfg.version, str)
     assert isinstance(cfg.user_agent, str)
     assert isinstance(cfg.access_key, str)
     assert isinstance(cfg.secret_key, str)
     assert isinstance(cfg.hash_type, str)
+    assert isinstance(cfg.vfolder_mounts, tuple)
+
+
+def test_validation():
+    with pytest.raises(ValueError):
+        APIConfig(endpoint='/mylocalpath')
+    cfg = APIConfig(vfolder_mounts='abc')
+    assert cfg.vfolder_mounts == ('abc',)
+    cfg = APIConfig(vfolder_mounts='')
+    assert cfg.vfolder_mounts == tuple()
+    cfg = APIConfig(vfolder_mounts=['abc', 'def'])
+    assert cfg.vfolder_mounts == ('abc', 'def')
 
 
 def test_set_and_get_config(mocker, cfg_params):
@@ -85,5 +100,7 @@ def test_get_config_return_default_config_when_config_is_none(
     })
 
     cfg = get_config()
-    for k, v in APIConfig.DEFAULTS.items():
-        assert getattr(cfg, k) == v
+    assert str(cfg.endpoint) == APIConfig.DEFAULTS['endpoint']
+    assert cfg.version == APIConfig.DEFAULTS['version']
+    assert cfg.access_key == cfg_params['access_key']
+    assert cfg.secret_key == cfg_params['secret_key']

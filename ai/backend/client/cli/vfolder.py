@@ -79,7 +79,7 @@ info.add_argument('name', type=str, help='The name of a virtual folder.')
 
 @vfolder.register_command
 def upload(args):
-    '''Upload a file to the virtual folder.'''
+    '''Upload a file to the virtual folder from the current working directory.'''
     try:
         VFolder(args.name).upload(args.filenames)
         print_done('Done.')
@@ -91,3 +91,19 @@ def upload(args):
 upload.add_argument('name', type=str, help='The name of a virtual folder.')
 upload.add_argument('filenames', type=Path, nargs='+',
                     help='Paths of the files to be uploaded.')
+
+
+@vfolder.register_command
+def download(args):
+    '''Download a file from the virtual folder to the current working directory.'''
+    try:
+        VFolder(args.name).download(args.filenames)
+        print_done('Done.')
+    except BackendError as e:
+        print_fail(str(e))
+        sys.exit(1)
+
+
+download.add_argument('name', type=str, help='The name of a virtual folder.')
+download.add_argument('filenames', type=Path, nargs='+',
+                      help='Paths of the files to be uploaded.')

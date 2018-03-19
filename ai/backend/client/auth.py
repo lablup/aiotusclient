@@ -1,6 +1,5 @@
 import hashlib
 import hmac
-from urllib.parse import urlsplit
 
 
 def generate_signature(method, version, endpoint,
@@ -10,7 +9,7 @@ def generate_signature(method, version, endpoint,
     Generates the API request signature from the given parameters.
     '''
     hash_type = hash_type
-    hostname = urlsplit(endpoint).netloc
+    hostname = endpoint._val.netloc  # FIXME: migrate to public API
     if content_type.startswith('multipart/'):
         content = b''
     body_hash = hashlib.new(hash_type, content).hexdigest()

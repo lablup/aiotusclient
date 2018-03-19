@@ -24,7 +24,7 @@ def test_config(capsys, mocker):
     config = get_config()
     main()
     out, _ = capsys.readouterr()
-    assert config.endpoint in out
+    assert str(config.endpoint) in out
     assert config.version in out
     assert config.access_key in out
     assert config.secret_key[:6] in out

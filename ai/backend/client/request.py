@@ -2,7 +2,6 @@ import asyncio
 from collections import OrderedDict
 from datetime import datetime
 from typing import Any, Mapping, Sequence, Union
-from urllib.parse import urljoin
 
 import aiohttp
 import aiohttp.web
@@ -140,8 +139,11 @@ class BaseRequest:
 
     def build_url(self):
         major_ver = self.config.version.split('.', 1)[0]
-        path = '/' + self.path if len(self.path) > 0 else ''
-        return urljoin(self.config.endpoint, major_ver + path)
+        path = '{0}/{1}/{2}'.format(self.config.endpoint.path,
+                                    major_ver,
+                                    self.path if len(self.path) > 0 else '')
+        canonical_url = self.config.endpoint.with_path(path)
+        return str(canonical_url)
 
     # TODO: attach rate-limit information
 

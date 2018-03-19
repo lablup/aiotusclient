@@ -71,18 +71,23 @@ class BaseVFolder(BaseFunction):
         resp = yield rqst
         return resp
 
+    def _download(self, files: Sequence[Union[str, Path]]):
+        # TODO: implement
+        raise NotImplementedError
+
     def __init__(self, name: str, *, config: APIConfig=None):
         assert _rx_slug.search(name) is not None
         self.name = name
         self.config = config
-        self.delete = self._call_base_method(self._delete)
-        self.info = self._call_base_method(self._info)
-        self.upload = self._call_base_method(self._upload)
+        self.delete   = self._call_base_method(self._delete)
+        self.info     = self._call_base_method(self._info)
+        self.upload   = self._call_base_method(self._upload)
+        self.download = self._call_base_method(self._download)
 
     def __init_subclass__(cls):
         cls.create = cls._call_base_clsmethod(cls._create)
-        cls.list = cls._call_base_clsmethod(cls._list)
-        cls.get = cls._call_base_clsmethod(cls._get)
+        cls.list   = cls._call_base_clsmethod(cls._list)
+        cls.get    = cls._call_base_clsmethod(cls._get)
 
 
 class VFolder(SyncFunctionMixin, BaseVFolder):
