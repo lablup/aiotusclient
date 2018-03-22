@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.3.1 (to be released)
+----------------------
+
+ - Upgrade aiohttp to v3.1 series, which introduces bugfixes and improvements in
+   websocket handling.
+
 1.3.0 (2018-03-20)
 ------------------
 
