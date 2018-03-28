@@ -12,7 +12,7 @@ __all__ = [
     request.__all__,  # noqa
 ]
 
-__version__ = '1.3.1a0'
+__version__ = '1.3.1'
 
 
 def get_user_agent():

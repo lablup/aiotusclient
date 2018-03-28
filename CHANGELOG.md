@@ -4,6 +4,8 @@ Changes
 1.3.1 (to be released)
 ----------------------
 
+ - Fix missing date object when making websocket requests.
+
  - Upgrade aiohttp to v3.1 series, which introduces bugfixes and improvements in
    websocket handling.
 
