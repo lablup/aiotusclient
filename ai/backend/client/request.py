@@ -232,6 +232,7 @@ class AsyncRequestMixin:
         Creates a WebSocket connection.
         '''
         assert self.method == 'GET'
+        self.date = datetime.now(tzutc())
         if sess is None:
             sess = aiohttp.ClientSession()
         else:
