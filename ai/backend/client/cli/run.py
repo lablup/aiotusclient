@@ -31,6 +31,11 @@ def exec_loop(kernel, code, mode, opts=None,
                 print(rec[1])
                 print('----- end of record -----')
         sys.stdout.flush()
+        files = result.get('files', [])
+        if files:
+            print('--- generated files ---')
+            for item in files:
+                print('{0}: {1}'.format(item['name'], item['url']))
         if result['status'] == 'build-finished':
             exitCode = result.get('exitCode')
             vprint_done('Build finished. (exit code = {0})'.format(exitCode))
