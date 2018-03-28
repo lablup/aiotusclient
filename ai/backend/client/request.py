@@ -233,6 +233,7 @@ class AsyncRequestMixin:
         '''
         assert self.method == 'GET'
         self.date = datetime.now(tzutc())
+        self.headers['Date'] = self.date.isoformat()
         if sess is None:
             sess = aiohttp.ClientSession()
         else:
@@ -241,6 +242,9 @@ class AsyncRequestMixin:
         try:
             ws = await sess.ws_connect(self.build_url(), headers=self.headers)
             return sess, ws
+        except (asyncio.CancelledError, asyncio.TimeoutError):
+            # These exceptions must be bubbled up.
+            raise
         except aiohttp.ClientError as e:
             msg = 'Request to the API endpoint has failed.\n' \
                   'Check your network connection and/or the server status.'
