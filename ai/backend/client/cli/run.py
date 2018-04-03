@@ -162,8 +162,8 @@ run.add_argument('lang',
 run.add_argument('files', nargs='*', type=Path,
                  help='The code file(s). Can be added multiple times')
 run.add_argument('-t', '--client-token', metavar='SESSID',
-                 help='Specify a human-readable session ID or name '
-                      '[default: a random hex-string]')
+                 help='Specify a human-readable session ID or name. '
+                      'If not set, a random hex string is used.')
 run.add_argument('-c', '--code', metavar='CODE',
                  help='The code snippet as a single string')
 run.add_argument('--build', metavar='CMD',
@@ -175,7 +175,7 @@ run.add_argument('--basedir', metavar='PATH', type=Path, default=None,
                       'All uploaded files must reside inside this directory.')
 run.add_argument('--rm', action='store_true', default=False,
                  help='Terminate the session immediately after running '
-                      'the given code or files [default: False]')
+                      'the given code or files')
 run.add_argument('-e', '--env', metavar='KEY=VAL', type=str, action='append',
                  help='Environment variable '
                       '(may appear multiple times)')

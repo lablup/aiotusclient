@@ -69,4 +69,4 @@ proxy.add_argument('--bind', type=str, default='localhost',
                    help='The IP/host address to bind this proxy.')
 proxy.add_argument('-p', '--port', type=int, default=8084,
                    help='The TCP port to accept non-encrypted non-authorized '
-                        'API requests. (default: 8084)')
+                        'API requests.')

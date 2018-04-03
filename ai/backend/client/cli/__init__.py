@@ -13,7 +13,9 @@ ArgParserType = Union[argparse.ArgumentParser, configargparse.ArgumentParser]
 
 global_argparser = configargparse.ArgumentParser(
     prog='backend.ai',
-    description='Backend.AI command line interface')
+    description='Backend.AI command line interface',
+    formatter_class=configargparse.ArgumentDefaultsHelpFormatter,
+)
 _subparsers = dict()
 
 
@@ -34,9 +36,11 @@ def register_command(handler: Callable[[argparse.Namespace], None],
         handler(args)
 
     doc_summary = handler.__doc__.split('\n\n')[0]
-    inner_parser = subparsers.add_parser(handler.__name__.replace('_', '-'),
-                                         description=handler.__doc__,
-                                         help=doc_summary)
+    inner_parser = subparsers.add_parser(
+        handler.__name__.replace('_', '-'),
+        description=handler.__doc__,
+        formatter_class=configargparse.ArgumentDefaultsHelpFormatter,
+        help=doc_summary)
     inner_parser.set_defaults(function=wrapped)
     wrapped.register_command = functools.partial(register_command,
                                                  main_parser=inner_parser)

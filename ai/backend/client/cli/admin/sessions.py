@@ -50,7 +50,7 @@ sessions.add_argument('--status', type=str, default='RUNNING',
                       choices={'PREPARING', 'BUILDING', 'RUNNING',
                                'RESTARTING', 'RESIZING', 'SUSPENDED',
                                'TERMINATING', 'TERMINATED', 'ERROR', 'ALL'},
-                      help='Filter by the given status (default: RUNNING)')
+                      help='Filter by the given status')
 sessions.add_argument('--access-key', type=str, default=None,
                       help='Get sessions for a specific access key '
                            '(only works if you are a super-admin)')
