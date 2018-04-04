@@ -45,7 +45,7 @@ class BaseKernel(BaseFunction):
             'clientSessionToken': client_token,
             'config': {
                 'mounts': mounts,
-                'envs': envs,
+                'environ': envs,
             },
         }, config=config)
         data = resp.json()
