@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.3.3 (2018-04-95)
+------------------
+
+ - Hotfix for passing environment variables when creating new kernels.
+
 1.3.2 (2018-03-28)
 ------------------
 
