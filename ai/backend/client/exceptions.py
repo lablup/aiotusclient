@@ -20,7 +20,14 @@ class BackendAPIError(BackendError):
 
     def __init__(self, status: int, reason: str, data: Any):
         if isinstance(data, (str, bytes)):
-            data = json.loads(data)
+            try:
+                data = json.loads(data)
+            except json.JSONDecodeError:
+                data = {
+                    'type': 'https://api.backend.ai/probs/generic-error',
+                    'title': 'Generic Error (could not parse error string)',
+                    'content': data,
+                }
         super().__init__(status, reason, data)
 
     @property

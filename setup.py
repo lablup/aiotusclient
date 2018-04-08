@@ -9,9 +9,9 @@ install_requires = [
     'async_timeout',
     'namedlist>=1.6',
     'python-dateutil>=2.5',
-    'requests>=2.12',
     'ConfigArgParse==0.12.0',
     'tabulate>=0.7.7',
+    'tqdm~=4.21',
     'humanize',
     'yarl>=1.1.1',
 ]
@@ -27,6 +27,7 @@ test_requires = [
     'pytest-mock',
     'pytest-asyncio',
     'pytest-sugar',
+    'aioresponses',
     'asynctest',
     'codecov',
     'flake8',

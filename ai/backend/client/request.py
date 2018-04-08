@@ -1,14 +1,13 @@
 import asyncio
 from collections import OrderedDict
 from datetime import datetime
-from typing import Any, Mapping, Sequence, Union
+from typing import Any, Callable, Mapping, Sequence, Union
 
 import aiohttp
 import aiohttp.web
 from async_timeout import timeout as _timeout
 from dateutil.tz import tzutc
 from multidict import CIMultiDict
-import requests
 import json
 
 from .auth import generate_signature
@@ -35,7 +34,8 @@ class BaseRequest:
     def __init__(self, method: str='GET',
                  path: str=None,
                  content: Mapping=None,
-                 config: APIConfig=None) -> None:
+                 config: APIConfig=None,
+                 reporthook: Callable=None) -> None:
         '''
         Initialize an API request.
 
@@ -59,6 +59,7 @@ class BaseRequest:
             ('X-BackendAI-Version', self.config.version),
         ])
         self.content = content if content is not None else b''
+        self.reporthook = reporthook
 
     @property
     def content(self) -> Union[bytes, bytearray, None]:
@@ -147,42 +148,14 @@ class BaseRequest:
 
     # TODO: attach rate-limit information
 
-    def send(self, *, sess=None):
+    def send(self, *args, loop=None, **kwargs):
         '''
         Sends the request to the server.
         '''
-        assert self.method in self._allowed_methods
-        self.date = datetime.now(tzutc())
-        self.headers['Date'] = self.date.isoformat()
-        if sess is None:
-            sess = requests.Session()
-        else:
-            assert isinstance(sess, requests.Session)
-        self._sign()
-        reqfunc = getattr(sess, self.method.lower())
-        try:
-            if self.content_type == 'multipart/form-data':
-                files = map(
-                    lambda f: (f.name, (f.filename, f.file, f.content_type)),
-                    self._content)
-                resp = reqfunc(self.build_url(),
-                               files=files,
-                               headers=self.headers)
-            else:
-                resp = reqfunc(self.build_url(),
-                               data=self._content,
-                               headers=self.headers)
-            return Response(resp.status_code, resp.reason, resp.content,
-                            resp.headers['content-type'],
-                            resp.headers['content-length'])
-        except requests.exceptions.RequestException as e:
-            msg = 'Request to the API endpoint has failed.\n' \
-                  'Check your network connection and/or the server status.'
-            raise BackendClientError(msg) from e
+        loop = loop if loop is not None else asyncio.get_event_loop()
+        return loop.run_until_complete(self.asend(*args, **kwargs))
 
-
-class AsyncRequestMixin:
-    async def asend(self, *, sess=None, timeout=10.0):
+    async def asend(self, *, sess=None, timeout=None):
         '''
         Sends the request to the server.
 
@@ -217,8 +190,9 @@ class AsyncRequestMixin:
                     async with rqst_ctx as resp:
                         body = await resp.read()
                         return Response(resp.status, resp.reason,
-                                        body, resp.content_type,
-                                        len(body))
+                                        body=body,
+                                        content_type=resp.content_type,
+                                        charset=resp.charset)
         except (asyncio.CancelledError, asyncio.TimeoutError):
             # These exceptions must be bubbled up.
             raise
@@ -251,26 +225,29 @@ class AsyncRequestMixin:
             raise BackendClientError(msg) from e
 
 
-class Request(AsyncRequestMixin, BaseRequest):
+class Request(BaseRequest):
     pass
 
 
 class Response:
 
     __slots__ = ['_status', '_reason',
-                 '_content_type', '_content_length',
+                 '_content_type', '_content_length', '_charset',
                  '_body']
 
-    def __init__(self, status: int,
-                 reason: str,
-                 body: bytes,
+    def __init__(self, status: int, reason: str, *,
+                 body: Union[bytes, bytearray]=b'',
                  content_type='text/plain',
-                 content_length=None):
+                 content_length=None,
+                 charset=None):
         self._status = status
         self._reason = reason
+        if not isinstance(body, (bytes, bytearray)):
+            raise ValueError('body must be a bytes-like object.')
         self._body = body
         self._content_type = content_type
         self._content_length = content_length
+        self._charset = charset if charset else 'utf-8'
 
         # TODO: include rate-limiting information from headers
 
@@ -288,15 +265,21 @@ class Response:
 
     @property
     def content_length(self):
+        is_multipart = self._content_type.startswith('multipart/')
+        if self._content_length is None and not is_multipart:
+            return len(self._body)
         return self._content_length
+
+    @property
+    def charset(self):
+        return self._charset
 
     @property
     def content(self) -> bytes:
         return self._body
 
     def text(self) -> str:
-        # TODO: get encoding from underlying response obj
-        return self._body.decode('utf8')
+        return self._body.decode(self._charset)
 
     def json(self, loads=json.loads):
-        return loads(self._body.decode('utf8'), object_pairs_hook=OrderedDict)
+        return loads(self._body.decode(self._charset), object_pairs_hook=OrderedDict)

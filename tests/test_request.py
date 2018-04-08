@@ -2,12 +2,10 @@ import asyncio
 from collections import OrderedDict
 import io
 import json
-from unittest import mock
 
 import aiohttp
-from asynctest import CoroutineMock, MagicMock, patch
+from aioresponses import aioresponses
 import pytest
-import requests
 
 from ai.backend.client.exceptions import BackendClientError
 from ai.backend.client.request import Request, Response
@@ -17,48 +15,10 @@ from ai.backend.client.request import Request, Response
 def mock_request_params(defconfig):
     return OrderedDict(
         method='GET',
-        path='/path/to/api/',
+        path='/function/item/',
         content=OrderedDict(test1='1'),
         config=defconfig
     )
-
-
-@pytest.fixture
-def mock_requests_response():
-    resp = mock.Mock(spec=requests.Response)
-    content = b'{"test1": 1, "test2": 2}'
-    conf = {
-        'status_code': 900,
-        'reason': 'this is a test',
-        'content': content,
-        'headers': {
-            'content-type': 'application/json',
-            'content-length': len(content),
-        }
-    }
-    resp.configure_mock(**conf)
-    return resp, conf
-
-
-@pytest.fixture
-def mock_aiohttp_response():
-
-    def mocker(side_effect=None):
-        ctx = MagicMock()
-        resp = MagicMock()
-        resp.status = 900
-        resp.reason = 'Testing'
-        resp.content_type = 'application/json'
-        resp._test_body = b'{"test1": 1, "test2": 2}'  # for test codes
-        if side_effect is None:
-            resp.read = CoroutineMock(return_value=resp._test_body)
-        else:
-            resp.read = CoroutineMock(side_effect=side_effect)
-        ctx.return_value.__aenter__.return_value = resp
-        ctx._test_response = resp  # for test codes
-        return ctx
-
-    return mocker
 
 
 def test_request_initialization(mock_request_params):
@@ -66,7 +26,7 @@ def test_request_initialization(mock_request_params):
 
     assert rqst.config == mock_request_params['config']
     assert rqst.method == mock_request_params['method']
-    assert rqst.path == mock_request_params['path'][1:]
+    assert rqst.path == mock_request_params['path'].lstrip('/')
     assert rqst.content == mock_request_params['content']
     assert 'X-BackendAI-Version' in rqst.headers
     assert rqst._content == json.dumps(mock_request_params['content']).encode('utf8')
@@ -147,112 +107,108 @@ def test_send_not_allowed_request_raises_error(mock_request_params):
         rqst.send()
 
 
-def test_send(mocker, mock_request_params):
-    rqst = Request(**mock_request_params)
-    methods = Request._allowed_methods
-    for method in methods:
-        rqst.method = method
-
-        mock_reqfunc = mocker.patch.object(
-            requests.Session, method.lower(), autospec=True)
-
-        assert mock_reqfunc.call_count == 0
-        rqst.send()
-        mock_reqfunc.assert_called_once_with(
-            mocker.ANY, rqst.build_url(),
-            data=rqst._content, headers=rqst.headers)
-
-
-def test_send_and_read_response(
-        mocker, mock_request_params, mock_requests_response):
-    rqst = Request(**mock_request_params)
-    methods = Request._allowed_methods
-    for method in methods:
-        rqst.method = method
-
-        mock_reqfunc = mocker.patch.object(
-            requests.Session, method.lower(), autospec=True)
-        mock_reqfunc.return_value, conf = mock_requests_response
-
+def test_send_and_read_response(dummy_endpoint):
+    # Request.send() now calls Request.asend() internally.
+    with aioresponses() as m:
+        body = b'hello world'
+        m.post(
+            dummy_endpoint + 'function', status=200, body=body,
+            headers={'Content-Type': 'text/plain; charset=utf-8',
+                     'Content-Length': str(len(body))},
+        )
+        rqst = Request('POST', 'function')
         resp = rqst.send()
+    assert isinstance(resp, Response)
+    assert resp.status == 200
+    assert resp.charset == 'utf-8'
+    assert resp.content_type == 'text/plain'
+    assert resp.content_length == len(body)
+    assert resp.text() == body.decode()
 
-        assert resp.status == conf['status_code']
-        assert resp.reason == conf['reason']
-        assert resp.content_type == conf['headers']['content-type']
-        assert resp.content_length == conf['headers']['content-length']
-        assert resp.text() == conf['content'].decode()
-        assert resp.json() == json.loads(conf['content'].decode())
+    with aioresponses() as m:
+        body = b'{"a": 1234, "b": null}'
+        m.post(
+            dummy_endpoint + 'function', status=200, body=body,
+            headers={'Content-Type': 'application/json; charset=utf-8',
+                     'Content-Length': str(len(body))},
+        )
+        rqst = Request('POST', 'function')
+        resp = rqst.send()
+    assert isinstance(resp, Response)
+    assert resp.status == 200
+    assert resp.charset == 'utf-8'
+    assert resp.content_type == 'application/json'
+    assert resp.content_length == len(body)
+    assert resp.text() == body.decode()
+    assert resp.json() == {'a': 1234, 'b': None}
+
+
+def test_invalid_requests(dummy_endpoint):
+    with aioresponses() as m:
+        body = json.dumps({
+            'type': 'https://api.backend.ai/probs/kernel-not-found',
+            'title': 'Kernel Not Found',
+        }).encode('utf8')
+        m.post(
+            dummy_endpoint, status=404, body=body,
+            headers={'Content-Type': 'application/problem+json; charset=utf-8',
+                     'Content-Length': str(len(body))},
+        )
+        rqst = Request('POST', '/')
+        resp = rqst.send()
+    assert isinstance(resp, Response)
+    assert resp.status == 404
+    assert resp.charset == 'utf-8'
+    assert resp.content_type == 'application/problem+json'
+    assert resp.content_length == len(body)
+    assert resp.text() == body.decode()
+    data = resp.json()
+    assert data['type'] == 'https://api.backend.ai/probs/kernel-not-found'
+    assert data['title'] == 'Kernel Not Found'
 
 
 @pytest.mark.asyncio
-async def test_asend_not_allowed_request_raises_error(mock_request_params):
-    mock_request_params['method'] = 'STRANGE'
-    rqst = Request(**mock_request_params)
+async def test_asend_not_allowed_request_raises_error():
+    rqst = Request('STRANGE', '/')
     with pytest.raises(AssertionError):
         await rqst.asend()
 
 
 @pytest.mark.asyncio
-async def test_asend_and_read_response(mocker, mock_request_params,
-                                       mock_aiohttp_response):
-    rqst = Request(**mock_request_params)
-    methods = Request._allowed_methods
-    mock_rqst_ctx = mock_aiohttp_response()
-    mock_response = mock_rqst_ctx._test_response
-    for method in methods:
-        rqst.method = method
-        with patch('aiohttp.ClientSession.request',
-                   new=mock_rqst_ctx) as mock_request:
-            resp = await rqst.asend()
-            mock_request.assert_called_with(
-                method, rqst.build_url(),
-                data=rqst._content, headers=rqst.headers)
-            assert isinstance(resp, Response)
-            body = mock_response._test_body
-            assert resp.status == mock_response.status
-            assert resp.reason == mock_response.reason
-            assert resp.content_type == mock_response.content_type
-            assert resp.content_length == len(body)
-            assert resp.text() == body.decode()
-            assert resp.json() == json.loads(body.decode())
-
-
-@pytest.mark.asyncio
-async def test_asend_client_error(mock_request_params, mock_aiohttp_response):
-    rqst = Request(**mock_request_params)
-    mock_rqst_ctx = mock_aiohttp_response(side_effect=aiohttp.ClientConnectionError)
-    with patch('aiohttp.ClientSession.request', new=mock_rqst_ctx):
+async def test_asend_client_error(dummy_endpoint):
+    with aioresponses() as m:
+        m.post(dummy_endpoint,
+               exception=aiohttp.ClientConnectionError())
+        rqst = Request('POST', '/')
         with pytest.raises(BackendClientError):
             await rqst.asend()
 
 
 @pytest.mark.asyncio
-async def test_asend_cancellation(mock_request_params, mock_aiohttp_response):
-    rqst = Request(**mock_request_params)
-    mock_rqst_ctx = mock_aiohttp_response(side_effect=asyncio.CancelledError)
-    with patch('aiohttp.ClientSession.request', new=mock_rqst_ctx):
+async def test_asend_cancellation(dummy_endpoint):
+    with aioresponses() as m:
+        m.post(dummy_endpoint,
+               exception=asyncio.CancelledError())
+        rqst = Request('POST', '/')
         with pytest.raises(asyncio.CancelledError):
             await rqst.asend()
 
 
 @pytest.mark.asyncio
-async def test_asend_timeout(mock_request_params, mock_aiohttp_response):
-    rqst = Request(**mock_request_params)
-    mock_rqst_ctx = mock_aiohttp_response(side_effect=asyncio.TimeoutError)
-    with patch('aiohttp.ClientSession.request', new=mock_rqst_ctx):
+async def test_asend_timeout(dummy_endpoint):
+    with aioresponses() as m:
+        m.post(dummy_endpoint,
+               exception=asyncio.TimeoutError())
+        rqst = Request('POST', '/')
         with pytest.raises(asyncio.TimeoutError):
             await rqst.asend()
 
 
-def test_response_initialization(mock_requests_response):
-    _, conf = mock_requests_response
-    resp = Response(conf['status_code'], conf['reason'], conf['content'],
-                    conf['headers']['content-type'],
-                    conf['headers']['content-length'])
-
-    assert resp.status == conf['status_code']
-    assert resp.reason == conf['reason']
-    assert resp.content_type == conf['headers']['content-type']
-    assert resp.content_length == conf['headers']['content-length']
-    assert resp.text() == conf['content'].decode()
-    assert resp.json() == json.loads(conf['content'].decode())
+def test_response_initialization():
+    body = b'my precious content \xea\xb0\x80..'
+    resp = Response(299, 'Something Done', body=body, content_type='text/plain')
+    assert resp.status == 299
+    assert resp.reason == 'Something Done'
+    assert resp.content_type == 'text/plain'
+    assert resp.content_length == len(body)
+    assert resp.text() == 'my precious content 가..'

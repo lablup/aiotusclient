@@ -10,3 +10,8 @@ def defconfig():
                   secret_key='wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY')
     set_config(c)
     return c
+
+
+@pytest.fixture
+def dummy_endpoint(defconfig):
+    return str(defconfig.endpoint) + '/v2/'
