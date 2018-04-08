@@ -1,7 +1,20 @@
 Changes
 =======
 
-1.3.3 (2018-04-95)
+1.3.4 (2018-04-08)
+------------------
+
+ - Add progress bars when uploading files to kernel/vfolder in CLI. (#23)
+
+ - Drop dependency to requests and use aiohttp all the time, in favor of
+   better streaming request/response handling for large files.
+   Synchronous APIs will implicitly spawn event loops if not already there,
+   via `asyncio.get_event_loop()`.  You may also pass a loop object explicitly.
+
+ - Remove default timeout (10 secs) in asynchronous requests, to allow
+   large file uploads that takes longer than that.
+
+1.3.3 (2018-04-05)
 ------------------
 
  - Hotfix for passing environment variables when creating new kernels.
