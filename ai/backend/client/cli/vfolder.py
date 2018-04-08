@@ -81,7 +81,7 @@ info.add_argument('name', type=str, help='The name of a virtual folder.')
 def upload(args):
     '''Upload a file to the virtual folder from the current working directory.'''
     try:
-        VFolder(args.name).upload(args.filenames)
+        VFolder(args.name).upload(args.filenames, show_progress=True)
         print_done('Done.')
     except BackendError as e:
         print_fail(str(e))

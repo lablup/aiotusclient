@@ -117,7 +117,8 @@ def run(args):
                       'code snippet.', file=sys.stderr)
                 return
             vprint_wait('Uploading source files...')
-            ret = kernel.upload(args.files, basedir=args.basedir)
+            ret = kernel.upload(args.files, basedir=args.basedir,
+                                show_progress=True)
             if ret.status // 100 != 2:
                 print_fail('Uploading source files failed!')
                 print('{0}: {1}\n{2}'.format(

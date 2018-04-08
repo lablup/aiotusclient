@@ -3,11 +3,13 @@ from pathlib import Path
 import uuid
 
 import aiohttp.web
+from tqdm import tqdm
 
 from .base import BaseFunction, SyncFunctionMixin
 from .config import APIConfig, get_config
 from .exceptions import BackendClientError
 from .request import Request
+from .cli.pretty import ProgressReportingReader
 
 __all__ = (
     'BaseKernel',
@@ -130,28 +132,39 @@ class BaseKernel(BaseFunction):
         return resp.json()['result']
 
     def _upload(self, files: Sequence[Union[str, Path]],
-               basedir: Union[str, Path]=None):
+               basedir: Union[str, Path]=None,
+               show_progress: bool=False):
         fields = []
         base_path = (Path.cwd() if basedir is None
                      else Path(basedir).resolve())
-        for file in files:
-            file_path = Path(file).resolve()
-            try:
-                fields.append(aiohttp.web.FileField(
-                    'src',
-                    str(file_path.relative_to(base_path)),
-                    open(str(file_path), 'rb'),
-                    'application/octet-stream',
-                    None
-                ))
-            except ValueError:
-                msg = 'File "{0}" is outside of the base directory "{1}".' \
-                      .format(file_path, base_path)
-                raise ValueError(msg) from None
-        rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id),
-                       config=self.config)
-        rqst.content = fields
-        resp = yield rqst
+        files = [Path(file).resolve() for file in files]
+        total_size = 0
+        for file_path in files:
+            total_size += file_path.stat().st_size
+        tqdm_obj = tqdm(desc='Uploading files',
+                        unit='bytes', unit_scale=True,
+                        ncols=79,
+                        total=total_size,
+                        disable=not show_progress)
+        with tqdm_obj:
+            for file_path in files:
+                try:
+                    fields.append(aiohttp.web.FileField(
+                        'src',
+                        str(file_path.relative_to(base_path)),
+                        ProgressReportingReader(str(file_path),
+                                                tqdm_instance=tqdm_obj),
+                        'application/octet-stream',
+                        None
+                    ))
+                except ValueError:
+                    msg = 'File "{0}" is outside of the base directory "{1}".' \
+                          .format(file_path, base_path)
+                    raise ValueError(msg) from None
+            rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id),
+                           config=self.config)
+            rqst.content = fields
+            resp = yield rqst
         return resp
 
     def __init__(self, kernel_id: str, *, config: APIConfig=None) -> None:

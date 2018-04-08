@@ -49,7 +49,8 @@ class BaseVFolder(BaseFunction):
             return resp.json()
 
     def _upload(self, files: Sequence[Union[str, Path]],
-               basedir: Union[str, Path]=None):
+               basedir: Union[str, Path]=None,
+               show_progress: bool=False):
         fields = []
         base_path = (Path.cwd() if basedir is None
                      else Path(basedir).resolve())
@@ -60,14 +61,16 @@ class BaseVFolder(BaseFunction):
         tqdm_obj = tqdm(desc='Uploading files',
                         unit='bytes', unit_scale=True,
                         ncols=79,
-                        total=total_size)
+                        total=total_size,
+                        disable=not show_progress)
         with tqdm_obj:
             for file_path in files:
                 try:
                     fields.append(aiohttp.web.FileField(
                         'src',
                         str(file_path.relative_to(base_path)),
-                        ProgressReportingReader(str(file_path), tqdm=tqdm_obj),
+                        ProgressReportingReader(str(file_path),
+                                                tqdm_instance=tqdm_obj),
                         'application/octet-stream',
                         None
                     ))
