@@ -167,6 +167,12 @@ class BaseKernel(BaseFunction):
             resp = yield rqst
         return resp
 
+    def _list_files(self, path: str='.'):
+        resp = yield Request('POST', f'/kernel/{self.kernel_id}/files', {
+            'path': path,
+        }, config=self.config)
+        return resp.json()
+
     def __init__(self, kernel_id: str, *, config: APIConfig=None) -> None:
         self.kernel_id = kernel_id
         self.config    = config
@@ -178,6 +184,7 @@ class BaseKernel(BaseFunction):
         self.get_logs  = self._call_base_method(self._get_logs)
         self.execute   = self._call_base_method(self._execute)
         self.upload    = self._call_base_method(self._upload)
+        self.list_files = self._call_base_method(self._list_files)
 
     def __init_subclass__(cls):
         cls.get_or_create = cls._call_base_clsmethod(cls._get_or_create)
