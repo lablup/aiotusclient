@@ -22,7 +22,7 @@ ci_requires = [
     'twine',
 ]
 test_requires = [
-    'pytest>=3.4',
+    'pytest>=3.5',
     'pytest-cov',
     'pytest-mock',
     'pytest-asyncio',
