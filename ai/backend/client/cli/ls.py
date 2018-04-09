@@ -11,10 +11,11 @@ def ls(args):
     """
     try:
         path = args.path if args.path else '.'
-        print_wait(f'Retrieving list of files in "{path}"...')
+        print_wait('Retrieving list of files in "{}"...'.format(path))
         kernel = Kernel(args.sess_id_or_alias)
         result = kernel.list_files(path)
-        print_done(result['ls'])
+        print_done('Retrived.')
+        print(result['ls'])
     except BackendError as e:
         print_fail(str(e))
 
