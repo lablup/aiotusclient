@@ -168,7 +168,7 @@ class BaseKernel(BaseFunction):
         return resp
 
     def _list_files(self, path: str='.'):
-        resp = yield Request('POST', f'/kernel/{self.kernel_id}/files', {
+        resp = yield Request('POST', '/kernel/{}/files'.format(self.kernel_id), {
             'path': path,
         }, config=self.config)
         return resp.json()
