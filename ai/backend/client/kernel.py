@@ -167,6 +167,12 @@ class BaseKernel(BaseFunction):
             resp = yield rqst
         return resp
 
+    def _download(self, file: str):
+        resp = yield Request('POST', '/kernel/{}/download'.format(self.kernel_id), {
+            'file': file,
+        }, config=self.config)
+        return resp
+
     def _list_files(self, path: str='.'):
         resp = yield Request('POST', '/kernel/{}/files'.format(self.kernel_id), {
             'path': path,
@@ -184,6 +190,7 @@ class BaseKernel(BaseFunction):
         self.get_logs  = self._call_base_method(self._get_logs)
         self.execute   = self._call_base_method(self._execute)
         self.upload    = self._call_base_method(self._upload)
+        self.download  = self._call_base_method(self._download)
         self.list_files = self._call_base_method(self._list_files)
 
     def __init_subclass__(cls):
