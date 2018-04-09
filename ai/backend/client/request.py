@@ -164,35 +164,37 @@ class BaseRequest:
         assert self.method in self._allowed_methods
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
+        owns_session = False
         if sess is None:
-            sess = aiohttp.ClientSession()
+            owns_session = True
+            session = aiohttp.ClientSession()
         else:
-            assert isinstance(sess, aiohttp.ClientSession)
+            assert isinstance(session, aiohttp.ClientSession)
+            session = sess
         try:
-            async with sess:
-                if self.content_type == 'multipart/form-data':
-                    data = aiohttp.FormData()
-                    for f in self._content:
-                        data.add_field(f.name,
-                                       f.file,
-                                       filename=f.filename,
-                                       content_type=f.content_type)
-                    assert data.is_multipart
-                else:
-                    data = self._content
-                self._sign()
-                async with _timeout(timeout):
-                    rqst_ctx = sess.request(
-                        self.method,
-                        self.build_url(),
-                        data=data,
-                        headers=self.headers)
-                    async with rqst_ctx as resp:
-                        body = await resp.read()
-                        return Response(resp.status, resp.reason,
-                                        body=body,
-                                        content_type=resp.content_type,
-                                        charset=resp.charset)
+            if self.content_type == 'multipart/form-data':
+                data = aiohttp.FormData()
+                for f in self._content:
+                    data.add_field(f.name,
+                                   f.file,
+                                   filename=f.filename,
+                                   content_type=f.content_type)
+                assert data.is_multipart
+            else:
+                data = self._content
+            self._sign()
+            async with _timeout(timeout):
+                rqst_ctx = session.request(
+                    self.method,
+                    self.build_url(),
+                    data=data,
+                    headers=self.headers)
+                async with rqst_ctx as resp:
+                    body = await resp.read()
+                    return Response(resp.status, resp.reason,
+                                    body=body,
+                                    content_type=resp.content_type,
+                                    charset=resp.charset)
         except (asyncio.CancelledError, asyncio.TimeoutError):
             # These exceptions must be bubbled up.
             raise
@@ -200,22 +202,30 @@ class BaseRequest:
             msg = 'Request to the API endpoint has failed.\n' \
                   'Check your network connection and/or the server status.'
             raise BackendClientError(msg) from e
+        finally:
+            if owns_session:
+                await session.close()
 
-    async def connect_websocket(self, sess=None):
+    async def connect_websocket(self, *, sess=None):
         '''
         Creates a WebSocket connection.
+
+        This method is a coroutine.
         '''
         assert self.method == 'GET'
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
+        owns_session = False
         if sess is None:
-            sess = aiohttp.ClientSession()
+            owns_session = True
+            session = aiohttp.ClientSession()
         else:
-            assert isinstance(sess, aiohttp.ClientSession)
-        self._sign()
+            assert isinstance(session, aiohttp.ClientSession)
+            session = sess
         try:
-            ws = await sess.ws_connect(self.build_url(), headers=self.headers)
-            return sess, ws
+            self._sign()
+            ws = await session.ws_connect(self.build_url(), headers=self.headers)
+            return session, ws
         except (asyncio.CancelledError, asyncio.TimeoutError):
             # These exceptions must be bubbled up.
             raise
@@ -223,6 +233,9 @@ class BaseRequest:
             msg = 'Request to the API endpoint has failed.\n' \
                   'Check your network connection and/or the server status.'
             raise BackendClientError(msg) from e
+        finally:
+            if owns_session:
+                await session.close()
 
 
 class Request(BaseRequest):

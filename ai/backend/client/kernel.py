@@ -143,7 +143,6 @@ class BaseKernel(BaseFunction):
             total_size += file_path.stat().st_size
         tqdm_obj = tqdm(desc='Uploading files',
                         unit='bytes', unit_scale=True,
-                        ncols=79,
                         total=total_size,
                         disable=not show_progress)
         with tqdm_obj:
@@ -161,6 +160,7 @@ class BaseKernel(BaseFunction):
                     msg = 'File "{0}" is outside of the base directory "{1}".' \
                           .format(file_path, base_path)
                     raise ValueError(msg) from None
+
             rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id),
                            config=self.config)
             rqst.content = fields

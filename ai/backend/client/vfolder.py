@@ -60,7 +60,6 @@ class BaseVFolder(BaseFunction):
             total_size += file_path.stat().st_size
         tqdm_obj = tqdm(desc='Uploading files',
                         unit='bytes', unit_scale=True,
-                        ncols=79,
                         total=total_size,
                         disable=not show_progress)
         with tqdm_obj:
@@ -78,9 +77,9 @@ class BaseVFolder(BaseFunction):
                     msg = 'File "{0}" is outside of the base directory "{1}".' \
                           .format(file_path, base_path)
                     raise ValueError(msg) from None
+
             rqst = Request('POST', '/folders/{}/upload'.format(self.name),
-                           config=self.config,
-                           reporthook=None)
+                           config=self.config)
             rqst.content = fields
             resp = yield rqst
         return resp
