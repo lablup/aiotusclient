@@ -4,7 +4,6 @@ import io
 import os
 import sys
 import textwrap
-import time
 
 from tqdm import tqdm
 
