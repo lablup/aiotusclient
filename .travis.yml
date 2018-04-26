@@ -17,7 +17,7 @@ os:
 # test stage
 install:
   - pip install -U pip setuptools
-  - pip install -U -r requirements-ci.txt
+  - pip install -U --upgrade-strategy=eager -r requirements-ci.txt
 script:
   - python -m flake8 ai/backend tests
   - python -m pytest --cov=ai.backend.client -v -m "not integration"

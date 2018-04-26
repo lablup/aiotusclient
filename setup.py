@@ -16,6 +16,7 @@ install_requires = [
     'yarl>=1.1.1',
 ]
 dev_requires = [
+    'pytest-sugar',
 ]
 ci_requires = [
     'wheel',
@@ -26,7 +27,6 @@ test_requires = [
     'pytest-cov',
     'pytest-mock',
     'pytest-asyncio',
-    'pytest-sugar',
     'aioresponses',
     'asynctest',
     'codecov',
@@ -57,7 +57,7 @@ setup(
     license='MIT',
     classifiers=[
         'Development Status :: 4 - Beta',
-        'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',  # noqa
         'Intended Audience :: Developers',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
