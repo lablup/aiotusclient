@@ -165,6 +165,7 @@ def test_send_and_read_response(dummy_endpoint):
     with pytest.raises(AssertionError):
         assert resp.text()
 
+
 def test_invalid_requests(dummy_endpoint):
     with aioresponses() as m:
         body = json.dumps({
