@@ -2,6 +2,7 @@ import asyncio
 from collections import OrderedDict
 import io
 import json
+from unittest import mock
 
 import aiohttp
 from aioresponses import aioresponses
@@ -122,8 +123,8 @@ def test_send_and_read_response(dummy_endpoint):
     assert resp.status == 200
     assert resp.charset == 'utf-8'
     assert resp.content_type == 'text/plain'
-    assert resp.content_length == len(body)
     assert resp.text() == body.decode()
+    assert resp.content_length == len(body)
 
     with aioresponses() as m:
         body = b'{"a": 1234, "b": null}'
@@ -138,10 +139,31 @@ def test_send_and_read_response(dummy_endpoint):
     assert resp.status == 200
     assert resp.charset == 'utf-8'
     assert resp.content_type == 'application/json'
-    assert resp.content_length == len(body)
     assert resp.text() == body.decode()
     assert resp.json() == {'a': 1234, 'b': None}
+    assert resp.content_length == len(body)
 
+    # Read content by chunks.
+    with aioresponses() as m:
+        body = b'hello world'
+        m.post(
+            dummy_endpoint + 'function', status=200, body=body,
+            headers={'Content-Type': 'text/plain; charset=utf-8',
+                     'Content-Length': str(len(body))},
+        )
+        rqst = Request('POST', 'function')
+        resp = rqst.send()
+    assert isinstance(resp, Response)
+    assert resp.status == 200
+    assert resp.charset == 'utf-8'
+    assert resp.content_type == 'text/plain'
+    assert resp.read(3) == b'hel'
+    assert resp.read(2) == b'lo'
+    assert not resp.at_stream_eof
+    resp.read()
+    assert resp.at_stream_eof
+    with pytest.raises(AssertionError):
+        assert resp.text()
 
 def test_invalid_requests(dummy_endpoint):
     with aioresponses() as m:
@@ -160,8 +182,8 @@ def test_invalid_requests(dummy_endpoint):
     assert resp.status == 404
     assert resp.charset == 'utf-8'
     assert resp.content_type == 'application/problem+json'
-    assert resp.content_length == len(body)
     assert resp.text() == body.decode()
+    assert resp.content_length == len(body)
     data = resp.json()
     assert data['type'] == 'https://api.backend.ai/probs/kernel-not-found'
     assert data['title'] == 'Kernel Not Found'
@@ -206,9 +228,14 @@ async def test_asend_timeout(dummy_endpoint):
 
 def test_response_initialization():
     body = b'my precious content \xea\xb0\x80..'
-    resp = Response(299, 'Something Done', body=body, content_type='text/plain')
+    protocol = mock.Mock(_reading_paused=False)
+    stream = aiohttp.streams.StreamReader(protocol)
+    stream.feed_data(body)
+    stream.feed_eof()
+    resp = Response(299, 'Something Done', stream_reader=stream,
+                    content_type='text/plain')
     assert resp.status == 299
     assert resp.reason == 'Something Done'
     assert resp.content_type == 'text/plain'
-    assert resp.content_length == len(body)
     assert resp.text() == 'my precious content 가..'
+    assert resp.content_length == len(body)
