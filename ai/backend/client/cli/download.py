@@ -1,6 +1,3 @@
-import io
-import tarfile
-
 from . import register_command
 from .pretty import print_wait, print_done, print_fail
 from ..exceptions import BackendError
@@ -16,12 +13,7 @@ def download(args):
         target = args.file.split('/')[-1]
         print_wait('Downloading file(s) from {}...'.format(args.sess_id_or_alias))
         kernel = Kernel(args.sess_id_or_alias)
-        result = kernel.download(args.file)
-
-        # Write file contents in the current directory.
-        fileobj = io.BytesIO(result.content)
-        with tarfile.TarFile(fileobj=fileobj) as tarobj:
-            tarobj.extractall()
+        kernel.download(args.file)
         print_done('downloaded {}.'.format(target))
     except BackendError as e:
         print_fail(str(e))

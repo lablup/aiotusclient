@@ -1,3 +1,6 @@
+import os
+import tarfile
+import tempfile
 from typing import Iterable, Mapping, Sequence, Union
 from pathlib import Path
 import uuid
@@ -171,6 +174,23 @@ class BaseKernel(BaseFunction):
         resp = yield Request('POST', '/kernel/{}/download'.format(self.kernel_id), {
             'file': file,
         }, config=self.config)
+
+        # Create temporary .tar file.
+        # chunk_size = 256 * 1024
+        chunk_size = 1 * 1024
+        fp = tempfile.NamedTemporaryFile(delete=False)
+        while True:
+            chunk = resp.read(chunk_size)
+            if not chunk:
+                break
+            fp.write(chunk)
+        fp.close()
+
+        # Extract downloaded tarfile.
+        with tarfile.open(fp.name) as tarf:
+            tarf.extractall()
+        os.unlink(fp.name)
+
         return resp
 
     def _list_files(self, path: str='.'):

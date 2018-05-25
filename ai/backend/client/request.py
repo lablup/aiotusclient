@@ -180,9 +180,8 @@ class BaseRequest:
                     data=self.pack_content(),
                     headers=self.headers)
                 async with rqst_ctx as resp:
-                    body = await resp.read()
                     return Response(resp.status, resp.reason,
-                                    body=body,
+                                    stream_reader=resp.content,
                                     content_type=resp.content_type,
                                     charset=resp.charset)
         except (asyncio.CancelledError, asyncio.TimeoutError):
@@ -249,18 +248,18 @@ class Response:
 
     __slots__ = ['_status', '_reason',
                  '_content_type', '_content_length', '_charset',
-                 '_body']
+                 '_body', '_stream_reader', '_chunked']
 
     def __init__(self, status: int, reason: str, *,
-                 body: Union[bytes, bytearray]=b'',
+                 stream_reader: aiohttp.streams.StreamReader=None,
                  content_type='text/plain',
                  content_length=None,
                  charset=None):
         self._status = status
         self._reason = reason
-        if not isinstance(body, (bytes, bytearray)):
-            raise ValueError('body must be a bytes-like object.')
-        self._body = body
+        self._body = None
+        self._stream_reader = stream_reader
+        self._chunked = False
         self._content_type = content_type
         self._content_length = content_length
         self._charset = charset if charset else 'utf-8'
@@ -281,8 +280,9 @@ class Response:
 
     @property
     def content_length(self):
+        assert not self._chunked, 'unable to get content_length for streamed content'
         is_multipart = self._content_type.startswith('multipart/')
-        if self._content_length is None and not is_multipart:
+        if self._content_length is None and not is_multipart and self._body:
             return len(self._body)
         return self._content_length
 
@@ -291,11 +291,40 @@ class Response:
         return self._charset
 
     @property
+    def stream_reader(self) -> aiohttp.streams.StreamReader:
+        return self._stream_reader
+
+    @property
+    def at_stream_eof(self) -> bool:
+        return self._stream_reader.at_eof()
+
+    def read(self, n=-1, loop=None) -> bytes:
+        loop = loop if loop is not None else asyncio.get_event_loop()
+        return loop.run_until_complete(self.aread(n))
+
+    async def aread(self, n=-1) -> bytes:
+        if self.at_stream_eof:
+            return None
+        if not self._chunked:
+            self._chunked = True
+        return await self._stream_reader.read(n)
+
+    def _readall(self, loop=None) -> bytes:
+        loop = loop if loop is not None else asyncio.get_event_loop()
+        return loop.run_until_complete(self._areadall())
+
+    async def _areadall(self) -> bytes:
+        return await self._stream_reader.read()
+
+    @property
     def content(self) -> bytes:
+        assert not self._chunked, 'cannot get content which is already streamed'
+        if self._body is None:
+            self._body = self._readall()
         return self._body
 
     def text(self) -> str:
-        return self._body.decode(self._charset)
+        return self.content.decode(self._charset)
 
     def json(self, loads=json.loads):
-        return loads(self._body.decode(self._charset), object_pairs_hook=OrderedDict)
+        return loads(self.text(), object_pairs_hook=OrderedDict)
