@@ -13,7 +13,7 @@ def download(args):
         target = args.file.split('/')[-1]
         print_wait('Downloading file(s) from {}...'.format(args.sess_id_or_alias))
         kernel = Kernel(args.sess_id_or_alias)
-        kernel.download(args.file)
+        kernel.download(args.file, show_progress=True)
         print_done('downloaded {}.'.format(target))
     except BackendError as e:
         print_fail(str(e))

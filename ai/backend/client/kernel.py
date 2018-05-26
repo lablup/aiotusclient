@@ -170,7 +170,7 @@ class BaseKernel(BaseFunction):
             resp = yield rqst
         return resp
 
-    def _download(self, file: str):
+    def _download(self, file: str, show_progress: bool=False):
         resp = yield Request('POST', '/kernel/{}/download'.format(self.kernel_id), {
             'file': file,
         }, config=self.config)
@@ -179,11 +179,17 @@ class BaseKernel(BaseFunction):
         # chunk_size = 256 * 1024
         chunk_size = 1 * 1024
         fp = tempfile.NamedTemporaryFile(delete=False)
-        while True:
-            chunk = resp.read(chunk_size)
-            if not chunk:
-                break
-            fp.write(chunk)
+        tqdm_obj = tqdm(desc='Downloading files',
+                        unit='bytes', unit_scale=True,
+                        total=resp.stream_reader.total_bytes,
+                        disable=not show_progress)
+        with tqdm_obj as pbar:
+            while True:
+                chunk = resp.read(chunk_size)
+                if not chunk:
+                    break
+                fp.write(chunk)
+                pbar.update(chunk_size)
         fp.close()
 
         # Extract downloaded tarfile.
