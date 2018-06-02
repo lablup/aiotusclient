@@ -5,7 +5,7 @@ import re
 install_requires = [
     'colorama',
     'multidict',
-    'aiohttp~=3.1.0',
+    'aiohttp~=3.2.0',
     'async_timeout',
     'namedlist>=1.6',
     'python-dateutil>=2.5',
