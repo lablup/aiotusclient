@@ -5,8 +5,8 @@ import re
 install_requires = [
     'colorama',
     'multidict>=4.0',
-    'aiohttp~=3.3.0',
-    'async_timeout>=3',  # to avoid pip10 resolver issue
+    'aiohttp~=3.2.0',
+    'async_timeout>=3.0',  # to avoid pip10 resolver issue
     'attrs>=18.0',       # to avoid pip10 resolver issue
     'namedlist>=1.6',
     'python-dateutil>=2.5',
