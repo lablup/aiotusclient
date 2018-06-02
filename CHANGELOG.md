@@ -1,11 +1,11 @@
 Changes
 =======
 
-1.3.5 (2018-06-02)
+1.3.6 (2018-06-02)
 ------------------
 
- - Fix installation warnings about aiohttp/async_timeout version mismatch with the
-   new pip 10 series.
+ - Fix installation warnings about aiohttp/async_timeout/attrs version mismatch
+   with the new pip 10 series.
 
    NOTE: A workaround is to add `--upgrade-strategy=eager` option to `pip install`
    command.
