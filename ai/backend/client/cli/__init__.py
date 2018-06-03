@@ -72,7 +72,7 @@ def main():
     import ai.backend.client.cli.ps     # noqa
     import ai.backend.client.cli.logs   # noqa
     import ai.backend.client.cli.ls     # noqa
-    import ai.backend.client.cli.download        # noqa
+    import ai.backend.client.cli.files           # noqa
 
     if len(sys.argv) <= 1:
         global_argparser.print_help()
