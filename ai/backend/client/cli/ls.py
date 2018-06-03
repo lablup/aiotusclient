@@ -39,7 +39,7 @@ def ls(args):
         print_fail(str(e))
 
 
-ls.add_argument('sess_id_or_alias', metavar='NAME',
+ls.add_argument('sess_id_or_alias', metavar='SESSID',
                 help='The session ID or its alias given when creating the session.')
-ls.add_argument('path', metavar='PATH',
-                help='Target path to get list of files.')
+ls.add_argument('path', metavar='PATH', nargs='?', default='/home/work',
+                help='Path inside container')
