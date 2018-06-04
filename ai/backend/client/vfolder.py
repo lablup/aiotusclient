@@ -88,6 +88,12 @@ class BaseVFolder(BaseFunction):
         # TODO: implement
         raise NotImplementedError
 
+    def _list_files(self, path: Union[str, Path]='.'):
+        resp = yield Request('GET', '/folders/{}/files'.format(self.name), {
+            'path': path,
+        }, config=self.config)
+        return resp.json()
+
     def __init__(self, name: str, *, config: APIConfig=None):
         assert _rx_slug.search(name) is not None
         self.name = name
@@ -96,6 +102,7 @@ class BaseVFolder(BaseFunction):
         self.info     = self._call_base_method(self._info)
         self.upload   = self._call_base_method(self._upload)
         self.download = self._call_base_method(self._download)
+        self.list_files = self._call_base_method(self._list_files)
 
     def __init_subclass__(cls):
         cls.create = cls._call_base_clsmethod(cls._create)

@@ -1,10 +1,12 @@
+from datetime import datetime
+import json
 from pathlib import Path
 import sys
 
 from tabulate import tabulate
 
 from . import register_command
-from .pretty import print_done, print_fail
+from .pretty import print_wait, print_done, print_fail
 from ..exceptions import BackendError
 from ..vfolder import VFolder
 
@@ -105,5 +107,36 @@ def download(args):
 
 
 download.add_argument('name', type=str, help='The name of a virtual folder.')
-download.add_argument('filenames', type=Path, nargs='+',
-                      help='Paths of the files to be uploaded.')
+download.add_argument('filenames', nargs='+',
+                      help='Paths of the files to be downloaded.')
+
+
+@vfolder.register_command
+def ls(args):
+    """
+    List files in a path of a virtual folder.
+    """
+    try:
+        print_wait('Retrieving list of files in "{}"...'.format(args.path))
+        result = VFolder(args.name).list_files(args.path)
+        if 'error_msg' in result and result['error_msg']:
+            print_fail(result['error_msg'])
+            return
+        files = json.loads(result['files'])
+        table = []
+        headers = ['file name', 'size', 'modified', 'mode']
+        for file in files:
+            mdt = datetime.fromtimestamp(file['mtime'])
+            mtime = mdt.strftime('%b %d %Y %H:%M:%S')
+            row = [file['filename'], file['size'], mtime, file['mode']]
+            table.append(row)
+        print_done('Retrived.')
+        print('Path in vfolder:', result['folder_path'])
+        print(tabulate(table, headers=headers))
+    except BackendError as e:
+        print_fail(str(e))
+
+
+ls.add_argument('name', type=str, help='The name of a virtual folder.')
+ls.add_argument('path', metavar='PATH', nargs='?', default='.',
+                help='Path inside vfolder')
