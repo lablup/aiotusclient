@@ -170,32 +170,39 @@ class BaseKernel(BaseFunction):
             resp = yield rqst
         return resp
 
-    def _download(self, file: str, show_progress: bool=False):
+    def _download(self, files: list, show_progress: bool=False):
         resp = yield Request('POST', '/kernel/{}/download'.format(self.kernel_id), {
-            'file': file,
+            'files': files,
         }, config=self.config)
 
-        # Create temporary .tar file.
-        # chunk_size = 256 * 1024
         chunk_size = 1 * 1024
-        fp = tempfile.NamedTemporaryFile(delete=False)
         tqdm_obj = tqdm(desc='Downloading files',
                         unit='bytes', unit_scale=True,
                         total=resp.stream_reader.total_bytes,
                         disable=not show_progress)
         with tqdm_obj as pbar:
+            fp = None
             while True:
                 chunk = resp.read(chunk_size)
                 if not chunk:
                     break
-                fp.write(chunk)
-                pbar.update(chunk_size)
-        fp.close()
-
-        # Extract downloaded tarfile.
-        with tarfile.open(fp.name) as tarf:
-            tarf.extractall()
-        os.unlink(fp.name)
+                pbar.update(len(chunk))
+                # TODO: more elegant parsing of multipart response?
+                for part in chunk.split(b'\r\n'):
+                    if part.startswith(b'--'):
+                        if fp:
+                            fp.close()
+                            with tarfile.open(fp.name) as tarf:
+                                tarf.extractall()
+                            os.unlink(fp.name)
+                        fp = tempfile.NamedTemporaryFile(suffix='.tar', delete=False)
+                    elif part.startswith(b'Content-') or part == b'':
+                        continue
+                    else:
+                        fp.write(part)
+            if fp:
+                fp.close()
+                os.unlink(fp.name)
 
         return resp
 

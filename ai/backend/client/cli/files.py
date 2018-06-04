@@ -32,11 +32,10 @@ def download(args):
     Download files from a running container.
     """
     try:
-        target = args.file.split('/')[-1]
         print_wait('Downloading file(s) from {}...'.format(args.sess_id_or_alias))
         kernel = Kernel(args.sess_id_or_alias)
-        kernel.download(args.file, show_progress=True)
-        print_done('downloaded {}.'.format(target))
+        kernel.download(args.files, show_progress=True)
+        print_done('Downloaded.')
     except BackendError as e:
         print_fail(str(e))
 
@@ -44,5 +43,5 @@ def download(args):
 download.add_argument('sess_id_or_alias', metavar='NAME',
                       help=('The session ID or its alias given when creating the'
                             'session.'))
-download.add_argument('file', metavar='FILE',
-                      help='Target file path to be downloaded from container.')
+download.add_argument('files', nargs='+',
+                      help='File paths inside container')
