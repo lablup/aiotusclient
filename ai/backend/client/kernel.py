@@ -172,7 +172,7 @@ class BaseKernel(BaseFunction):
 
     def _download(self, files: Sequence[Union[str, Path]],
                   show_progress: bool=False):
-        resp = yield Request('POST', '/kernel/{}/download'.format(self.kernel_id), {
+        resp = yield Request('GET', '/kernel/{}/download'.format(self.kernel_id), {
             'files': files,
         }, config=self.config)
         chunk_size = 1 * 1024
@@ -206,7 +206,7 @@ class BaseKernel(BaseFunction):
         return resp
 
     def _list_files(self, path: Union[str, Path]='.'):
-        resp = yield Request('POST', '/kernel/{}/files'.format(self.kernel_id), {
+        resp = yield Request('GET', '/kernel/{}/files'.format(self.kernel_id), {
             'path': path,
         }, config=self.config)
         return resp.json()
