@@ -71,7 +71,6 @@ def main():
     import ai.backend.client.cli.vfolder # noqa
     import ai.backend.client.cli.ps     # noqa
     import ai.backend.client.cli.logs   # noqa
-    import ai.backend.client.cli.ls     # noqa
     import ai.backend.client.cli.files           # noqa
 
     if len(sys.argv) <= 1:

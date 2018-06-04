@@ -1,4 +1,8 @@
+from datetime import datetime
+import json
 from pathlib import Path
+
+from tabulate import tabulate
 
 from . import register_command
 from .pretty import print_wait, print_done, print_fail
@@ -45,3 +49,38 @@ download.add_argument('sess_id_or_alias', metavar='NAME',
                             'session.'))
 download.add_argument('files', nargs='+',
                       help='File paths inside container')
+
+
+@register_command
+def ls(args):
+    """
+    List files in a path of a running container.
+    """
+    try:
+        print_wait('Retrieving list of files in "{}"...'.format(args.path))
+        kernel = Kernel(args.sess_id_or_alias)
+        result = kernel.list_files(args.path)
+
+        if 'errors' in result and result['errors']:
+            print_fail(result['errors'])
+            return
+
+        files = json.loads(result['files'])
+        table = []
+        headers = ['file name', 'size', 'modified', 'mode']
+        for file in files:
+            mdt = datetime.fromtimestamp(file['mtime'])
+            mtime = mdt.strftime('%b %d %Y %H:%M:%S')
+            row = [file['filename'], file['size'], mtime, file['mode']]
+            table.append(row)
+        print_done('Retrived.')
+        print('Path in container:', result['abspath'], end='')
+        print(tabulate(table, headers=headers))
+    except BackendError as e:
+        print_fail(str(e))
+
+
+ls.add_argument('sess_id_or_alias', metavar='SESSID',
+                help='The session ID or its alias given when creating the session.')
+ls.add_argument('path', metavar='PATH', nargs='?', default='/home/work',
+                help='Path inside container')

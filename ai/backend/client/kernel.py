@@ -170,11 +170,11 @@ class BaseKernel(BaseFunction):
             resp = yield rqst
         return resp
 
-    def _download(self, files: list, show_progress: bool=False):
+    def _download(self, files: Sequence[Union[str, Path]],
+                  show_progress: bool=False):
         resp = yield Request('POST', '/kernel/{}/download'.format(self.kernel_id), {
             'files': files,
         }, config=self.config)
-
         chunk_size = 1 * 1024
         tqdm_obj = tqdm(desc='Downloading files',
                         unit='bytes', unit_scale=True,
@@ -203,10 +203,9 @@ class BaseKernel(BaseFunction):
             if fp:
                 fp.close()
                 os.unlink(fp.name)
-
         return resp
 
-    def _list_files(self, path: str='.'):
+    def _list_files(self, path: Union[str, Path]='.'):
         resp = yield Request('POST', '/kernel/{}/files'.format(self.kernel_id), {
             'path': path,
         }, config=self.config)
