@@ -181,6 +181,7 @@ class BaseRequest:
                     headers=self.headers)
                 async with rqst_ctx as resp:
                     return Response(resp.status, resp.reason,
+                                    response=resp,
                                     stream_reader=resp.content,
                                     content_type=resp.content_type,
                                     charset=resp.charset)
@@ -248,15 +249,17 @@ class Response:
 
     __slots__ = ['_status', '_reason',
                  '_content_type', '_content_length', '_charset',
-                 '_body', '_stream_reader', '_chunked']
+                 '_response', '_body', '_stream_reader', '_chunked']
 
     def __init__(self, status: int, reason: str, *,
+                 response: aiohttp.ClientResponse=None,
                  stream_reader: aiohttp.streams.StreamReader=None,
                  content_type='text/plain',
                  content_length=None,
                  charset=None):
         self._status = status
         self._reason = reason
+        self._response = response
         self._body = None
         self._stream_reader = stream_reader
         self._chunked = False
@@ -289,6 +292,10 @@ class Response:
     @property
     def charset(self):
         return self._charset
+
+    @property
+    def response(self) -> aiohttp.web_response.Response:
+        return self._response
 
     @property
     def stream_reader(self) -> aiohttp.streams.StreamReader:

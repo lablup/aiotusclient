@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 import re
 from typing import Sequence, Union
@@ -84,9 +85,41 @@ class BaseVFolder(BaseFunction):
             resp = yield rqst
         return resp
 
-    def _download(self, files: Sequence[Union[str, Path]]):
-        # TODO: implement
-        raise NotImplementedError
+    def _download(self, files: Sequence[Union[str, Path]],
+                  show_progress: bool=False):
+        resp = yield Request('GET', '/folders/{}/download'.format(self.name), {
+            'files': files,
+        }, config=self.config)
+        total_bytes = resp.response.content.total_bytes
+        tqdm_obj = tqdm(desc='Downloading files',
+                        unit='bytes', unit_scale=True,
+                        total=total_bytes,
+                        disable=not show_progress)
+
+        async def save_multipart_files(reader):
+            with tqdm_obj as pbar:
+                acc_bytes = 0
+                while True:
+                    part = await reader.next()
+                    if part is None:
+                        break
+                    fp = open(part.filename, 'wb')
+                    while True:
+                        chunk = await part.read_chunk()  # default chunk size: 8192
+                        if not chunk:
+                            break
+                        fp.write(chunk)
+                        curr_pos = total_bytes - reader.resp.content._size
+                        read_bytes = curr_pos - acc_bytes
+                        acc_bytes = curr_pos
+                        pbar.update(read_bytes)
+                    fp.close()
+                pbar.update(total_bytes - curr_pos)
+
+        loop = asyncio.get_event_loop()
+        reader = aiohttp.MultipartReader.from_response(resp.response)
+        loop.run_until_complete(save_multipart_files(reader))
+        loop.close()
 
     def _list_files(self, path: Union[str, Path]='.'):
         resp = yield Request('GET', '/folders/{}/files'.format(self.name), {

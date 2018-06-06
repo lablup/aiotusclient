@@ -99,7 +99,7 @@ upload.add_argument('filenames', type=Path, nargs='+',
 def download(args):
     '''Download a file from the virtual folder to the current working directory.'''
     try:
-        VFolder(args.name).download(args.filenames)
+        VFolder(args.name).download(args.filenames, show_progress=True)
         print_done('Done.')
     except BackendError as e:
         print_fail(str(e))
