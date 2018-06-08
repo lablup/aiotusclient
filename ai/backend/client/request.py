@@ -169,7 +169,7 @@ class BaseRequest:
             owns_session = True
             session = aiohttp.ClientSession()
         else:
-            assert isinstance(session, aiohttp.ClientSession)
+            assert isinstance(sess, aiohttp.ClientSession)
             session = sess
         try:
             self._sign()
@@ -294,7 +294,7 @@ class Response:
         return self._charset
 
     @property
-    def response(self) -> aiohttp.web_response.Response:
+    def response(self) -> aiohttp.ClientResponse:
         return self._response
 
     @property

@@ -1,13 +1,17 @@
 import asyncio
+from datetime import datetime
 from pathlib import Path
 import re
 from typing import Sequence, Union
 
 import aiohttp
+from async_timeout import timeout as _timeout
+from dateutil.tz import tzutc
 from tqdm import tqdm
 
 from .base import BaseFunction, SyncFunctionMixin
 from .config import APIConfig
+from .exceptions import BackendClientError
 from .request import Request
 from .cli.pretty import ProgressReportingReader
 
@@ -87,38 +91,60 @@ class BaseVFolder(BaseFunction):
 
     def _download(self, files: Sequence[Union[str, Path]],
                   show_progress: bool=False):
-        resp = yield Request('GET', '/folders/{}/download'.format(self.name), {
-            'files': files,
-        }, config=self.config)
-        total_bytes = resp.response.content.total_bytes
-        tqdm_obj = tqdm(desc='Downloading files',
-                        unit='bytes', unit_scale=True,
-                        total=total_bytes,
-                        disable=not show_progress)
+        async def _stream_download():
+            rqst = Request('GET', '/folders/{}/download'.format(self.name), {
+                'files': files,
+            }, config=self.config)
+            rqst.date = datetime.now(tzutc())
+            rqst.headers['Date'] = rqst.date.isoformat()
+            try:
+                sess = aiohttp.ClientSession()
+                rqst._sign()
+                async with _timeout(None):
+                    rqst_ctx = sess.request(rqst.method,
+                                            rqst.build_url(),
+                                            data=rqst.pack_content(),
+                                            headers=rqst.headers)
+                    async with rqst_ctx as resp:
+                        total_bytes = resp.content_length
+                        tqdm_obj = tqdm(desc='Downloading files',
+                                        unit='bytes', unit_scale=True,
+                                        total=total_bytes,
+                                        disable=not show_progress)
+                        reader = aiohttp.MultipartReader.from_response(resp)
+                        with tqdm_obj as pbar:
+                            acc_bytes = 0
+                            while True:
+                                part = await reader.next()
+                                if part is None:
+                                    break
+                                fp = open(part.filename, 'wb')
+                                while True:
+                                    # default chunk size: 8192
+                                    chunk = await part.read_chunk()
+                                    if not chunk:
+                                        break
+                                    fp.write(chunk)
+                                    acc_bytes += len(chunk)
+                                    pbar.update(len(chunk))
+                                fp.close()
+                            # TODO: more accurate progress bar update
+                            pbar.update(total_bytes - acc_bytes)
 
-        async def save_multipart_files(reader):
-            with tqdm_obj as pbar:
-                acc_bytes = 0
-                while True:
-                    part = await reader.next()
-                    if part is None:
-                        break
-                    fp = open(part.filename, 'wb')
-                    while True:
-                        chunk = await part.read_chunk()  # default chunk size: 8192
-                        if not chunk:
-                            break
-                        fp.write(chunk)
-                        curr_pos = total_bytes - reader.resp.content._size
-                        read_bytes = curr_pos - acc_bytes
-                        acc_bytes = curr_pos
-                        pbar.update(read_bytes)
-                    fp.close()
-                pbar.update(total_bytes - curr_pos)
+                        # print(len(await resp.content.read()))
+            except (asyncio.CancelledError, asyncio.TimeoutError):
+                # These exceptions must be bubbled up.
+                raise
+            except aiohttp.ClientError as e:
+                msg = 'Request to the API endpoint has failed.\n' \
+                      'Check your network connection and/or the server status.'
+                raise BackendClientError(msg) from e
+            finally:
+                if sess:
+                    await sess.close()
 
         loop = asyncio.get_event_loop()
-        reader = aiohttp.MultipartReader.from_response(resp.response)
-        loop.run_until_complete(save_multipart_files(reader))
+        loop.run_until_complete(_stream_download())
         loop.close()
 
     def _list_files(self, path: Union[str, Path]='.'):
@@ -134,7 +160,11 @@ class BaseVFolder(BaseFunction):
         self.delete   = self._call_base_method(self._delete)
         self.info     = self._call_base_method(self._info)
         self.upload   = self._call_base_method(self._upload)
-        self.download = self._call_base_method(self._download)
+        # self.download = self._call_base_method(self._download)
+        # To deliver loop and session objects to Request.send method.
+        # TODO: Generalized request/response abstraction accounting for streaming
+        #       would be needed.
+        self.download = self._download
         self.list_files = self._call_base_method(self._list_files)
 
     def __init_subclass__(cls):
