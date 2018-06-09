@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 import re
 from typing import Sequence, Union
+import zlib
 
 import aiohttp
 from async_timeout import timeout as _timeout
@@ -11,7 +12,7 @@ from tqdm import tqdm
 
 from .base import BaseFunction, SyncFunctionMixin
 from .config import APIConfig
-from .exceptions import BackendClientError
+from .exceptions import BackendAPIError, BackendClientError
 from .request import Request
 from .cli.pretty import ProgressReportingReader
 
@@ -112,7 +113,10 @@ class BaseVFolder(BaseFunction):
                                             data=rqst.pack_content(),
                                             headers=rqst.headers)
                     async with rqst_ctx as resp:
-                        total_bytes = resp.content_length
+                        if resp.status // 100 != 2:
+                            raise BackendAPIError(resp.status, resp.reason,
+                                                  await resp.text())
+                        total_bytes = int(resp.headers['X-TOTAL-PAYLOADS-LENGTH'])
                         tqdm_obj = tqdm(desc='Downloading files',
                                         unit='bytes', unit_scale=True,
                                         total=total_bytes,
@@ -124,17 +128,25 @@ class BaseVFolder(BaseFunction):
                                 part = await reader.next()
                                 if part is None:
                                     break
+                                # It seems like that there's no automatic
+                                # decompression steps in multipart reader for
+                                # chuncked encoding.
+                                encoding = part.headers['Content-Encoding']
+                                zlib_mode = (16 + zlib.MAX_WBITS
+                                                 if encoding == 'gzip'
+                                                 else -zlib.MAX_WBITS)
+                                decompressor = zlib.decompressobj(wbits=zlib_mode)
                                 fp = open(part.filename, 'wb')
                                 while True:
                                     # default chunk size: 8192
                                     chunk = await part.read_chunk()
                                     if not chunk:
                                         break
-                                    fp.write(chunk)
+                                    raw_chunk = decompressor.decompress(chunk)
+                                    fp.write(raw_chunk)
                                     acc_bytes += len(chunk)
                                     pbar.update(len(chunk))
                                 fp.close()
-                            # TODO: more accurate progress bar update
                             pbar.update(total_bytes - acc_bytes)
             except (asyncio.CancelledError, asyncio.TimeoutError):
                 # These exceptions must be bubbled up.
