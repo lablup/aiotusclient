@@ -144,8 +144,8 @@ class BaseVFolder(BaseFunction):
                                         break
                                     raw_chunk = decompressor.decompress(chunk)
                                     fp.write(raw_chunk)
-                                    acc_bytes += len(chunk)
-                                    pbar.update(len(chunk))
+                                    acc_bytes += len(raw_chunk)
+                                    pbar.update(len(raw_chunk))
                                 fp.close()
                             pbar.update(total_bytes - acc_bytes)
             except (asyncio.CancelledError, asyncio.TimeoutError):
