@@ -89,6 +89,12 @@ class BaseVFolder(BaseFunction):
             resp = yield rqst
         return resp
 
+    def _delete_files(self, files: Sequence[Union[str, Path]]):
+        resp = yield Request('GET', '/folders/{}/delete_files'.format(self.name), {
+            'files': files,
+        }, config=self.config)
+        return resp
+
     def _download(self, files: Sequence[Union[str, Path]],
                   show_progress: bool=False):
         async def _stream_download():
@@ -130,8 +136,6 @@ class BaseVFolder(BaseFunction):
                                 fp.close()
                             # TODO: more accurate progress bar update
                             pbar.update(total_bytes - acc_bytes)
-
-                        # print(len(await resp.content.read()))
             except (asyncio.CancelledError, asyncio.TimeoutError):
                 # These exceptions must be bubbled up.
                 raise
@@ -160,6 +164,7 @@ class BaseVFolder(BaseFunction):
         self.delete   = self._call_base_method(self._delete)
         self.info     = self._call_base_method(self._info)
         self.upload   = self._call_base_method(self._upload)
+        self.delete_files = self._call_base_method(self._delete_files)
         # self.download = self._call_base_method(self._download)
         # To deliver loop and session objects to Request.send method.
         # TODO: Generalized request/response abstraction accounting for streaming

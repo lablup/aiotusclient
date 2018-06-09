@@ -96,6 +96,23 @@ upload.add_argument('filenames', type=Path, nargs='+',
 
 
 @vfolder.register_command
+def delete_files(args):
+    '''Delete files in a virtual folder. This operation is irreversible!'''
+    try:
+        if input("> Are you sure? (y/n): ").lower().strip()[:1] == 'y':
+            VFolder(args.name).delete_files(args.filenames)
+            print_done('Done.')
+    except BackendError as e:
+        print_fail(str(e))
+        sys.exit(1)
+
+
+delete_files.add_argument('name', type=str, help='The name of a virtual folder.')
+delete_files.add_argument('filenames', nargs='+',
+                          help='Paths of the files to delete.')
+
+
+@vfolder.register_command
 def download(args):
     '''Download a file from the virtual folder to the current working directory.'''
     try:
@@ -108,7 +125,7 @@ def download(args):
 
 download.add_argument('name', type=str, help='The name of a virtual folder.')
 download.add_argument('filenames', nargs='+',
-                      help='Paths of the files to be downloaded.')
+                      help='Paths of the files to download.')
 
 
 @vfolder.register_command
