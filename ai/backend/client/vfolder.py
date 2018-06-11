@@ -91,9 +91,8 @@ class BaseVFolder(BaseFunction):
         return resp
 
     def _delete_files(self, files: Sequence[Union[str, Path]]):
-        resp = yield Request('DELETE', '/folders/{}/delete_files'.format(self.name), {
-            'files': files,
-        }, config=self.config)
+        resp = yield Request('DELETE', '/folders/{}/delete_files'.format(self.name),
+                             {'files': files}, config=self.config)
         return resp
 
     def _download(self, files: Sequence[Union[str, Path]],
