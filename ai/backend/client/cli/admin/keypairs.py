@@ -14,6 +14,7 @@ def keypairs(args):
     List and manage keypairs.
     '''
     fields = [
+        ('User ID', 'user_id'),
         ('Access Key', 'access_key'),
         ('Secret Key', 'secret_key'),
         ('Active?', 'is_active'),
@@ -24,6 +25,10 @@ def keypairs(args):
         ('Rate Limit', 'rate_limit'),
         ('Concur.Limit', 'concurrency_limit'),
     ]
+    try:
+        args.user_id = int(args.user_id)
+    except ValueError:
+        pass  # string-based user ID for Backend.AI v1.4+
     try:
         items = KeyPair.list(args.user_id, args.is_active,
                              fields=(item[1] for item in fields))
@@ -38,7 +43,7 @@ def keypairs(args):
                    headers=(item[0] for item in fields)))
 
 
-keypairs.add_argument('-u', '--user-id', type=int, default=0,
+keypairs.add_argument('-u', '--user-id', type=str, default='0',
                       help='Show keypairs of this given user. '
                            '[default: 0]')
 keypairs.add_argument('--is-active', type=bool, default=None,
@@ -54,6 +59,10 @@ def add(args):
         print('You must set the user ID (-u/--user-id).')
         return
     try:
+        args.user_id = int(args.user_id)
+    except ValueError:
+        pass  # string-based user ID for Backend.AI v1.4+
+    try:
         data = KeyPair.create(args.user_id)
     except BackendError as e:
         print_fail(str(e))
@@ -67,5 +76,5 @@ def add(args):
     print('Secret Key: {0}'.format(item['secret_key']))
 
 
-add.add_argument('-u', '--user-id', type=int, default=None,
+add.add_argument('-u', '--user-id', type=str, default=None,
                  help='Create a keypair for this user.')

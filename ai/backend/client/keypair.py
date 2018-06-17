@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Union
 
 from .base import BaseFunction, SyncFunctionMixin
 from .config import APIConfig
@@ -13,7 +13,7 @@ __all__ = (
 class BaseKeyPair(BaseFunction):
 
     @classmethod
-    def _create(cls, user_id: int,
+    def _create(cls, user_id: Union[int, str],
                 is_active: bool=True,
                 is_admin: bool=False,
                 resource_policy: str=None,
@@ -23,7 +23,8 @@ class BaseKeyPair(BaseFunction):
                 config: APIConfig=None):
         if fields is None:
             fields = ('access_key', 'secret_key')
-        q = 'mutation($user_id: Int!, $input: KeyPairInput!) {' \
+        uid_type = 'Int!' if isinstance(user_id, int) else 'String!'
+        q = 'mutation($user_id: {0}, $input: KeyPairInput!) {{'.format(uid_type) + \
             '  create_keypair(user_id: $user_id, props: $input) {' \
             '    ok msg keypair { $fields }' \
             '  }' \
@@ -47,7 +48,7 @@ class BaseKeyPair(BaseFunction):
         return data['create_keypair']
 
     @classmethod
-    def _list(cls, user_id: int,
+    def _list(cls, user_id: Union[int, str],
               is_active: bool=None,
               fields: Iterable[str]=None,
               config: APIConfig=None):
@@ -56,7 +57,8 @@ class BaseKeyPair(BaseFunction):
                 'access_key', 'secret_key',
                 'is_active', 'is_admin',
             )
-        q = 'query($user_id: Int!, $is_active: Boolean) {' \
+        uid_type = 'Int!' if isinstance(user_id, int) else 'String!'
+        q = 'query($user_id: {0}, $is_active: Boolean) {{'.format(uid_type) + \
             '  keypairs(user_id: $user_id, is_active: $is_active) {' \
             '    $fields' \
             '  }' \
