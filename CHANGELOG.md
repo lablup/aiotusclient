@@ -1,6 +1,15 @@
 Changes
 =======
 
+1.4.0 (to be released)
+----------------------
+
+ - Allow customization of keypairs when creating new one via extra arguments.
+   (See `backend.ai admin keypairs add --help`)
+
+ - Accept both integer and string values in `-u` / `--user` arguments for
+   Backend.AI v1.4+ forward compatibility.
+
 1.3.6 (2018-06-02)
 ------------------
 
@@ -9,7 +18,6 @@ Changes
 
    NOTE: A workaround is to add `--upgrade-strategy=eager` option to `pip install`
    command.
-
 
 1.3.4 (2018-04-08)
 ------------------
