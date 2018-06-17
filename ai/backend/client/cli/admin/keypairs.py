@@ -63,7 +63,13 @@ def add(args):
     except ValueError:
         pass  # string-based user ID for Backend.AI v1.4+
     try:
-        data = KeyPair.create(args.user_id)
+        data = KeyPair.create(
+            args.user_id,
+            is_active=not args.inactive,
+            is_admin=args.admin,
+            resource_policy=args.resource_policy,
+            rate_limit=args.rate_limit,
+            concurrency_limit=args.concurrency_limit)
     except BackendError as e:
         print_fail(str(e))
         sys.exit(1)
@@ -78,3 +84,13 @@ def add(args):
 
 add.add_argument('-u', '--user-id', type=str, default=None,
                  help='Create a keypair for this user.')
+add.add_argument('-a', '--admin', action='store_true', default=False,
+                 help='Give the admin privilege to the new keypair.')
+add.add_argument('-i', '--inactive', action='store_true', default=False,
+                 help='Create the new keypair in inactive state.')
+add.add_argument('-c', '--concurrency-limit', type=int, default=1,
+                 help='Set the limit on concurrent sessions.')
+add.add_argument('-r', '--rate-limit', type=int, default=5000,
+                 help='Set the API query rate limit.')
+add.add_argument('--resource-policy', type=str, default=None,
+                 help='Set the resource policy. (reserved for future use)')
