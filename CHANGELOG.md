@@ -4,8 +4,11 @@ Changes
 1.4.0 (to be released)
 ----------------------
 
+ - Support download and deletion of virtual folder files.
+   Check `backend.ai vfolder --help` for new commands!
+
  - Allow customization of keypairs when creating new one via extra arguments.
-   (See `backend.ai admin keypairs add --help`)
+   See `backend.ai admin keypairs add --help` for available options.
 
  - Accept both integer and string values in `-u` / `--user` arguments for
    Backend.AI v1.4+ forward compatibility.
