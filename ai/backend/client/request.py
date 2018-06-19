@@ -1,7 +1,8 @@
 import asyncio
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from datetime import datetime
 import queue
+import sys
 import threading
 from typing import Any, Callable, Mapping, Sequence, Union
 
@@ -41,8 +42,12 @@ class _SyncWorkerThread(threading.Thread):
                 coro = self.work_queue.get()
                 if coro is self.sentinel:
                     break
-                result = loop.run_until_complete(coro)
-                self.done_queue.put_nowait(result)
+                try:
+                    result = loop.run_until_complete(coro)
+                except Exception as e:
+                    self.done_queue.put_nowait(e)
+                else:
+                    self.done_queue.put_nowait(result)
                 self.work_queue.task_done()
         except (SystemExit, KeyboardInterrupt):
             pass
@@ -55,6 +60,7 @@ def shutdown():
     if _worker_thread is not None:
         _worker_thread.work_queue.put(_worker_thread.sentinel)
         _worker_thread.join()
+        _worker_thread = None
 
 
 class BaseRequest:
@@ -196,6 +202,8 @@ class BaseRequest:
         _worker_thread.work_queue.put(self.asend(*args, **kwargs))
         result = _worker_thread.done_queue.get()
         _worker_thread.done_queue.task_done()
+        if isinstance(result, Exception):
+            raise result
         return result
 
     async def asend(self, *, sess=None, timeout=None):
