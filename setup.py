@@ -5,34 +5,36 @@ import re
 install_requires = [
     'colorama',
     'multidict>=4.0',
-    'aiohttp~=3.2.0',
-    'async_timeout>=3.0',  # to avoid pip10 resolver issue
+    'aiohttp~=3.3.0',
+    'async_timeout~=3.0',  # to avoid pip10 resolver issue
     'attrs>=18.0',       # to avoid pip10 resolver issue
     'namedlist>=1.6',
     'python-dateutil>=2.5',
     'ConfigArgParse==0.12.0',
     'tabulate>=0.7.7',
     'tqdm~=4.21',
-    'humanize',
+    'humanize>=0.5.1',
     'yarl>=1.1.1',
 ]
-dev_requires = [
-    'pytest-sugar',
-]
-ci_requires = [
-    'wheel',
-    'twine',
+build_requires = [
+    'wheel>=0.31.0',
+    'twine>=1.11.0',
 ]
 test_requires = [
-    'pytest>=3.5',
+    'pytest>=3.6.0',
     'pytest-cov',
     'pytest-mock',
-    'pytest-asyncio',
-    'aioresponses',
+    'pytest-asyncio>=0.8.0',
+    'aioresponses>=0.4.2',
     'asynctest',
     'codecov',
     'flake8',
 ]
+ci_requires = [
+] + build_requires + test_requires
+dev_requires = [
+    'pytest-sugar>=0.9.1',
+] + build_requires + test_requires
 
 
 def read_src_version():
@@ -79,9 +81,9 @@ setup(
     python_requires='>=3.5',
     install_requires=install_requires,
     extras_require={
-        'dev': dev_requires + ci_requires + test_requires,
+        'dev': dev_requires,
         'test': test_requires,
-        'ci': ci_requires + test_requires,
+        'ci': ci_requires,
     },
     data_files=[],
     entry_points={

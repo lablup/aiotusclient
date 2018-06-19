@@ -2,6 +2,7 @@
 A compatibility module for backported codes from Python 3.6 standard library.
 '''
 
+import asyncio
 import binascii
 import os
 import sys
@@ -58,3 +59,9 @@ class Py36Object(object, metaclass=Py36Type):
 
 if sys.version_info >= (3, 6):
     Py36Object = object  # noqa
+
+
+if hasattr(asyncio, 'get_running_loop'):
+    current_loop = asyncio.get_running_loop
+else:
+    current_loop = asyncio.get_event_loop

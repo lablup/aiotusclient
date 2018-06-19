@@ -1,6 +1,13 @@
 import pytest
 
 from ai.backend.client.config import APIConfig, set_config
+from ai.backend.client.request import shutdown
+
+
+@pytest.fixture(autouse=True)
+def sync_api_cleanup():
+    yield
+    shutdown()
 
 
 @pytest.fixture(autouse=True)
