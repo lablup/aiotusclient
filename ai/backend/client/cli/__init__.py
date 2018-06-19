@@ -8,6 +8,7 @@ import colorama
 import configargparse
 
 from .pretty import print_fail
+from ..request import shutdown
 
 ArgParserType = Union[argparse.ArgumentParser, configargparse.ArgumentParser]
 
@@ -92,3 +93,5 @@ def main():
         args.function(args)
     else:
         print_fail('The command is not specified or unrecognized.')
+
+    shutdown()

@@ -1,6 +1,8 @@
 import asyncio
 from collections import OrderedDict
 from datetime import datetime
+import queue
+import threading
 from typing import Any, Callable, Mapping, Sequence, Union
 
 import aiohttp
@@ -18,6 +20,41 @@ __all__ = [
     'Request',
     'Response',
 ]
+
+_worker_thread = None
+
+
+class _SyncWorkerThread(threading.Thread):
+
+    sentinel = object()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.work_queue = queue.Queue()
+        self.done_queue = queue.Queue()
+
+    def run(self):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            while True:
+                coro = self.work_queue.get()
+                if coro is self.sentinel:
+                    break
+                result = loop.run_until_complete(coro)
+                self.done_queue.put_nowait(result)
+                self.work_queue.task_done()
+        except (SystemExit, KeyboardInterrupt):
+            pass
+        finally:
+            loop.close()
+
+
+def shutdown():
+    global _worker_thread
+    if _worker_thread is not None:
+        _worker_thread.work_queue.put(_worker_thread.sentinel)
+        _worker_thread.join()
 
 
 class BaseRequest:
@@ -152,8 +189,14 @@ class BaseRequest:
         '''
         Sends the request to the server.
         '''
-        loop = loop if loop is not None else asyncio.get_event_loop()
-        return loop.run_until_complete(self.asend(*args, **kwargs))
+        global _worker_thread
+        if _worker_thread is None:
+            _worker_thread = _SyncWorkerThread()
+            _worker_thread.start()
+        _worker_thread.work_queue.put(self.asend(*args, **kwargs))
+        result = _worker_thread.done_queue.get()
+        _worker_thread.done_queue.task_done()
+        return result
 
     async def asend(self, *, sess=None, timeout=None):
         '''
