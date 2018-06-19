@@ -1,6 +1,7 @@
 import pytest
 
 from ai.backend.client.config import APIConfig, set_config
+from ai.backend.client.request import shutdown
 
 
 @pytest.fixture(autouse=True)
@@ -15,3 +16,7 @@ def defconfig():
 @pytest.fixture
 def dummy_endpoint(defconfig):
     return str(defconfig.endpoint) + '/v2/'
+
+
+def pytest_sessionfinish(session, exitstatus):
+    shutdown()
