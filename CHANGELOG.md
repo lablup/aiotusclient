@@ -1,6 +1,18 @@
 Changes
 =======
 
+1.3.7 (2018-06-19)
+------------------
+
+ - Fix use of synchronous APIs inside asyncio-based applications using a separate
+   worker thread that needs to be shut down manually.
+   (e.g., our Jupyter notebook kernel plugin)
+
+ - Synchronous API users now MUST call "ai.backend.client.request.shutdown()"
+   function when their application exits.
+
+ - Update dependencies (aiohttp and aioresponses)
+
 1.3.6 (2018-06-02)
 ------------------
 
@@ -9,7 +21,6 @@ Changes
 
    NOTE: A workaround is to add `--upgrade-strategy=eager` option to `pip install`
    command.
-
 
 1.3.4 (2018-04-08)
 ------------------
