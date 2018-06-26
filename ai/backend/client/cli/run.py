@@ -97,11 +97,16 @@ def run(args):
         envs = {k: v for k, v in map(lambda s: s.split('=', 1), args.env)}
     else:
         envs = {}
+    if args.resources is not None:
+        resources = {k: v for k, v in map(lambda s: s.split('=', 1), args.resources)}
+    else:
+        resources = {}
     try:
         kernel = Kernel.get_or_create(
             args.lang, args.client_token,
             mounts=args.mount,
-            envs=envs)
+            envs=envs,
+            resources=resources)
     except BackendError as e:
         print_fail(str(e))
         return
@@ -185,8 +190,12 @@ run.add_argument('-m', '--mount', type=str, action='append',
 run.add_argument('-s', '--stats', action='store_true', default=False,
                  help='Show resource usage statistics after termination '
                       '(only works if "--rm" is given)')
+run.add_argument('-r', '--resources', metavar='KEY=VAL', type=str, action='append',
+                 help='Set computation resources (e.g: -r cpu=2 -r ram=512 -r gpu=1)'
+                      'The maximum values may be limited by system setting '
+                      '(default: cpu=1 ram=1024 gpu=0)')
 run.add_argument('-q', '--quiet', action='store_true', default=False,
-                 help='Hide execution details but show only the kernel'
+                 help='Hide execution details but show only the kernel '
                       'outputs')
 
 

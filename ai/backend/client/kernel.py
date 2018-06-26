@@ -33,6 +33,7 @@ class BaseKernel(BaseFunction):
                        client_token: str=None,
                        mounts: Iterable[str]=None,
                        envs: Mapping[str, str]=None,
+                       resources: Mapping[str, int]=None,
                        max_mem: int=0, exec_timeout: int=0,
                        config: APIConfig=None) -> str:
         if client_token:
@@ -51,6 +52,9 @@ class BaseKernel(BaseFunction):
             'config': {
                 'mounts': mounts,
                 'environ': envs,
+                'instanceMemory': resources.get('ram'),
+                'instanceCores': resources.get('cpu'),
+                'instanceGPUs': resources.get('gpu'),
             },
         }, config=config)
         data = resp.json()
