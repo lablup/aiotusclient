@@ -195,8 +195,7 @@ run.add_argument('-s', '--stats', action='store_true', default=False,
 run.add_argument('-r', '--resources', metavar='KEY=VAL', type=str, action='append',
                  help='Set computation resources (e.g: -r cpu=2 -r ram=2 -r gpu=1). '
                       '1 slot of cpu/gpu represents 1 core. '
-                      '1 slot of ram represents 256 MiB.',
-                 default='depends on the image setting')
+                      '1 slot of ram represents 256 MiB.')
 run.add_argument('-q', '--quiet', action='store_true', default=False,
                  help='Hide execution details but show only the kernel outputs.')
 
