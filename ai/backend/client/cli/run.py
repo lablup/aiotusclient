@@ -193,12 +193,12 @@ run.add_argument('-s', '--stats', action='store_true', default=False,
                  help='Show resource usage statistics after termination '
                       '(only works if "--rm" is given)')
 run.add_argument('-r', '--resources', metavar='KEY=VAL', type=str, action='append',
-                 help='Set computation resources (e.g: -r cpu=2 -r ram=512 -r gpu=1)'
-                      'The maximum values may be limited by system setting '
-                      '(default: cpu=1 ram=1024 gpu=0)')
+                 help='Set computation resources (e.g: -r cpu=2 -r ram=2 -r gpu=1). '
+                      '1 slot of cpu/gpu represents 1 core. '
+                      '1 slot of ram represents 256 MiB.',
+                 default='depends on the image setting')
 run.add_argument('-q', '--quiet', action='store_true', default=False,
-                 help='Hide execution details but show only the kernel '
-                      'outputs')
+                 help='Hide execution details but show only the kernel outputs.')
 
 
 @register_command
