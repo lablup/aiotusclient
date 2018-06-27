@@ -1,3 +1,4 @@
+from argparse import Namespace
 import getpass
 from pathlib import Path
 import sys
@@ -7,6 +8,7 @@ from humanize import naturalsize
 from tabulate import tabulate
 
 from . import register_command
+from .admin.sessions import session
 from ..compat import token_hex
 from ..exceptions import BackendError
 from .pretty import print_info, print_wait, print_done, print_fail
@@ -226,3 +228,19 @@ terminate.add_argument('sess_id_or_alias', metavar='NAME',
                             'given when creating the session.')
 terminate.add_argument('-s', '--stats', action='store_true', default=False,
                        help='Show resource usage statistics after termination')
+
+
+@register_command
+def info(args):
+    '''
+    Show detailed information for a running compute session.
+    This is an alias of the "admin session <sess_id>" command.
+    '''
+    inner_args = Namespace()
+    inner_args.sess_id_or_alias = args.sess_id_or_alias
+    session(inner_args)
+
+
+info.add_argument('sess_id_or_alias', metavar='NAME',
+                  help='The session ID or its alias '
+                       'given when creating the session.')
