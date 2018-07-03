@@ -168,6 +168,12 @@ class BaseVFolder(BaseFunction):
         }, config=self.config)
         return resp.json()
 
+    def _invite(self, perm: str, emails: Sequence[str]):
+        resp = yield Request('POST', '/folders/{}/invite'.format(self.name), {
+            'perm': perm, 'user_ids': emails,
+        }, config=self.config)
+        return resp.json()
+
     def __init__(self, name: str, *, config: APIConfig=None):
         assert _rx_slug.search(name) is not None
         self.name = name
@@ -182,6 +188,7 @@ class BaseVFolder(BaseFunction):
         #       would be needed.
         self.download = self._download
         self.list_files = self._call_base_method(self._list_files)
+        self.invite = self._call_base_method(self._invite)
 
     def __init_subclass__(cls):
         cls.create = cls._call_base_clsmethod(cls._create)

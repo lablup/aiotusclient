@@ -157,3 +157,22 @@ def ls(args):
 ls.add_argument('name', type=str, help='The name of a virtual folder.')
 ls.add_argument('path', metavar='PATH', nargs='?', default='.',
                 help='Path inside vfolder')
+
+
+@vfolder.register_command
+def invite(args):
+    """Invite other users to access the virtual folder.
+    """
+    try:
+        assert args.perm in ['rw', 'ro']
+        result = VFolder(args.name).invite(args.perm, args.emails)
+        print('Invitation sent.')
+    except BackendError as e:
+        print_fail(str(e))
+        sys.exit(1)
+
+
+invite.add_argument('name', type=str, help='The name of a virtual folder.')
+invite.add_argument('emails', type=str, nargs='+', help='Emails to invite.')
+invite.add_argument('-p', '--perm', metavar='PERMISSION', type=str, default='rw',
+                    help='Permission to give. "ro" (read-only) / "rw" (read-write).')
