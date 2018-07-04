@@ -351,16 +351,12 @@ class Response:
     def stream_reader(self) -> aiohttp.streams.StreamReader:
         return self._stream_reader
 
-    @property
-    def at_stream_eof(self) -> bool:
-        return self._stream_reader.at_eof()
-
     def read(self, n=-1, loop=None) -> bytes:
         loop = loop if loop is not None else asyncio.get_event_loop()
         return loop.run_until_complete(self.aread(n))
 
     async def aread(self, n=-1) -> bytes:
-        if self.at_stream_eof:
+        if self._stream_reader.at_eof():
             return None
         if not self._chunked:
             self._chunked = True

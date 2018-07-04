@@ -159,9 +159,9 @@ def test_send_and_read_response(dummy_endpoint):
     assert resp.content_type == 'text/plain'
     assert resp.read(3) == b'hel'
     assert resp.read(2) == b'lo'
-    assert not resp.at_stream_eof
+    assert not resp.stream_reader.at_eof()
     resp.read()
-    assert resp.at_stream_eof
+    assert resp.stream_reader.at_eof()
     with pytest.raises(AssertionError):
         assert resp.text()
 
