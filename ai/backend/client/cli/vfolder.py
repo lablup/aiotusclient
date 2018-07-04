@@ -166,7 +166,13 @@ def invite(args):
     try:
         assert args.perm in ['rw', 'ro']
         result = VFolder(args.name).invite(args.perm, args.emails)
-        print('Invitation sent.')
+        invited_ids = result.get('invited_ids', [])
+        if len(invited_ids) > 0:
+            print('Invitation sent to:')
+            for invitee in invited_ids:
+                print('\t- ' + invitee)
+        else:
+            print('No users found. Invitation was not sent.')
     except BackendError as e:
         print_fail(str(e))
         sys.exit(1)
