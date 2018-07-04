@@ -192,3 +192,29 @@ invite.add_argument('name', type=str, help='The name of a virtual folder.')
 invite.add_argument('emails', type=str, nargs='+', help='Emails to invite.')
 invite.add_argument('-p', '--perm', metavar='PERMISSION', type=str, default='rw',
                     help='Permission to give. "ro" (read-only) / "rw" (read-write).')
+
+
+
+@vfolder.register_command
+def invitations(args):
+    """List and manage received invitations.
+    """
+    with Session() as session:
+        try:
+            result = session.VFolder.invitations()
+            invitations = result.get('invitations', [])
+            if len(invitations) < 1:
+                print('No invitations.')
+                return
+            print('List of invitations (vfolder id, permission):')
+            for cnt, inv in enumerate(invitations):
+                if inv['perm'] == 'rw':
+                    perm = 'read-write'
+                elif inv['perm'] == 'ro':
+                    perm = 'read-only'
+                else:
+                    perm = inv['perm']
+                print('[{}] {}, {}'.format(cnt + 1, inv['vfolder_id'], perm))
+        except BackendError as e:
+            print_fail(str(e))
+            sys.exit(1)

@@ -180,6 +180,12 @@ class BaseVFolder(BaseFunction):
             }, config=self.config)
         return resp.json()
 
+    @classmethod
+    def _invitations(cls, *, config: APIConfig=None):
+        resp = yield Request(cls._session, 'GET', '/folders/invitations/list',
+                             config=config)
+        return resp.json()
+
     def __init__(self, name: str, *, config: APIConfig=None):
         assert _rx_slug.search(name) is not None
         self.name = name
@@ -200,6 +206,7 @@ class BaseVFolder(BaseFunction):
         cls.create = cls._call_base_clsmethod(cls._create)
         cls.list   = cls._call_base_clsmethod(cls._list)
         cls.get    = cls._call_base_clsmethod(cls._get)
+        cls.invitations = cls._call_base_clsmethod(cls._invitations)
 
 
 class VFolder(SyncFunctionMixin, BaseVFolder):
