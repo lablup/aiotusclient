@@ -55,17 +55,17 @@ def aggregate_console(c):
 @pytest.mark.integration
 def test_connection(defconfig):
     request = Request('GET', '/')
-    resp = request.send()
+    resp = request.fetch()
     assert 'version' in resp.json()
 
 
 @pytest.mark.integration
 def test_not_found(defconfig):
     request = Request('GET', '/invalid-url-wow')
-    resp = request.send()
+    resp = request.fetch()
     assert resp.status == 404
     request = Request('GET', '/authorize/uh-oh')
-    resp = request.send()
+    resp = request.fetch()
     assert resp.status == 404
 
 
@@ -73,7 +73,7 @@ def test_not_found(defconfig):
 @pytest.mark.asyncio
 async def test_async_connection(defconfig):
     request = Request('GET', '/')
-    resp = await request.asend()
+    resp = await request.afetch()
     assert 'version' in resp.json()
 
 
@@ -83,7 +83,7 @@ def test_auth(defconfig):
     request = Request('GET', '/authorize', {
         'echo': random_msg,
     })
-    resp = request.send()
+    resp = request.fetch()
     assert resp.status == 200
     data = resp.json()
     assert data['authorized'] == 'yes'
@@ -98,7 +98,7 @@ def test_auth_missing_signature(defconfig):
     })
     # let it bypass actual signing
     request._sign = lambda *args, **kwargs: None
-    resp = request.send()
+    resp = request.fetch()
     assert resp.status == 401
 
 
@@ -106,14 +106,14 @@ def test_auth_missing_signature(defconfig):
 def test_auth_malformed(defconfig):
     request = Request('GET', '/authorize')
     request.content = b'<this is not json>'
-    resp = request.send()
+    resp = request.fetch()
     assert resp.status == 400
 
 
 @pytest.mark.integration
 def test_auth_missing_body(defconfig):
     request = Request('GET', '/authorize')
-    resp = request.send()
+    resp = request.fetch()
     assert resp.status == 400
 
 
@@ -124,7 +124,7 @@ async def test_async_auth(defconfig):
     request = Request('GET', '/authorize', {
         'echo': random_msg,
     })
-    resp = await request.asend()
+    resp = await request.afetch()
     assert resp.status == 200
     data = resp.json()
     assert data['authorized'] == 'yes'

@@ -2,8 +2,8 @@ import sys
 
 from tabulate import tabulate
 
-from ...admin import Admin
 from ...exceptions import BackendError
+from ...session import Session
 from ..pretty import print_fail
 from . import admin
 
@@ -25,13 +25,14 @@ def vfolders(args):
     else:
         q = 'query($ak:String) { vfolders(access_key:$ak) { $fields } }'
     q = q.replace('$fields', ' '.join(item[1] for item in fields))
-    try:
-        resp = Admin.query(q)
-    except BackendError as e:
-        print_fail(str(e))
-        sys.exit(1)
-    print(tabulate((item.values() for item in resp['vfolders']),
-                   headers=(item[0] for item in fields)))
+    with Session() as session:
+        try:
+            resp = session.Admin.query(q)
+        except BackendError as e:
+            print_fail(str(e))
+            sys.exit(1)
+        print(tabulate((item.values() for item in resp['vfolders']),
+                       headers=(item[0] for item in fields)))
 
 
 vfolders.add_argument('--access-key', type=str, default=None,

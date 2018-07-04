@@ -12,6 +12,8 @@ __all__ = (
 
 class BaseKeyPair(BaseFunction):
 
+    _session = None
+
     @classmethod
     def _create(cls, user_id: Union[int, str],
                 is_active: bool=True,
@@ -40,7 +42,7 @@ class BaseKeyPair(BaseFunction):
                 'concurrency_limit': concurrency_limit,
             },
         }
-        resp = yield Request('POST', '/admin/graphql', {
+        resp = yield Request(cls._session, 'POST', '/admin/graphql', {
             'query': q,
             'variables': vars,
         }, config=config)
@@ -68,7 +70,7 @@ class BaseKeyPair(BaseFunction):
             'user_id': user_id,
             'is_active': is_active,
         }
-        resp = yield Request('POST', '/admin/graphql', {
+        resp = yield Request(cls._session, 'POST', '/admin/graphql', {
             'query': q,
             'variables': vars,
         }, config=config)
@@ -89,4 +91,7 @@ class BaseKeyPair(BaseFunction):
 
 
 class KeyPair(SyncFunctionMixin, BaseKeyPair):
+    '''
+    Deprecated! Use ai.backend.client.Session instead.
+    '''
     pass

@@ -8,6 +8,9 @@ __all__ = (
 
 
 class Admin(AsyncFunctionMixin, BaseAdmin):
+    '''
+    Deprecated! Use ai.backend.client.AsyncSession instead.
+    '''
     pass
 
 

@@ -7,4 +7,7 @@ __all__ = (
 
 
 class VFolder(AsyncFunctionMixin, BaseVFolder):
+    '''
+    Deprecated! Use ai.backend.client.AsyncSession instead.
+    '''
     pass

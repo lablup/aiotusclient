@@ -49,7 +49,7 @@ class SyncFunctionMixin:
     @staticmethod
     def _make_request(gen):
         rqst = next(gen)
-        resp = rqst.send()
+        resp = rqst.fetch()
         return resp
 
     @classmethod
@@ -59,6 +59,8 @@ class SyncFunctionMixin:
         @classmethod
         @functools.wraps(meth)
         def _caller(cls, *args, **kwargs):
+            assert cls._session is not None, \
+                   'You must use API wrapper functions via a Session object.'
             gen = meth(*args, **kwargs)
             resp = cls._make_request(gen)
             return cls._handle_response(resp, gen)
@@ -70,6 +72,8 @@ class SyncFunctionMixin:
 
         @functools.wraps(meth)
         def _caller(*args, **kwargs):
+            assert type(self)._session is not None, \
+                   'You must use API wrapper functions via a Session object.'
             gen = meth(*args, **kwargs)
             resp = self._make_request(gen)
             return self._handle_response(resp, gen)
@@ -85,7 +89,7 @@ class AsyncFunctionMixin:
     @staticmethod
     async def _make_request(gen):
         rqst = next(gen)
-        resp = await rqst.asend()
+        resp = await rqst.afetch()
         return resp
 
     @classmethod
@@ -95,6 +99,8 @@ class AsyncFunctionMixin:
         @classmethod
         @functools.wraps(meth)
         async def _caller(cls, *args, **kwargs):
+            assert cls._session is not None, \
+                   'You must use API wrapper functions via a Session object.'
             gen = meth(*args, **kwargs)
             resp = await cls._make_request(gen)
             return cls._handle_response(resp, gen)
@@ -106,6 +112,8 @@ class AsyncFunctionMixin:
 
         @functools.wraps(meth)
         async def _caller(*args, **kwargs):
+            assert type(self)._session is not None, \
+                   'You must use API wrapper functions via a Session object.'
             gen = meth(*args, **kwargs)
             resp = await self._make_request(gen)
             return self._handle_response(resp, gen)

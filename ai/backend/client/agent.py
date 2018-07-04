@@ -11,6 +11,8 @@ __all__ = (
 
 class BaseAgent(BaseFunction):
 
+    _session = None
+
     @classmethod
     def _list(cls,
               status: str='ALIVE',
@@ -34,10 +36,11 @@ class BaseAgent(BaseFunction):
         vars = {
             'status': status,
         }
-        resp = yield Request('POST', '/admin/graphql', {
-            'query': q,
-            'variables': vars,
-        })
+        resp = yield Request(cls._session,
+            'POST', '/admin/graphql', {
+                'query': q,
+                'variables': vars,
+            })
         data = resp.json()
         return data['agents']
 
@@ -46,4 +49,7 @@ class BaseAgent(BaseFunction):
 
 
 class Agent(SyncFunctionMixin, BaseAgent):
+    '''
+    Deprecated! Use ai.backend.client.Session instead.
+    '''
     pass

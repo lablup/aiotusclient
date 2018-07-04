@@ -2,8 +2,8 @@ import sys
 
 from tabulate import tabulate
 
-from ...agent import Agent
 from ...exceptions import BackendError
+from ...session import Session
 from ..pretty import print_fail
 from . import admin
 
@@ -21,17 +21,18 @@ def agents(args):
         ('CPU Slots', 'cpu_slots'),
         ('GPU Slots', 'gpu_slots'),
     ]
-    try:
-        items = Agent.list(args.status,
-                           fields=(item[1] for item in fields))
-    except BackendError as e:
-        print_fail(str(e))
-        sys.exit(1)
-    if len(items) == 0:
-        print('There are no matching agents.')
-        return
-    print(tabulate((item.values() for item in items),
-                   headers=(item[0] for item in fields)))
+    with Session() as session:
+        try:
+            items = session.Agent.list(args.status,
+                                       fields=(item[1] for item in fields))
+        except BackendError as e:
+            print_fail(str(e))
+            sys.exit(1)
+        if len(items) == 0:
+            print('There are no matching agents.')
+            return
+        print(tabulate((item.values() for item in items),
+                       headers=(item[0] for item in fields)))
 
 
 agents.add_argument('-s', '--status', type=str, default='ALIVE',

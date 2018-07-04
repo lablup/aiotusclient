@@ -2,8 +2,8 @@ import sys
 
 from tabulate import tabulate
 
-from ...admin import Admin
 from ...exceptions import BackendError
+from ...session import Session
 from ..pretty import print_fail
 from . import admin
 
@@ -24,7 +24,9 @@ def sessions(args):
         ('GPU Slot', 'gpu_slot'),
     ]
     if args.access_key is None:
-        q = 'query($status:String) { compute_sessions(status:$status) { $fields } }'
+        q = 'query($status:String) {' \
+            '  compute_sessions(status:$status) { $fields }' \
+            '}'
     else:
         q = 'query($ak:String, $status:String) {' \
             '  compute_sessions(access_key:$ak, status:$status) { $fields }' \
@@ -34,16 +36,17 @@ def sessions(args):
         'status': args.status if args.status != 'ALL' else None,
         'ak': args.access_key,
     }
-    try:
-        resp = Admin.query(q, v)
-    except BackendError as e:
-        print_fail(str(e))
-        sys.exit(1)
-    if len(resp['compute_sessions']) == 0:
-        print('There are no compute sessions currently running.')
-        return
-    print(tabulate((item.values() for item in resp['compute_sessions']),
-                   headers=(item[0] for item in fields)))
+    with Session() as session:
+        try:
+            resp = session.Admin.query(q, v)
+        except BackendError as e:
+            print_fail(str(e))
+            sys.exit(1)
+        if len(resp['compute_sessions']) == 0:
+            print('There are no compute sessions currently running.')
+            return
+        print(tabulate((item.values() for item in resp['compute_sessions']),
+                       headers=(item[0] for item in fields)))
 
 
 sessions.add_argument('--status', type=str, default='RUNNING',
@@ -84,20 +87,23 @@ def session(args):
         ('IO Max Scratch Size', 'io_max_scratch_size'),
         ('IO Current Scratch Size', 'io_cur_scratch_size'),
     ]
-    q = 'query($sess_id:String) { compute_session(sess_id:$sess_id) { $fields } }'
+    q = 'query($sess_id:String) {' \
+        '  compute_session(sess_id:$sess_id) { $fields }' \
+        '}'
     q = q.replace('$fields', ' '.join(item[1] for item in fields))
     v = {'sess_id': args.sess_id_or_alias}
-    try:
-        resp = Admin.query(q, v)
-    except BackendError as e:
-        print_fail(str(e))
-        sys.exit(1)
-    if resp['compute_session']['sess_id'] is None:
-        print('There is no such running compute session.')
-        return
-    print('Session detail:\n---------------')
-    for i, value in enumerate(resp['compute_session'].values()):
-        print(fields[i][0] + ': ' + str(value))
+    with Session() as session:
+        try:
+            resp = session.Admin.query(q, v)
+        except BackendError as e:
+            print_fail(str(e))
+            sys.exit(1)
+        if resp['compute_session']['sess_id'] is None:
+            print('There is no such running compute session.')
+            return
+        print('Session detail:\n---------------')
+        for i, value in enumerate(resp['compute_session'].values()):
+            print(fields[i][0] + ': ' + str(value))
 
 
 session.add_argument('sess_id_or_alias', metavar='NAME',

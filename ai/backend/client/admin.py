@@ -12,6 +12,8 @@ __all__ = (
 
 class BaseAdmin(BaseFunction):
 
+    _session = None
+
     @classmethod
     def _query(cls, query: str,
                variables: Optional[Mapping[str, Any]]=None,
@@ -20,7 +22,10 @@ class BaseAdmin(BaseFunction):
             'query': query,
             'variables': variables if variables else {},
         }
-        resp = yield Request('POST', '/admin/graphql', gql_query, config=config)
+        resp = yield Request(cls._session,
+                             'POST', '/admin/graphql',
+                             gql_query,
+                             config=config)
         return resp.json()
 
     def __init_subclass__(cls):
@@ -28,4 +33,7 @@ class BaseAdmin(BaseFunction):
 
 
 class Admin(SyncFunctionMixin, BaseAdmin):
+    '''
+    Deprecated! Use ai.backend.client.Session instead.
+    '''
     pass

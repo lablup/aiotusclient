@@ -1,3 +1,4 @@
+import json
 import os
 import tarfile
 import tempfile
@@ -28,6 +29,8 @@ class BaseKernel(BaseFunction):
     via the generator protocol.
     '''
 
+    _session = None
+
     @classmethod
     def _get_or_create(cls, lang: str,
                        client_token: str=None,
@@ -45,8 +48,10 @@ class BaseKernel(BaseFunction):
             config = get_config()
         if mounts is None:
             mounts = []
+        if resources is None:
+            resources = {}
         mounts.extend(config.vfolder_mounts)
-        resp = yield Request('POST', '/kernel/create', {
+        resp = yield Request(cls._session, 'POST', '/kernel/create', {
             'lang': lang,
             'clientSessionToken': client_token,
             'config': {
@@ -63,40 +68,46 @@ class BaseKernel(BaseFunction):
         return o
 
     def _destroy(self):
-        resp = yield Request('DELETE', '/kernel/{}'.format(self.kernel_id),
+        resp = yield Request(self._session,
+                             'DELETE', '/kernel/{}'.format(self.kernel_id),
                              config=self.config)
         if resp.status == 200:
             return resp.json()
 
     def _restart(self):
-        yield Request('PATCH', '/kernel/{}'.format(self.kernel_id),
+        yield Request(self._session,
+                      'PATCH', '/kernel/{}'.format(self.kernel_id),
                       config=self.config)
 
     def _interrupt(self):
-        yield Request('POST', '/kernel/{}/interrupt'.format(self.kernel_id),
+        yield Request(self._session,
+                      'POST', '/kernel/{}/interrupt'.format(self.kernel_id),
                       config=self.config)
 
     def _complete(self, code: str, opts: dict=None):
         opts = {} if opts is None else opts
-        rqst = Request('POST', '/kernel/{}/complete'.format(self.kernel_id), {
-            'code': code,
-            'options': {
-                'row': int(opts.get('row', 0)),
-                'col': int(opts.get('col', 0)),
-                'line': opts.get('line', ''),
-                'post': opts.get('post', ''),
-            },
-        }, config=self.config)
+        rqst = Request(self._session,
+            'POST', '/kernel/{}/complete'.format(self.kernel_id), {
+                'code': code,
+                'options': {
+                    'row': int(opts.get('row', 0)),
+                    'col': int(opts.get('col', 0)),
+                    'line': opts.get('line', ''),
+                    'post': opts.get('post', ''),
+                },
+            }, config=self.config)
         resp = yield rqst
         return resp.json()
 
     def _get_info(self):
-        resp = yield Request('GET', '/kernel/{}'.format(self.kernel_id),
+        resp = yield Request(self._session,
+                             'GET', '/kernel/{}'.format(self.kernel_id),
                              config=self.config)
         return resp.json()
 
     def _get_logs(self):
-        resp = yield Request('GET', '/kernel/{}/logs'.format(self.kernel_id),
+        resp = yield Request(self._session,
+                             'GET', '/kernel/{}/logs'.format(self.kernel_id),
                              config=self.config)
         return resp.json()
 
@@ -107,32 +118,35 @@ class BaseKernel(BaseFunction):
         opts = {} if opts is None else opts
         if mode in {'query', 'continue', 'input'}:
             assert code is not None  # but maybe empty due to continuation
-            rqst = Request('POST', '/kernel/{}'.format(self.kernel_id), {
-                'mode': mode,
-                'code': code,
-                'runId': run_id,
-            }, config=self.config)
+            rqst = Request(self._session,
+                'POST', '/kernel/{}'.format(self.kernel_id), {
+                    'mode': mode,
+                    'code': code,
+                    'runId': run_id,
+                }, config=self.config)
         elif mode == 'batch':
-            rqst = Request('POST', '/kernel/{}'.format(self.kernel_id), {
-                'mode': mode,
-                'code': code,
-                'runId': run_id,
-                'options': {
-                    'build': opts.get('build', None),
-                    'buildLog': bool(opts.get('buildLog', False)),
-                    'exec': opts.get('exec', None),
-                },
-            }, config=self.config)
+            rqst = Request(self._session,
+                'POST', '/kernel/{}'.format(self.kernel_id), {
+                    'mode': mode,
+                    'code': code,
+                    'runId': run_id,
+                    'options': {
+                        'build': opts.get('build', None),
+                        'buildLog': bool(opts.get('buildLog', False)),
+                        'exec': opts.get('exec', None),
+                    },
+                }, config=self.config)
         elif mode == 'complete':
-            rqst = Request('POST', '/kernel/{}/complete'.format(self.kernel_id), {
-                'code': code,
-                'options': {
-                    'row': int(opts.get('row', 0)),
-                    'col': int(opts.get('col', 0)),
-                    'line': opts.get('line', ''),
-                    'post': opts.get('post', ''),
-                },
-            }, config=self.config)
+            rqst = Request(self._session,
+                'POST', '/kernel/{}/complete'.format(self.kernel_id), {
+                    'code': code,
+                    'options': {
+                        'row': int(opts.get('row', 0)),
+                        'col': int(opts.get('col', 0)),
+                        'line': opts.get('line', ''),
+                        'post': opts.get('post', ''),
+                    },
+                }, config=self.config)
         else:
             raise BackendClientError('Invalid execution mode: {0}'.format(mode))
         resp = yield rqst
@@ -168,7 +182,8 @@ class BaseKernel(BaseFunction):
                           .format(file_path, base_path)
                     raise ValueError(msg) from None
 
-            rqst = Request('POST', '/kernel/{}/upload'.format(self.kernel_id),
+            rqst = Request(self._session,
+                           'POST', '/kernel/{}/upload'.format(self.kernel_id),
                            config=self.config)
             rqst.content = fields
             resp = yield rqst
@@ -176,9 +191,10 @@ class BaseKernel(BaseFunction):
 
     def _download(self, files: Sequence[Union[str, Path]],
                   show_progress: bool=False):
-        resp = yield Request('GET', '/kernel/{}/download'.format(self.kernel_id), {
-            'files': files,
-        }, config=self.config)
+        resp = yield Request(self._session,
+            'GET', '/kernel/{}/download'.format(self.kernel_id), {
+                'files': files,
+            }, config=self.config)
         chunk_size = 1 * 1024
         tqdm_obj = tqdm(desc='Downloading files',
                         unit='bytes', unit_scale=True,
@@ -210,10 +226,22 @@ class BaseKernel(BaseFunction):
         return resp
 
     def _list_files(self, path: Union[str, Path]='.'):
-        resp = yield Request('GET', '/kernel/{}/files'.format(self.kernel_id), {
-            'path': path,
-        }, config=self.config)
+        resp = yield Request(self._session,
+            'GET', '/kernel/{}/files'.format(self.kernel_id), {
+                'path': path,
+            }, config=self.config)
         return resp.json()
+
+    # only supported in AsyncKernel
+    async def stream_pty(self):
+        request = Request(self._session,
+                          'GET', '/stream/kernel/{}/pty'.format(self.kernel_id),
+                          config=self.config)
+        try:
+            ws = await request.connect_websocket()
+        except aiohttp.ClientResponseError as e:
+            raise BackendClientError(e.code, e.message)
+        return StreamPty(self.kernel_id, ws)
 
     def __init__(self, kernel_id: str, *, config: APIConfig=None) -> None:
         self.kernel_id = kernel_id
@@ -234,4 +262,52 @@ class BaseKernel(BaseFunction):
 
 
 class Kernel(SyncFunctionMixin, BaseKernel):
+    '''
+    Deprecated! Use ai.backend.client.Session instead.
+    '''
     pass
+
+
+class StreamPty:
+
+    '''
+    A very thin wrapper of aiohttp.WebSocketResponse object.
+    It keeps the reference to the mother aiohttp.ClientSession object while the
+    connection is alive.
+    '''
+
+    def __init__(self, kernel_id, ws):
+        self.kernel_id = kernel_id
+        self.ws = ws
+
+    @property
+    def closed(self):
+        return self.ws.closed
+
+    def __aiter__(self):
+        return self.ws.__aiter__()
+
+    async def __anext__(self):
+        msg = await self.ws.__anext__()
+        return msg
+
+    def exception(self):
+        return self.ws.exception()
+
+    async def send_str(self, raw_str):
+        await self.ws.send_str(raw_str)
+
+    async def resize(self, rows, cols):
+        await self.ws.send_str(json.dumps({
+            'type': 'resize',
+            'rows': rows,
+            'cols': cols,
+        }))
+
+    async def restart(self):
+        await self.ws.send_str(json.dumps({
+            'type': 'restart',
+        }))
+
+    async def close(self):
+        await self.ws.close()

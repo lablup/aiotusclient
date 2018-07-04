@@ -25,18 +25,21 @@ _rx_slug = re.compile(r'^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?$')
 
 
 class BaseVFolder(BaseFunction):
+
+    _session = None
+
     @classmethod
     def _create(cls, name: str, *,
                 config: APIConfig=None):
         assert _rx_slug.search(name) is not None
-        resp = yield Request('POST', '/folders/', {
+        resp = yield Request(cls._session, 'POST', '/folders/', {
             'name': name,
         }, config=config)
         return resp.json()
 
     @classmethod
     def _list(cls, *, config: APIConfig=None):
-        resp = yield Request('GET', '/folders/', config=config)
+        resp = yield Request(cls._session, 'GET', '/folders/', config=config)
         return resp.json()
 
     @classmethod
@@ -44,12 +47,14 @@ class BaseVFolder(BaseFunction):
         return cls(name, config=config)
 
     def _info(self):
-        resp = yield Request('GET', '/folders/{0}'.format(self.name),
+        resp = yield Request(self._session,
+                             'GET', '/folders/{0}'.format(self.name),
                              config=self.config)
         return resp.json()
 
     def _delete(self):
-        resp = yield Request('DELETE', '/folders/{0}'.format(self.name),
+        resp = yield Request(self._session,
+                             'DELETE', '/folders/{0}'.format(self.name),
                              config=self.config)
         if resp.status == 200:
             return resp.json()
@@ -84,33 +89,37 @@ class BaseVFolder(BaseFunction):
                           .format(file_path, base_path)
                     raise ValueError(msg) from None
 
-            rqst = Request('POST', '/folders/{}/upload'.format(self.name),
+            rqst = Request(self._session,
+                           'POST', '/folders/{}/upload'.format(self.name),
                            config=self.config)
             rqst.content = fields
             resp = yield rqst
         return resp
 
     def _delete_files(self, files: Sequence[Union[str, Path]]):
-        resp = yield Request('DELETE', '/folders/{}/delete_files'.format(self.name),
+        resp = yield Request(self._session,
+                             'DELETE', '/folders/{}/delete_files'.format(self.name),
                              {'files': files}, config=self.config)
         return resp
 
     def _download(self, files: Sequence[Union[str, Path]],
                   show_progress: bool=False):
+
         async def _stream_download():
-            rqst = Request('GET', '/folders/{}/download'.format(self.name), {
-                'files': files,
-            }, config=self.config)
+            rqst = Request(self._session,
+                'GET', '/folders/{}/download'.format(self.name), {
+                    'files': files,
+                }, config=self.config)
             rqst.date = datetime.now(tzutc())
             rqst.headers['Date'] = rqst.date.isoformat()
             try:
-                sess = aiohttp.ClientSession()
+                client = self._session.aiohttp_session
                 rqst._sign()
                 async with _timeout(None):
-                    rqst_ctx = sess.request(rqst.method,
-                                            rqst.build_url(),
-                                            data=rqst.pack_content(),
-                                            headers=rqst.headers)
+                    rqst_ctx = client.request(rqst.method,
+                                              rqst.build_url(),
+                                              data=rqst.pack_content(),
+                                              headers=rqst.headers)
                     async with rqst_ctx as resp:
                         if resp.status // 100 != 2:
                             raise BackendAPIError(resp.status, resp.reason,
@@ -154,24 +163,21 @@ class BaseVFolder(BaseFunction):
                 msg = 'Request to the API endpoint has failed.\n' \
                       'Check your network connection and/or the server status.'
                 raise BackendClientError(msg) from e
-            finally:
-                if sess:
-                    await sess.close()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(_stream_download())
-        loop.close()
+        self._session.worker_thread.execute(_stream_download())
 
     def _list_files(self, path: Union[str, Path]='.'):
-        resp = yield Request('GET', '/folders/{}/files'.format(self.name), {
-            'path': path,
-        }, config=self.config)
+        resp = yield Request(self._session,
+            'GET', '/folders/{}/files'.format(self.name), {
+                'path': path,
+            }, config=self.config)
         return resp.json()
 
     def _invite(self, perm: str, emails: Sequence[str]):
-        resp = yield Request('POST', '/folders/{}/invite'.format(self.name), {
-            'perm': perm, 'user_ids': emails,
-        }, config=self.config)
+        resp = yield Request(self._session,
+            'POST', '/folders/{}/invite'.format(self.name), {
+                'perm': perm, 'user_ids': emails,
+            }, config=self.config)
         return resp.json()
 
     def __init__(self, name: str, *, config: APIConfig=None):
@@ -197,4 +203,7 @@ class BaseVFolder(BaseFunction):
 
 
 class VFolder(SyncFunctionMixin, BaseVFolder):
+    '''
+    Deprecated! Use ai.backend.client.Session instead.
+    '''
     pass

@@ -2,8 +2,8 @@ import sys
 
 from tabulate import tabulate
 
-from ...keypair import KeyPair
 from ...exceptions import BackendError
+from ...session import Session
 from ..pretty import print_fail
 from . import admin
 
@@ -29,18 +29,19 @@ def keypairs(args):
         args.user_id = int(args.user_id)
     except ValueError:
         pass  # string-based user ID for Backend.AI v1.4+
-    try:
-        items = KeyPair.list(args.user_id, args.is_active,
-                             fields=(item[1] for item in fields))
-    except BackendError as e:
-        print_fail(str(e))
-        sys.exit(1)
-    if len(items) == 0:
-        print('There are no matching keypairs associated '
-              'with the user ID {0}'.format(args.user_id))
-        return
-    print(tabulate((item.values() for item in items),
-                   headers=(item[0] for item in fields)))
+    with Session() as session:
+        try:
+            items = session.KeyPair.list(args.user_id, args.is_active,
+                                         fields=(item[1] for item in fields))
+        except BackendError as e:
+            print_fail(str(e))
+            sys.exit(1)
+        if len(items) == 0:
+            print('There are no matching keypairs associated '
+                  'with the user ID {0}'.format(args.user_id))
+            return
+        print(tabulate((item.values() for item in items),
+                       headers=(item[0] for item in fields)))
 
 
 keypairs.add_argument('-u', '--user-id', type=str, default='0',
@@ -62,24 +63,25 @@ def add(args):
         args.user_id = int(args.user_id)
     except ValueError:
         pass  # string-based user ID for Backend.AI v1.4+
-    try:
-        data = KeyPair.create(
-            args.user_id,
-            is_active=not args.inactive,
-            is_admin=args.admin,
-            resource_policy=args.resource_policy,
-            rate_limit=args.rate_limit,
-            concurrency_limit=args.concurrency_limit)
-    except BackendError as e:
-        print_fail(str(e))
-        sys.exit(1)
-    if not data['ok']:
-        print_fail('KeyPair creation has failed: {0}'
-                   .format(data['msg']))
-        sys.exit(1)
-    item = data['keypair']
-    print('Access Key: {0}'.format(item['access_key']))
-    print('Secret Key: {0}'.format(item['secret_key']))
+    with Session() as session:
+        try:
+            data = session.KeyPair.create(
+                args.user_id,
+                is_active=not args.inactive,
+                is_admin=args.admin,
+                resource_policy=args.resource_policy,
+                rate_limit=args.rate_limit,
+                concurrency_limit=args.concurrency_limit)
+        except BackendError as e:
+            print_fail(str(e))
+            sys.exit(1)
+        if not data['ok']:
+            print_fail('KeyPair creation has failed: {0}'
+                       .format(data['msg']))
+            sys.exit(1)
+        item = data['keypair']
+        print('Access Key: {0}'.format(item['access_key']))
+        print('Secret Key: {0}'.format(item['secret_key']))
 
 
 add.add_argument('-u', '--user-id', type=str, default=None,

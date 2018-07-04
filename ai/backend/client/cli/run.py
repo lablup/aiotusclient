@@ -11,8 +11,8 @@ from . import register_command
 from .admin.sessions import session
 from ..compat import token_hex
 from ..exceptions import BackendError
+from ..session import Session
 from .pretty import print_info, print_wait, print_done, print_fail
-from ..kernel import Kernel
 
 
 def exec_loop(kernel, code, mode, opts=None,
@@ -99,70 +99,71 @@ def run(args):
         envs = {k: v for k, v in map(lambda s: s.split('=', 1), args.env)}
     else:
         envs = {}
+    if args.files and args.code:
+        print('You can run only either source files or command-line '
+              'code snippet.', file=sys.stderr)
+        return
+    if not args.files and not args.code:
+        print('You should provide the command-line code snippet using '
+              '"-c" option if run without files.', file=sys.stderr)
+        return
     if args.resources is not None:
         resources = {k: v for k, v in map(lambda s: s.split('=', 1), args.resources)}
     else:
         resources = {}
-    try:
-        kernel = Kernel.get_or_create(
-            args.lang, args.client_token,
-            mounts=args.mount,
-            envs=envs,
-            resources=resources)
-    except BackendError as e:
-        print_fail(str(e))
-        return
-    if kernel.created:
-        vprint_done('Session {0} is ready.'.format(kernel.kernel_id))
-    else:
-        vprint_done('Reusing session {0}...'.format(kernel.kernel_id))
-
-    try:
-        if args.files:
-            if args.code:
-                print('You can run only either source files or command-line '
-                      'code snippet.', file=sys.stderr)
-                return
-            vprint_wait('Uploading source files...')
-            ret = kernel.upload(args.files, basedir=args.basedir,
-                                show_progress=True)
-            if ret.status // 100 != 2:
-                print_fail('Uploading source files failed!')
-                print('{0}: {1}\n{2}'.format(
-                    ret.status, ret.reason, ret.text()))
-                return
-            vprint_done('Uploading done.')
-            build_cmd = args.build if args.build else '*'
-            exec_cmd = args.exec if args.exec else '*'
-            exec_loop(kernel, '', 'batch', opts={
-                'build': build_cmd,
-                'exec': exec_cmd,
-            }, vprint_wait=vprint_wait, vprint_done=vprint_done)
+    with Session() as session:
+        try:
+            kernel = session.Kernel.get_or_create(
+                args.lang, args.client_token,
+                mounts=args.mount,
+                envs=envs,
+                resources=resources)
+        except BackendError as e:
+            print_fail(str(e))
+            return
+        if kernel.created:
+            vprint_done('Session {0} is ready.'.format(kernel.kernel_id))
         else:
-            if not args.code:
-                print('You should provide the command-line code snippet using '
-                      '"-c" option if run without files.', file=sys.stderr)
-                return
-            exec_loop(kernel, args.code, 'query',
-                      vprint_wait=vprint_wait, vprint_done=vprint_done)
-    except BackendError as e:
-        print_fail(str(e))
-        sys.exit(1)
-    except Exception:
-        print_fail('Execution failed!')
-        traceback.print_exc()
-        sys.exit(1)
-    finally:
-        if args.rm:
-            vprint_wait('Cleaning up the session...')
-            ret = kernel.destroy()
-            vprint_done('Cleaned up the session.')
-            if args.stats:
-                stats = ret.get('stats', None) if ret else None
-                if stats:
-                    print(_format_stats(stats))
-                else:
-                    print('Statistics is not available.')
+            vprint_done('Reusing session {0}...'.format(kernel.kernel_id))
+
+        try:
+            if args.files:
+                vprint_wait('Uploading source files...')
+                ret = kernel.upload(args.files, basedir=args.basedir,
+                                    show_progress=True)
+                if ret.status // 100 != 2:
+                    print_fail('Uploading source files failed!')
+                    print('{0}: {1}\n{2}'.format(
+                        ret.status, ret.reason, ret.text()))
+                    return
+                vprint_done('Uploading done.')
+                build_cmd = args.build if args.build else '*'
+                exec_cmd = args.exec if args.exec else '*'
+                exec_loop(kernel, '', 'batch', opts={
+                    'build': build_cmd,
+                    'exec': exec_cmd,
+                }, vprint_wait=vprint_wait, vprint_done=vprint_done)
+            if args.code:
+                exec_loop(kernel, args.code, 'query',
+                          vprint_wait=vprint_wait, vprint_done=vprint_done)
+        except BackendError as e:
+            print_fail(str(e))
+            sys.exit(1)
+        except Exception:
+            print_fail('Execution failed!')
+            traceback.print_exc()
+            sys.exit(1)
+        finally:
+            if args.rm:
+                vprint_wait('Cleaning up the session...')
+                ret = kernel.destroy()
+                vprint_done('Cleaned up the session.')
+                if args.stats:
+                    stats = ret.get('stats', None) if ret else None
+                    if stats:
+                        print(_format_stats(stats))
+                    else:
+                        print('Statistics is not available.')
 
 
 run.add_argument('lang',
@@ -206,20 +207,21 @@ def terminate(args):
     Terminate the given session.
     '''
     print_wait('Terminating the session...')
-    try:
-        kernel = Kernel(args.sess_id_or_alias)
-        ret = kernel.destroy()
-    except BackendError as e:
-        print_fail(str(e))
-        sys.exit(1)
-    else:
-        print_done('Done.')
-        if args.stats:
-            stats = ret.get('stats', None) if ret else None
-            if stats:
-                print(_format_stats(stats))
-            else:
-                print('Statistics is not available.')
+    with Session() as session:
+        try:
+            kernel = session.Kernel(args.sess_id_or_alias)
+            ret = kernel.destroy()
+        except BackendError as e:
+            print_fail(str(e))
+            sys.exit(1)
+        else:
+            print_done('Done.')
+            if args.stats:
+                stats = ret.get('stats', None) if ret else None
+                if stats:
+                    print(_format_stats(stats))
+                else:
+                    print('Statistics is not available.')
 
 
 terminate.add_argument('sess_id_or_alias', metavar='NAME',

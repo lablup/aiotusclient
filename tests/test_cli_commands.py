@@ -4,7 +4,6 @@ import pytest
 
 from ai.backend.client.cli import main
 from ai.backend.client.config import get_config
-from ai.backend.client.kernel import Kernel
 # from ai.backend.client.cli.run import run
 
 
@@ -49,10 +48,7 @@ def test_compiler_shortcut(mocker):
 
 class TestRunCommand:
     def test_either_code_or_file_is_required(self, capsys, mocker):
-        fake_get_or_create = mocker.MagicMock()
-        mocker.patch.object(Kernel, 'get_or_create', fake_get_or_create)
         mocker.patch.object(sys, 'argv', ['backend.ai', 'run', 'python'])
-
         main()
         _, err = capsys.readouterr()
         assert 'provide the command-line code snippet using "-c"' in err

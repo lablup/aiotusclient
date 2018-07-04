@@ -1,8 +1,6 @@
 import asyncio
 from collections import OrderedDict
 from datetime import datetime
-import queue
-import threading
 from typing import Any, Callable, Mapping, Sequence, Union
 
 import aiohttp
@@ -15,57 +13,18 @@ import json
 from .auth import generate_signature
 from .config import APIConfig, get_config
 from .exceptions import BackendClientError
+from .session import BaseSession, Session
 
 __all__ = [
     'Request',
     'Response',
 ]
 
-_worker_thread = None
-
-
-class _SyncWorkerThread(threading.Thread):
-
-    sentinel = object()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.work_queue = queue.Queue()
-        self.done_queue = queue.Queue()
-
-    def run(self):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            while True:
-                coro = self.work_queue.get()
-                if coro is self.sentinel:
-                    break
-                try:
-                    result = loop.run_until_complete(coro)
-                except Exception as e:
-                    self.done_queue.put_nowait(e)
-                else:
-                    self.done_queue.put_nowait(result)
-                self.work_queue.task_done()
-        except (SystemExit, KeyboardInterrupt):
-            pass
-        finally:
-            loop.close()
-
-
-def shutdown():
-    global _worker_thread
-    if _worker_thread is not None:
-        _worker_thread.work_queue.put(_worker_thread.sentinel)
-        _worker_thread.join()
-        _worker_thread = None
-
 
 class BaseRequest:
 
-    __slots__ = ['config', 'method', 'path',
-                 'date', 'headers',
+    __slots__ = ['config', 'session', 'method', 'path',
+                 'date', 'headers', 'streaming',
                  'content_type', '_content']
 
     _allowed_methods = frozenset([
@@ -73,9 +32,11 @@ class BaseRequest:
         'PUT', 'PATCH', 'DELETE',
         'OPTIONS'])
 
-    def __init__(self, method: str='GET',
+    def __init__(self, session: Session,
+                 method: str='GET',
                  path: str=None,
                  content: Mapping=None,
+                 streaming: bool=False,
                  config: APIConfig=None,
                  reporthook: Callable=None) -> None:
         '''
@@ -90,7 +51,9 @@ class BaseRequest:
                                  use the global configuration which is read from the
                                  environment variables.
         '''
+        self.session = session
         self.config = config if config else get_config()
+        self.streaming = streaming
         self.method = method
         if path.startswith('/'):
             path = path[1:]
@@ -190,22 +153,13 @@ class BaseRequest:
 
     # TODO: attach rate-limit information
 
-    def send(self, *args, loop=None, **kwargs):
+    def fetch(self, *args, loop=None, **kwargs):
         '''
         Sends the request to the server.
         '''
-        global _worker_thread
-        if _worker_thread is None:
-            _worker_thread = _SyncWorkerThread()
-            _worker_thread.start()
-        _worker_thread.work_queue.put(self.asend(*args, **kwargs))
-        result = _worker_thread.done_queue.get()
-        _worker_thread.done_queue.task_done()
-        if isinstance(result, Exception):
-            raise result
-        return result
+        return self.session.worker_thread.execute(self.afetch(*args, **kwargs))
 
-    async def asend(self, *, sess=None, timeout=None):
+    async def afetch(self, *, timeout=None):
         '''
         Sends the request to the server.
 
@@ -214,27 +168,30 @@ class BaseRequest:
         assert self.method in self._allowed_methods
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
-        owns_session = False
-        if sess is None:
-            owns_session = True
-            session = aiohttp.ClientSession()
-        else:
-            assert isinstance(sess, aiohttp.ClientSession)
-            session = sess
         try:
             self._sign()
             async with _timeout(timeout):
-                rqst_ctx = session.request(
+                client = self.session.aiohttp_session
+                rqst_ctx = client.request(
                     self.method,
                     self.build_url(),
                     data=self.pack_content(),
                     headers=self.headers)
                 async with rqst_ctx as resp:
-                    return Response(resp.status, resp.reason,
-                                    response=resp,
-                                    stream_reader=resp.content,
-                                    content_type=resp.content_type,
-                                    charset=resp.charset)
+                    if self.streaming:
+                        return StreamingResponse(
+                            self.session,
+                            resp,
+                            stream=resp.content,
+                            content_type=resp.content_type)
+                    else:
+                        body = await resp.read()
+                        return Response(
+                            self.session,
+                            resp,
+                            body=body,
+                            content_type=resp.content_type,
+                            charset=resp.charset)
         except (asyncio.CancelledError, asyncio.TimeoutError):
             # These exceptions must be bubbled up.
             raise
@@ -242,9 +199,6 @@ class BaseRequest:
             msg = 'Request to the API endpoint has failed.\n' \
                   'Check your network connection and/or the server status.'
             raise BackendClientError(msg) from e
-        finally:
-            if owns_session:
-                await session.close()
 
     def pack_content(self):
         if self.content_type == 'multipart/form-data':
@@ -259,7 +213,7 @@ class BaseRequest:
         else:
             return self._content
 
-    async def connect_websocket(self, *, sess=None):
+    async def connect_websocket(self):
         '''
         Creates a WebSocket connection.
 
@@ -268,17 +222,11 @@ class BaseRequest:
         assert self.method == 'GET'
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
-        owns_session = False
-        if sess is None:
-            owns_session = True
-            session = aiohttp.ClientSession()
-        else:
-            assert isinstance(session, aiohttp.ClientSession)
-            session = sess
         try:
             self._sign()
-            ws = await session.ws_connect(self.build_url(), headers=self.headers)
-            return session, ws
+            client = self.session.aiohttp_session
+            ws = await client.ws_connect(self.build_url(), headers=self.headers)
+            return client, ws
         except (asyncio.CancelledError, asyncio.TimeoutError):
             # These exceptions must be bubbled up.
             raise
@@ -286,46 +234,60 @@ class BaseRequest:
             msg = 'Request to the API endpoint has failed.\n' \
                   'Check your network connection and/or the server status.'
             raise BackendClientError(msg) from e
-        finally:
-            if owns_session:
-                await session.close()
 
 
 class Request(BaseRequest):
     pass
 
 
-class Response:
+class BaseResponse:
+    __slots__ = (
+        '_response', '_session',
+    )
 
-    __slots__ = ['_status', '_reason',
-                 '_content_type', '_content_length', '_charset',
-                 '_response', '_body', '_stream_reader', '_chunked']
+    def __init__(self, session: Session,
+                 underlying_response: aiohttp.ClientResponse):
+        self._session = session
+        self._response = underlying_response
 
-    def __init__(self, status: int, reason: str, *,
-                 response: aiohttp.ClientResponse=None,
-                 stream_reader: aiohttp.streams.StreamReader=None,
+    @property
+    def status(self) -> int:
+        return self._response.status
+
+    @property
+    def reason(self) -> str:
+        return self._response.reason
+
+    @property
+    def headers(self) -> Mapping[str, str]:
+        return self._response.headers
+
+    @property
+    def raw_response(self) -> aiohttp.ClientResponse:
+        return self._response
+
+    @property
+    def session(self) -> BaseSession:
+        return self._session
+
+
+class Response(BaseResponse):
+
+    __slots__ = BaseResponse.__slots__ + (
+        '_body', '_content_type', '_content_length', '_charset',
+    )
+
+    def __init__(self, session: Session,
+                 underlying_response: aiohttp.ClientResponse, *,
+                 body: Union[bytes, bytearray]=b'',
                  content_type='text/plain',
                  content_length=None,
                  charset=None):
-        self._status = status
-        self._reason = reason
-        self._response = response
-        self._body = None
-        self._stream_reader = stream_reader
-        self._chunked = False
+        super().__init__(session, underlying_response)
+        self._body = body
         self._content_type = content_type
         self._content_length = content_length
         self._charset = charset if charset else 'utf-8'
-
-        # TODO: include rate-limiting information from headers
-
-    @property
-    def status(self):
-        return self._status
-
-    @property
-    def reason(self):
-        return self._reason
 
     @property
     def content_type(self):
@@ -333,7 +295,6 @@ class Response:
 
     @property
     def content_length(self):
-        assert not self._chunked, 'unable to get content_length for streamed content'
         is_multipart = self._content_type.startswith('multipart/')
         if self._content_length is None and not is_multipart and self._body:
             return len(self._body)
@@ -344,40 +305,48 @@ class Response:
         return self._charset
 
     @property
-    def response(self) -> aiohttp.ClientResponse:
-        return self._response
-
-    @property
-    def stream_reader(self) -> aiohttp.streams.StreamReader:
-        return self._stream_reader
-
-    def read(self, n=-1, loop=None) -> bytes:
-        loop = loop if loop is not None else asyncio.get_event_loop()
-        return loop.run_until_complete(self.aread(n))
-
-    async def aread(self, n=-1) -> bytes:
-        if self._stream_reader.at_eof():
-            return None
-        if not self._chunked:
-            self._chunked = True
-        return await self._stream_reader.read(n)
-
-    def _readall(self, loop=None) -> bytes:
-        loop = loop if loop is not None else asyncio.get_event_loop()
-        return loop.run_until_complete(self._areadall())
-
-    async def _areadall(self) -> bytes:
-        return await self._stream_reader.read()
-
-    @property
     def content(self) -> bytes:
-        assert not self._chunked, 'cannot get content which is already streamed'
-        if self._body is None:
-            self._body = self._readall()
         return self._body
 
     def text(self) -> str:
-        return self.content.decode(self._charset)
+        return self._body.decode(self._charset)
 
     def json(self, loads=json.loads):
         return loads(self.text(), object_pairs_hook=OrderedDict)
+
+
+class StreamingResponse(BaseResponse):
+
+    __slots__ = BaseResponse.__slots__ + (
+        '_stream', '_content_type',
+    )
+
+    def __init__(self, session: Session,
+                 underlying_response: aiohttp.ClientResponse, *,
+                 stream: aiohttp.streams.StreamReader=None,
+                 content_type='text/plain'):
+        super().__init__(session, underlying_response)
+        self._stream = stream
+        self._content_type = content_type
+
+    @property
+    def content_type(self):
+        return self._content_type
+
+    @property
+    def stream(self) -> aiohttp.streams.StreamReader:
+        return self._stream
+
+    def read(self, n=-1) -> bytes:
+        return self._session.worker_thread.execute(self.aread(n))
+
+    async def aread(self, n=-1) -> bytes:
+        if self._stream.at_eof:
+            return b''
+        return await self._stream.read(n)
+
+    def readall(self) -> bytes:
+        return self._session.worker_thread.execute(self._areadall())
+
+    async def areadall(self) -> bytes:
+        return await self._stream.read(-1)
