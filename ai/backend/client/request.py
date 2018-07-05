@@ -11,7 +11,6 @@ from multidict import CIMultiDict
 import json
 
 from .auth import generate_signature
-from .config import APIConfig, get_config
 from .exceptions import BackendClientError
 from .session import BaseSession, Session
 
@@ -37,22 +36,21 @@ class BaseRequest:
                  path: str=None,
                  content: Mapping=None,
                  streaming: bool=False,
-                 config: APIConfig=None,
                  reporthook: Callable=None) -> None:
         '''
         Initialize an API request.
+
+        :param Session session: The session object where this request is executed on.
 
         :param str path: The query path. When performing requests, the version number
                          prefix will be automatically perpended if required.
 
         :param Mapping content: The API query body which will be encoded as JSON.
 
-        :param APIConfig config: The API configuration.  If set to ``None``, it will
-                                 use the global configuration which is read from the
-                                 environment variables.
+        :param bool streaming: Make the response to be StreamingResponse.
         '''
         self.session = session
-        self.config = config if config else get_config()
+        self.config = session.config
         self.streaming = streaming
         self.method = method
         if path.startswith('/'):

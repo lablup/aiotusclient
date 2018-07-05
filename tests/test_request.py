@@ -14,13 +14,12 @@ from ai.backend.client.session import Session, AsyncSession
 
 @pytest.fixture
 def mock_request_params(defconfig):
-    with Session() as session:
+    with Session(config=defconfig) as session:
         yield OrderedDict(
             session=session,
             method='GET',
             path='/function/item/',
             content=OrderedDict(test1='1'),
-            config=defconfig
         )
 
 
@@ -28,7 +27,6 @@ def test_request_initialization(mock_request_params):
     rqst = Request(**mock_request_params)
 
     assert rqst.session == mock_request_params['session']
-    assert rqst.config == mock_request_params['config']
     assert rqst.method == mock_request_params['method']
     assert rqst.path == mock_request_params['path'].lstrip('/')
     assert rqst.content == mock_request_params['content']
@@ -93,7 +91,7 @@ def test_set_content_correctly(mock_request_params):
 
 
 def test_build_correct_url(mock_request_params):
-    config = mock_request_params['config']
+    config = mock_request_params['session'].config
     rqst = Request(**mock_request_params)
 
     major_ver = config.version.split('.', 1)[0]

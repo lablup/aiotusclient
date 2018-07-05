@@ -11,7 +11,6 @@ from dateutil.tz import tzutc
 from tqdm import tqdm
 
 from .base import BaseFunction, SyncFunctionMixin
-from .config import APIConfig
 from .exceptions import BackendAPIError, BackendClientError
 from .request import Request
 from .cli.pretty import ProgressReportingReader
@@ -29,33 +28,30 @@ class BaseVFolder(BaseFunction):
     _session = None
 
     @classmethod
-    def _create(cls, name: str, *,
-                config: APIConfig=None):
+    def _create(cls, name: str):
         assert _rx_slug.search(name) is not None
         resp = yield Request(cls._session, 'POST', '/folders/', {
             'name': name,
-        }, config=config)
+        })
         return resp.json()
 
     @classmethod
-    def _list(cls, *, config: APIConfig=None):
-        resp = yield Request(cls._session, 'GET', '/folders/', config=config)
+    def _list(cls):
+        resp = yield Request(cls._session, 'GET', '/folders/')
         return resp.json()
 
     @classmethod
-    def _get(cls, name: str, *, config: APIConfig=None):
-        return cls(name, config=config)
+    def _get(cls, name: str):
+        return cls(name)
 
     def _info(self):
         resp = yield Request(self._session,
-                             'GET', '/folders/{0}'.format(self.name),
-                             config=self.config)
+                             'GET', '/folders/{0}'.format(self.name))
         return resp.json()
 
     def _delete(self):
         resp = yield Request(self._session,
-                             'DELETE', '/folders/{0}'.format(self.name),
-                             config=self.config)
+                             'DELETE', '/folders/{0}'.format(self.name))
         if resp.status == 200:
             return resp.json()
 
@@ -90,8 +86,7 @@ class BaseVFolder(BaseFunction):
                     raise ValueError(msg) from None
 
             rqst = Request(self._session,
-                           'POST', '/folders/{}/upload'.format(self.name),
-                           config=self.config)
+                           'POST', '/folders/{}/upload'.format(self.name))
             rqst.content = fields
             resp = yield rqst
         return resp
@@ -99,7 +94,7 @@ class BaseVFolder(BaseFunction):
     def _delete_files(self, files: Sequence[Union[str, Path]]):
         resp = yield Request(self._session,
                              'DELETE', '/folders/{}/delete_files'.format(self.name),
-                             {'files': files}, config=self.config)
+                             {'files': files})
         return resp
 
     def _download(self, files: Sequence[Union[str, Path]],
@@ -109,7 +104,7 @@ class BaseVFolder(BaseFunction):
             rqst = Request(self._session,
                 'GET', '/folders/{}/download'.format(self.name), {
                     'files': files,
-                }, config=self.config)
+                })
             rqst.date = datetime.now(tzutc())
             rqst.headers['Date'] = rqst.date.isoformat()
             try:
@@ -170,38 +165,36 @@ class BaseVFolder(BaseFunction):
         resp = yield Request(self._session,
             'GET', '/folders/{}/files'.format(self.name), {
                 'path': path,
-            }, config=self.config)
+            })
         return resp.json()
 
     def _invite(self, perm: str, emails: Sequence[str]):
         resp = yield Request(self._session,
             'POST', '/folders/{}/invite'.format(self.name), {
                 'perm': perm, 'user_ids': emails,
-            }, config=self.config)
+            })
         return resp.json()
 
     @classmethod
-    def _invitations(cls, *, config: APIConfig=None):
-        resp = yield Request(cls._session, 'GET', '/folders/invitations/list',
-                             config=config)
+    def _invitations(cls):
+        resp = yield Request(cls._session, 'GET', '/folders/invitations/list')
         return resp.json()
 
     @classmethod
-    def _accept_invitation(cls, inv_id, *, config: APIConfig=None):
+    def _accept_invitation(cls, inv_id):
         resp = yield Request(cls._session, 'POST', '/folders/invitations/accept',
-                             {'inv_id': inv_id}, config=config)
+                             {'inv_id': inv_id})
         return resp.json()
 
     @classmethod
-    def _delete_invitation(cls, inv_id, *, config: APIConfig=None):
+    def _delete_invitation(cls, inv_id):
         resp = yield Request(cls._session, 'DELETE', '/folders/invitations/delete',
-                             {'inv_id': inv_id}, config=config)
+                             {'inv_id': inv_id})
         return resp.json()
 
-    def __init__(self, name: str, *, config: APIConfig=None):
+    def __init__(self, name: str):
         assert _rx_slug.search(name) is not None
         self.name = name
-        self.config = config
         self.delete   = self._call_base_method(self._delete)
         self.info     = self._call_base_method(self._info)
         self.upload   = self._call_base_method(self._upload)

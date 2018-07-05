@@ -1,7 +1,6 @@
 from typing import Iterable, Union
 
 from .base import BaseFunction, SyncFunctionMixin
-from .config import APIConfig
 from .request import Request
 
 __all__ = (
@@ -21,8 +20,7 @@ class BaseKeyPair(BaseFunction):
                 resource_policy: str=None,
                 rate_limit: int=None,
                 concurrency_limit: int=None,
-                fields: Iterable[str]=None,
-                config: APIConfig=None):
+                fields: Iterable[str]=None):
         if fields is None:
             fields = ('access_key', 'secret_key')
         uid_type = 'Int!' if isinstance(user_id, int) else 'String!'
@@ -45,15 +43,14 @@ class BaseKeyPair(BaseFunction):
         resp = yield Request(cls._session, 'POST', '/admin/graphql', {
             'query': q,
             'variables': vars,
-        }, config=config)
+        })
         data = resp.json()
         return data['create_keypair']
 
     @classmethod
     def _list(cls, user_id: Union[int, str],
               is_active: bool=None,
-              fields: Iterable[str]=None,
-              config: APIConfig=None):
+              fields: Iterable[str]=None):
         if fields is None:
             fields = (
                 'access_key', 'secret_key',
@@ -73,7 +70,7 @@ class BaseKeyPair(BaseFunction):
         resp = yield Request(cls._session, 'POST', '/admin/graphql', {
             'query': q,
             'variables': vars,
-        }, config=config)
+        })
         data = resp.json()
         return data['keypairs']
 

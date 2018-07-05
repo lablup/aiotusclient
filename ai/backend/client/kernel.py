@@ -10,7 +10,6 @@ import aiohttp.web
 from tqdm import tqdm
 
 from .base import BaseFunction, SyncFunctionMixin
-from .config import APIConfig, get_config
 from .exceptions import BackendClientError
 from .request import Request
 from .cli.pretty import ProgressReportingReader
@@ -37,20 +36,17 @@ class BaseKernel(BaseFunction):
                        mounts: Iterable[str]=None,
                        envs: Mapping[str, str]=None,
                        resources: Mapping[str, int]=None,
-                       max_mem: int=0, exec_timeout: int=0,
-                       config: APIConfig=None) -> str:
+                       max_mem: int=0, exec_timeout: int=0) -> str:
         if client_token:
             assert 4 <= len(client_token) <= 64, \
                    'Client session token should be 4 to 64 characters long.'
         else:
             client_token = uuid.uuid4().hex
-        if config is None:
-            config = get_config()
         if mounts is None:
             mounts = []
         if resources is None:
             resources = {}
-        mounts.extend(config.vfolder_mounts)
+        mounts.extend(cls._session.config.vfolder_mounts)
         resp = yield Request(cls._session, 'POST', '/kernel/create', {
             'lang': lang,
             'clientSessionToken': client_token,
@@ -61,28 +57,25 @@ class BaseKernel(BaseFunction):
                 'instanceCores': resources.get('cpu'),
                 'instanceGPUs': resources.get('gpu'),
             },
-        }, config=config)
+        })
         data = resp.json()
-        o = cls(data['kernelId'], config=config)  # type: ignore
+        o = cls(data['kernelId'])  # type: ignore
         o.created = data.get('created', True)     # True is for legacy
         return o
 
     def _destroy(self):
         resp = yield Request(self._session,
-                             'DELETE', '/kernel/{}'.format(self.kernel_id),
-                             config=self.config)
+                             'DELETE', '/kernel/{}'.format(self.kernel_id))
         if resp.status == 200:
             return resp.json()
 
     def _restart(self):
         yield Request(self._session,
-                      'PATCH', '/kernel/{}'.format(self.kernel_id),
-                      config=self.config)
+                      'PATCH', '/kernel/{}'.format(self.kernel_id))
 
     def _interrupt(self):
         yield Request(self._session,
-                      'POST', '/kernel/{}/interrupt'.format(self.kernel_id),
-                      config=self.config)
+                      'POST', '/kernel/{}/interrupt'.format(self.kernel_id))
 
     def _complete(self, code: str, opts: dict=None):
         opts = {} if opts is None else opts
@@ -95,20 +88,18 @@ class BaseKernel(BaseFunction):
                     'line': opts.get('line', ''),
                     'post': opts.get('post', ''),
                 },
-            }, config=self.config)
+            })
         resp = yield rqst
         return resp.json()
 
     def _get_info(self):
         resp = yield Request(self._session,
-                             'GET', '/kernel/{}'.format(self.kernel_id),
-                             config=self.config)
+                             'GET', '/kernel/{}'.format(self.kernel_id))
         return resp.json()
 
     def _get_logs(self):
         resp = yield Request(self._session,
-                             'GET', '/kernel/{}/logs'.format(self.kernel_id),
-                             config=self.config)
+                             'GET', '/kernel/{}/logs'.format(self.kernel_id))
         return resp.json()
 
     def _execute(self, run_id: str=None,
@@ -123,7 +114,7 @@ class BaseKernel(BaseFunction):
                     'mode': mode,
                     'code': code,
                     'runId': run_id,
-                }, config=self.config)
+                })
         elif mode == 'batch':
             rqst = Request(self._session,
                 'POST', '/kernel/{}'.format(self.kernel_id), {
@@ -135,7 +126,7 @@ class BaseKernel(BaseFunction):
                         'buildLog': bool(opts.get('buildLog', False)),
                         'exec': opts.get('exec', None),
                     },
-                }, config=self.config)
+                })
         elif mode == 'complete':
             rqst = Request(self._session,
                 'POST', '/kernel/{}/complete'.format(self.kernel_id), {
@@ -146,7 +137,7 @@ class BaseKernel(BaseFunction):
                         'line': opts.get('line', ''),
                         'post': opts.get('post', ''),
                     },
-                }, config=self.config)
+                })
         else:
             raise BackendClientError('Invalid execution mode: {0}'.format(mode))
         resp = yield rqst
@@ -183,8 +174,7 @@ class BaseKernel(BaseFunction):
                     raise ValueError(msg) from None
 
             rqst = Request(self._session,
-                           'POST', '/kernel/{}/upload'.format(self.kernel_id),
-                           config=self.config)
+                           'POST', '/kernel/{}/upload'.format(self.kernel_id))
             rqst.content = fields
             resp = yield rqst
         return resp
@@ -194,7 +184,7 @@ class BaseKernel(BaseFunction):
         resp = yield Request(self._session,
             'GET', '/kernel/{}/download'.format(self.kernel_id), {
                 'files': files,
-            }, config=self.config)
+            })
         chunk_size = 1 * 1024
         tqdm_obj = tqdm(desc='Downloading files',
                         unit='bytes', unit_scale=True,
@@ -229,23 +219,21 @@ class BaseKernel(BaseFunction):
         resp = yield Request(self._session,
             'GET', '/kernel/{}/files'.format(self.kernel_id), {
                 'path': path,
-            }, config=self.config)
+            })
         return resp.json()
 
     # only supported in AsyncKernel
     async def stream_pty(self):
         request = Request(self._session,
-                          'GET', '/stream/kernel/{}/pty'.format(self.kernel_id),
-                          config=self.config)
+                          'GET', '/stream/kernel/{}/pty'.format(self.kernel_id))
         try:
             ws = await request.connect_websocket()
         except aiohttp.ClientResponseError as e:
             raise BackendClientError(e.code, e.message)
         return StreamPty(self.kernel_id, ws)
 
-    def __init__(self, kernel_id: str, *, config: APIConfig=None) -> None:
+    def __init__(self, kernel_id: str) -> None:
         self.kernel_id = kernel_id
-        self.config    = config
         self.destroy   = self._call_base_method(self._destroy)
         self.restart   = self._call_base_method(self._restart)
         self.interrupt = self._call_base_method(self._interrupt)

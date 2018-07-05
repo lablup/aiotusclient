@@ -22,15 +22,15 @@ def test_create_with_config(mocker):
         secret_key='asdf',
         user_agent='BAIClientTest'
     )
-    with Session() as session:
-        k = session.Kernel.get_or_create('python', config=myconfig)
+    with Session(config=myconfig) as session:
+        assert session.config is myconfig
+        k = session.Kernel.get_or_create('python')
         mock_req.assert_called_once_with(session,
-                                         'POST', '/kernel/create', mocker.ANY,
-                                         config=myconfig)
-        assert str(k.config.endpoint) == 'https://localhost:9999'
-        assert k.config.user_agent == 'BAIClientTest'
-        assert k.config.access_key == '1234'
-        assert k.config.secret_key == 'asdf'
+                                         'POST', '/kernel/create', mocker.ANY)
+        assert str(k._session.config.endpoint) == 'https://localhost:9999'
+        assert k._session.config.user_agent == 'BAIClientTest'
+        assert k._session.config.access_key == '1234'
+        assert k._session.config.secret_key == 'asdf'
 
 
 def test_deprecated_api():
@@ -48,7 +48,7 @@ def test_create_kernel_url(mocker):
     with Session() as session:
         session.Kernel.get_or_create('python')
         mock_req.assert_called_once_with(session, 'POST', '/kernel/create',
-                                         mocker.ANY, config=mocker.ANY)
+                                         mocker.ANY)
         mock_req_obj.fetch.assert_called_once_with()
         mock_req_obj.fetch.return_value.json.assert_called_once_with()
 
@@ -88,8 +88,7 @@ def test_destroy_kernel_url(mocker):
         k.destroy()
 
     mock_req.assert_called_once_with(session,
-                                     'DELETE', '/kernel/{}'.format(kernel_id),
-                                     config=mocker.ANY)
+                                     'DELETE', '/kernel/{}'.format(kernel_id))
     mock_req_obj.fetch.assert_called_once_with()
 
 
@@ -117,8 +116,7 @@ def test_restart_kernel_url(mocker):
         k.restart()
 
         mock_req.assert_called_once_with(session,
-                                         'PATCH', '/kernel/{}'.format(kernel_id),
-                                         config=mocker.ANY)
+                                         'PATCH', '/kernel/{}'.format(kernel_id))
         mock_req_obj.fetch.assert_called_once_with()
 
 
@@ -146,8 +144,7 @@ def test_get_kernel_info_url(mocker):
         k.get_info()
 
         mock_req.assert_called_once_with(session,
-                                         'GET', '/kernel/{}'.format(kernel_id),
-                                         config=mocker.ANY)
+                                         'GET', '/kernel/{}'.format(kernel_id))
         mock_req_obj.fetch.assert_called_once_with()
         mock_req_obj.fetch.return_value.json.assert_called_once_with()
 
@@ -178,8 +175,7 @@ def test_execute_code_url(mocker):
 
         mock_req.assert_called_once_with(
             session, 'POST', '/kernel/{}'.format(kernel_id),
-            {'mode': 'query', 'runId': run_id, 'code': 'hello'},
-            config=mocker.ANY)
+            {'mode': 'query', 'runId': run_id, 'code': 'hello'})
         mock_req_obj.fetch.assert_called_once_with()
         mock_req_obj.fetch.return_value.json.assert_called_once_with()
 

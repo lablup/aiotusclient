@@ -1,3 +1,4 @@
+import abc
 import asyncio
 import threading
 import queue
@@ -5,6 +6,7 @@ import queue
 import aiohttp
 
 from .base import SyncFunctionMixin, AsyncFunctionMixin
+from .config import APIConfig, get_config
 
 
 __all__ = (
@@ -52,24 +54,49 @@ class _SyncWorkerThread(threading.Thread):
         return result
 
 
-class BaseSession:
+class BaseSession(metaclass=abc.ABCMeta):
     __slots__ = (
-        'closed',
-        'aiohttp_session',
+        '_config', '_closed', 'aiohttp_session',
         'Admin', 'Agent', 'Kernel', 'KeyPair', 'VFolder',
     )
 
+    def __init__(self, *, config: APIConfig=None):
+        self._closed = False
+        self._config = config if config else get_config()
+
+    @abc.abstractmethod
+    def close(self):
+        raise NotImplementedError
+
+    @property
+    def closed(self):
+        return self._closed
+
+    @property
+    def config(self):
+        return self._config
+
 
 class Session(BaseSession):
+    '''
+    An API client session that makes API requests synchronously.
+    '''
 
     __slots__ = BaseSession.__slots__ + (
-        'worker_thread',
+        '_worker_thread',
     )
 
-    def __init__(self):
-        self.closed = False
-        self.worker_thread = _SyncWorkerThread()
-        self.worker_thread.start()
+    def __init__(self, *, config: APIConfig=None):
+        '''
+        Initialize a API client session.
+
+        :param APIConfig config: The API configuration.  If set to ``None``, it will
+                                 use the global configuration which is read from the
+                                 environment variables.
+        '''
+        super().__init__(config=config)
+        self._worker_thread = _SyncWorkerThread()
+        self._worker_thread.start()
 
         async def _create_aiohttp_session():
             return aiohttp.ClientSession()
@@ -98,12 +125,16 @@ class Session(BaseSession):
         })
 
     def close(self):
-        if self.closed:
+        if self._closed:
             return
-        self.closed = True
-        self.worker_thread.work_queue.put(self.aiohttp_session.close())
-        self.worker_thread.work_queue.put(self.worker_thread.sentinel)
-        self.worker_thread.join()
+        self._closed = True
+        self._worker_thread.work_queue.put(self.aiohttp_session.close())
+        self._worker_thread.work_queue.put(self.worker_thread.sentinel)
+        self._worker_thread.join()
+
+    @property
+    def worker_thread(self):
+        return self._worker_thread
 
     def __enter__(self):
         assert not self.closed, 'Cannot reuse closed session'
@@ -114,11 +145,22 @@ class Session(BaseSession):
 
 
 class AsyncSession(BaseSession):
+    '''
+    An API client session that makes API requests asynchronously using coroutines.
+    '''
 
     __slots__ = BaseSession.__slots__ + ()
 
-    def __init__(self):
-        self.closed = False
+    def __init__(self, *, config: APIConfig=None):
+        '''
+        Initialize a API client session.
+
+        :param APIConfig config: The API configuration.  If set to ``None``, it will
+                                 use the global configuration which is read from the
+                                 environment variables.
+        '''
+        super().__init__(config=config)
+
         self.aiohttp_session = aiohttp.ClientSession()
 
         from .admin import BaseAdmin
@@ -143,9 +185,9 @@ class AsyncSession(BaseSession):
         })
 
     async def close(self):
-        if self.closed:
+        if self._closed:
             return
-        self.closed = True
+        self._closed = True
         await self.aiohttp_session.close()
 
     async def __aenter__(self):
