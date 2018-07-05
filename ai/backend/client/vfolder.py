@@ -186,6 +186,18 @@ class BaseVFolder(BaseFunction):
                              config=config)
         return resp.json()
 
+    @classmethod
+    def _accept_invitation(cls, inv_id, *, config: APIConfig=None):
+        resp = yield Request(cls._session, 'POST', '/folders/invitations/accept',
+                             {'inv_id': inv_id}, config=config)
+        return resp.json()
+
+    @classmethod
+    def _delete_invitation(cls, inv_id, *, config: APIConfig=None):
+        resp = yield Request(cls._session, 'DELETE', '/folders/invitations/delete',
+                             {'inv_id': inv_id}, config=config)
+        return resp.json()
+
     def __init__(self, name: str, *, config: APIConfig=None):
         assert _rx_slug.search(name) is not None
         self.name = name
@@ -207,6 +219,8 @@ class BaseVFolder(BaseFunction):
         cls.list   = cls._call_base_clsmethod(cls._list)
         cls.get    = cls._call_base_clsmethod(cls._get)
         cls.invitations = cls._call_base_clsmethod(cls._invitations)
+        cls.accept_invitation = cls._call_base_clsmethod(cls._accept_invitation)
+        cls.delete_invitation = cls._call_base_clsmethod(cls._delete_invitation)
 
 
 class VFolder(SyncFunctionMixin, BaseVFolder):

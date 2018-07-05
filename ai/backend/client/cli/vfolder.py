@@ -194,7 +194,6 @@ invite.add_argument('-p', '--perm', metavar='PERMISSION', type=str, default='rw'
                     help='Permission to give. "ro" (read-only) / "rw" (read-write).')
 
 
-
 @vfolder.register_command
 def invitations(args):
     """List and manage received invitations.
@@ -206,7 +205,7 @@ def invitations(args):
             if len(invitations) < 1:
                 print('No invitations.')
                 return
-            print('List of invitations (vfolder id, permission):')
+            print('List of invitations (inviter, vfolder id, permission):')
             for cnt, inv in enumerate(invitations):
                 if inv['perm'] == 'rw':
                     perm = 'read-write'
@@ -214,7 +213,28 @@ def invitations(args):
                     perm = 'read-only'
                 else:
                     perm = inv['perm']
-                print('[{}] {}, {}'.format(cnt + 1, inv['vfolder_id'], perm))
+                print('[{}] {}, {}, {}'.format(cnt + 1, inv['inviter'],
+                                               inv['vfolder_id'], perm))
+
+            selection = input('Choose invitation number to manage: ')
+            if selection.isdigit():
+                selection = int(selection) - 1
+            else:
+                return
+            if 0 <= selection < len(invitations):
+                while True:
+                    action = input('Choose action. (a)ccept, (r)eject, (c)ancel: ')
+                    if action.lower() == 'a':
+                        result = session.VFolder.accept_invitation(
+                            invitations[selection]['id'])
+                        break
+                    elif action.lower() == 'r':
+                        result = session.VFolder.delete_invitation(
+                            invitations[selection]['id'])
+                        print(result['msg'])
+                        break
+                    elif action.lower() == 'c':
+                        break
         except BackendError as e:
             print_fail(str(e))
             sys.exit(1)
