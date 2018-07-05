@@ -181,13 +181,13 @@ class BaseVFolder(BaseFunction):
         return resp.json()
 
     @classmethod
-    def _accept_invitation(cls, inv_id):
+    def _accept_invitation(cls, inv_id: str, inv_ak: str):
         resp = yield Request(cls._session, 'POST', '/folders/invitations/accept',
-                             {'inv_id': inv_id})
+                             {'inv_id': inv_id, 'inv_ak': inv_ak})
         return resp.json()
 
     @classmethod
-    def _delete_invitation(cls, inv_id):
+    def _delete_invitation(cls, inv_id: str):
         resp = yield Request(cls._session, 'DELETE', '/folders/invitations/delete',
                              {'inv_id': inv_id})
         return resp.json()

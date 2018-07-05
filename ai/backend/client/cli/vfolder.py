@@ -6,6 +6,7 @@ import sys
 from tabulate import tabulate
 
 from . import register_command
+from ..config import get_config
 from .pretty import print_wait, print_done, print_fail
 from ..exceptions import BackendError
 from ..session import Session
@@ -225,8 +226,12 @@ def invitations(args):
                 while True:
                     action = input('Choose action. (a)ccept, (r)eject, (c)ancel: ')
                     if action.lower() == 'a':
+                        # TODO: Let user can select access_key among many.
+                        #       Currently, the config objects holds only one key.
+                        config = get_config()
                         result = session.VFolder.accept_invitation(
-                            invitations[selection]['id'])
+                            invitations[selection]['id'], config.access_key)
+                        print(result['msg'])
                         break
                     elif action.lower() == 'r':
                         result = session.VFolder.delete_invitation(
