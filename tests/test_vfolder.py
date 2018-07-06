@@ -1,12 +1,5 @@
-from unittest import mock
-
 from aioresponses import aioresponses
-import pytest
 
-from ai.backend.client.exceptions import BackendAPIError
-from ai.backend.client.compat import token_hex
-from ai.backend.client.config import APIConfig
-from ai.backend.client.kernel import Kernel
 from ai.backend.client.session import Session
 
 
@@ -124,25 +117,25 @@ def test_vfolder_list_files():
         with aioresponses() as m:
             vfolder_name = 'fake-vfolder-name'
             payload = {
-              "files": [
-                  {
-                      "mode": "-rw-r--r--",
-                      "size": 4751244,
-                      "ctime": 1528277299.2744732,
-                      "mtime": 1528277299.2744732,
-                      "atime": 1528277300.7658687,
-                      "filename": "bigtxt.txt",
-                   },
-                  {
-                      "mode": "-rw-r--r--",
-                      "size": 200000,
-                      "ctime": 1528333257.6576185,
-                      "mtime": 1528288069.625786,
-                      "atime": 1528332829.692922,
-                      "filename": "200000",
-                  }
-              ],
-              "folder_path": "/mnt/azure-shard01/1f6bd27fde1248cabfb50306ea83fc0a",
+                "files": [
+                    {
+                        "mode": "-rw-r--r--",
+                        "size": 4751244,
+                        "ctime": 1528277299.2744732,
+                        "mtime": 1528277299.2744732,
+                        "atime": 1528277300.7658687,
+                        "filename": "bigtxt.txt",
+                    },
+                    {
+                        "mode": "-rw-r--r--",
+                        "size": 200000,
+                        "ctime": 1528333257.6576185,
+                        "mtime": 1528288069.625786,
+                        "atime": 1528332829.692922,
+                        "filename": "200000",
+                    }
+                ],
+                "folder_path": "/mnt/azure-shard01/1f6bd27fde1248cabfb50306ea83fc0a",
             }
             m.get(build_url(session.config,
                             '/folders/{}/files'.format(vfolder_name)),
