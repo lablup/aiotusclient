@@ -97,7 +97,7 @@ def test_build_correct_url(mock_request_params):
     major_ver = config.version.split('.', 1)[0]
     path = '/' + rqst.path if len(rqst.path) > 0 else ''
 
-    canonical_url = 'http://127.0.0.1:8081/path/{0}{1}'.format(major_ver, path)
+    canonical_url = 'http://127.0.0.1:8081/{0}{1}'.format(major_ver, path)
     assert rqst.build_url() == canonical_url
 
 
