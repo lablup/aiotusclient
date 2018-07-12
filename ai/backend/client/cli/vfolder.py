@@ -24,6 +24,8 @@ def list(args):
     fields = [
         ('Name', 'name'),
         ('ID', 'id'),
+        ('Owner', 'is_owner'),
+        ('Permission', 'permission'),
     ]
     with Session() as session:
         try:
@@ -76,6 +78,8 @@ def info(args):
             result = session.VFolder(args.name).info()
             print('Virtual folder "{0}" (ID: {1})'
                   .format(result['name'], result['id']))
+            print('- Owner:', result['is_owner'])
+            print('- Permission:', result['permission'])
             print('- Number of files: {0}'.format(result['numFiles']))
         except BackendError as e:
             print_fail(str(e))
