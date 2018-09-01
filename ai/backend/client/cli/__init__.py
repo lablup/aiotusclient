@@ -2,7 +2,7 @@ import argparse
 import functools
 from pathlib import Path
 import sys
-from typing import Callable, Optional, Union
+from typing import Callable, Sequence, Union
 
 import colorama
 import configargparse
@@ -19,33 +19,45 @@ global_argparser = configargparse.ArgumentParser(
 _subparsers = dict()
 
 
-def register_command(handler: Callable[[argparse.Namespace], None],
-                     main_parser: Optional[ArgParserType]=None,
-                    ) -> Callable[[argparse.Namespace], None]:  # noqa
-    if main_parser is None:
-        main_parser = global_argparser
-    if id(main_parser) not in _subparsers:
-        subparsers = main_parser.add_subparsers(title='commands',
-                                                dest='command')
-        _subparsers[id(main_parser)] = subparsers
-    else:
-        subparsers = _subparsers[id(main_parser)]
+def register_command(*args, **kwargs):
 
-    @functools.wraps(handler)
-    def wrapped(args):
-        handler(args)
+    def _register_command(handler: Callable[[argparse.Namespace], None], *,
+                          main_parser: ArgParserType=None,
+                          aliases: Sequence[str]=None,
+                         ) -> Callable[[argparse.Namespace], None]:  # noqa
+        if main_parser is None:
+            main_parser = global_argparser
+        if id(main_parser) not in _subparsers:
+            subparsers = main_parser.add_subparsers(title='commands',
+                                                    dest='command')
+            _subparsers[id(main_parser)] = subparsers
+        else:
+            subparsers = _subparsers[id(main_parser)]
 
-    doc_summary = handler.__doc__.split('\n\n')[0]
-    inner_parser = subparsers.add_parser(
-        handler.__name__.replace('_', '-'),
-        description=handler.__doc__,
-        formatter_class=configargparse.ArgumentDefaultsHelpFormatter,
-        help=doc_summary)
-    inner_parser.set_defaults(function=wrapped)
-    wrapped.register_command = functools.partial(register_command,
-                                                 main_parser=inner_parser)
-    wrapped.add_argument = inner_parser.add_argument
-    return wrapped
+        @functools.wraps(handler)
+        def wrapped(args):
+            handler(args)
+
+        doc_summary = handler.__doc__.split('\n\n')[0]
+        inner_parser = subparsers.add_parser(
+            handler.__name__.replace('_', '-'),
+            aliases=[] if aliases is None else aliases,
+            description=handler.__doc__,
+            formatter_class=configargparse.ArgumentDefaultsHelpFormatter,
+            help=doc_summary)
+        inner_parser.set_defaults(function=wrapped)
+        wrapped.register_command = functools.partial(
+            register_command,
+            main_parser=inner_parser)
+        wrapped._parser = inner_parser
+        wrapped.add_argument = inner_parser.add_argument
+        return wrapped
+
+    if (len(args) == 1 and (
+            len(kwargs) == 0 or (len(kwargs) == 1 and 'main_parser' in kwargs)) and
+            callable(args[0])):
+        return _register_command(*args, **kwargs)
+    return lambda handler: _register_command(handler, *args, **kwargs)
 
 
 @register_command
