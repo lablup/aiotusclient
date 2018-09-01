@@ -4,7 +4,6 @@ from pathlib import Path
 import sys
 from typing import Callable, Sequence, Union
 
-import colorama
 import configargparse
 
 from .pretty import print_fail
@@ -69,8 +68,6 @@ def help(args):
 
 
 def main():
-
-    colorama.init()
 
     import ai.backend.client.cli.config # noqa
     import ai.backend.client.cli.run    # noqa
