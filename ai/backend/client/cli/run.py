@@ -201,7 +201,7 @@ run.add_argument('-q', '--quiet', action='store_true', default=False,
                  help='Hide execution details but show only the kernel outputs.')
 
 
-@register_command(aliases=['rm'])
+@register_command(aliases=['rm', 'kill'])
 def terminate(args):
     '''
     Terminate the given session.
