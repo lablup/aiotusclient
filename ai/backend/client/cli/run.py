@@ -206,14 +206,18 @@ def terminate(args):
     '''
     Terminate the given session.
     '''
-    print_wait('Terminating the session...')
+    print_wait('Terminating the session(s)...')
     with Session() as session:
-        try:
-            kernel = session.Kernel(args.sess_id_or_alias)
-            ret = kernel.destroy()
-        except BackendError as e:
-            print_fail(str(e))
-            sys.exit(1)
+        has_failure = False
+        for sess in args.sess_id_or_alias:
+            try:
+                kernel = session.Kernel(sess)
+                ret = kernel.destroy()
+            except BackendError as e:
+                print_fail(str(e))
+                has_failure = True
+            if has_failure:
+                sys.exit(1)
         else:
             print_done('Done.')
             if args.stats:
@@ -224,7 +228,7 @@ def terminate(args):
                     print('Statistics is not available.')
 
 
-terminate.add_argument('sess_id_or_alias', metavar='NAME',
+terminate.add_argument('sess_id_or_alias', metavar='NAME', nargs='+',
                        help='The session ID or its alias '
                             'given when creating the session.')
 terminate.add_argument('-s', '--stats', action='store_true', default=False,
