@@ -91,10 +91,26 @@ class BaseVFolder(BaseFunction):
             resp = yield rqst
         return resp
 
-    def _delete_files(self, files: Sequence[Union[str, Path]]):
-        resp = yield Request(self._session,
-                             'DELETE', '/folders/{}/delete_files'.format(self.name),
-                             {'files': files})
+    def _mkdir(self,
+                      path: Union[str, Path]):
+        resp = yield Request(
+            self._session,
+            'POST', '/folders/{}/mkdir'.format(self.name),
+            {
+                'path': path,
+            })
+        return resp
+
+    def _delete_files(self,
+                      files: Sequence[Union[str, Path]],
+                      recursive: bool=False):
+        resp = yield Request(
+            self._session,
+            'DELETE', '/folders/{}/delete_files'.format(self.name),
+            {
+                'files': files,
+                'recursive': recursive,
+            })
         return resp
 
     def _download(self, files: Sequence[Union[str, Path]],
@@ -198,12 +214,13 @@ class BaseVFolder(BaseFunction):
         self.delete   = self._call_base_method(self._delete)
         self.info     = self._call_base_method(self._info)
         self.upload   = self._call_base_method(self._upload)
-        self.delete_files = self._call_base_method(self._delete_files)
         # self.download = self._call_base_method(self._download)
         # To deliver loop and session objects to Request.send method.
         # TODO: Generalized request/response abstraction accounting for streaming
         #       would be needed.
         self.download = self._download
+        self.mkdir = self._call_base_method(self._mkdir)
+        self.delete_files = self._call_base_method(self._delete_files)
         self.list_files = self._call_base_method(self._list_files)
         self.invite = self._call_base_method(self._invite)
 

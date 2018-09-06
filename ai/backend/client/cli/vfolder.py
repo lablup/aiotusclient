@@ -91,7 +91,10 @@ info.add_argument('name', type=str, help='The name of a virtual folder.')
 
 @vfolder.register_command
 def upload(args):
-    '''Upload a file to the virtual folder from the current working directory.'''
+    '''
+    Upload a file to the virtual folder from the current working directory.
+    The files with the same names will be overwirtten.
+    '''
     with Session() as session:
         try:
             session.VFolder(args.name).upload(args.filenames, show_progress=True)
@@ -107,26 +110,11 @@ upload.add_argument('filenames', type=Path, nargs='+',
 
 
 @vfolder.register_command
-def delete_files(args):
-    '''Delete files in a virtual folder. This operation is irreversible!'''
-    with Session() as session:
-        try:
-            if input("> Are you sure? (y/n): ").lower().strip()[:1] == 'y':
-                session.VFolder(args.name).delete_files(args.filenames)
-                print_done('Done.')
-        except BackendError as e:
-            print_fail(str(e))
-            sys.exit(1)
-
-
-delete_files.add_argument('name', type=str, help='The name of a virtual folder.')
-delete_files.add_argument('filenames', nargs='+',
-                          help='Paths of the files to delete.')
-
-
-@vfolder.register_command
 def download(args):
-    '''Download a file from the virtual folder to the current working directory.'''
+    '''
+    Download a file from the virtual folder to the current working directory.
+    The files with the same names will be overwirtten.
+    '''
     with Session() as session:
         try:
             session.VFolder(args.name).download(args.filenames, show_progress=True)
@@ -139,6 +127,66 @@ def download(args):
 download.add_argument('name', type=str, help='The name of a virtual folder.')
 download.add_argument('filenames', nargs='+',
                       help='Paths of the files to download.')
+
+
+@vfolder.register_command
+def cp(args):
+    '''An scp-like shortcut for download/upload commands.'''
+    raise NotImplementedError
+
+
+cp.add_argument('filenames', nargs='+',
+                help='Paths of the files to operate on. '
+                     'The last one is the target while all others are the '
+                     'sources.  Either source paths or the target path should '
+                     'be prefixed with "<vfolder-name>:" like when using the '
+                     'Linux scp command to indicate if it is a remote path.')
+
+
+@vfolder.register_command
+def mkdir(args):
+    '''Create an empty directory in the virtual folder.'''
+    with Session() as session:
+        try:
+            session.VFolder(args.name).mkdir(args.path)
+            print_done('Done.')
+        except BackendError as e:
+            print_fail(str(e))
+            sys.exit(1)
+
+
+mkdir.add_argument('name', type=str, help='The name of a virtual folder.')
+mkdir.add_argument('path', type=str,
+                   help='The name or path of directory.  Parent directories are '
+                        'created automatically if they do not exist.')
+
+
+@vfolder.register_command(aliases=['delete-file'])
+def rm(args):
+    '''
+    Delete files in a virtual folder.
+    If one of the given paths is a directory and the recursive option is enabled,
+    all its content and the directory itself are recursively deleted.
+
+    This operation is irreversible!
+    '''
+    with Session() as session:
+        try:
+            if input("> Are you sure? (y/n): ").lower().strip()[:1] == 'y':
+                session.VFolder(args.name).delete_files(
+                    args.filenames,
+                    recursive=args.recursive)
+                print_done('Done.')
+        except BackendError as e:
+            print_fail(str(e))
+            sys.exit(1)
+
+
+rm.add_argument('name', type=str, help='The name of a virtual folder.')
+rm.add_argument('filenames', nargs='+',
+                help='Paths of the files to delete.')
+rm.add_argument('-r', '--recursive', action='store_true', default=False,
+                help='Enable recursive deletion of directories.')
 
 
 @vfolder.register_command
@@ -162,7 +210,6 @@ def ls(args):
                 row = [file['filename'], file['size'], mtime, file['mode']]
                 table.append(row)
             print_done('Retrived.')
-            print('Path in vfolder:', result['folder_path'])
             print(tabulate(table, headers=headers))
         except BackendError as e:
             print_fail(str(e))
