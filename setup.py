@@ -1,7 +1,10 @@
-from setuptools import setup
+from setuptools import setup, find_namespace_packages
 from pathlib import Path
 import re
 
+setup_requires = [
+    'setuptools>=40.2.0',
+]
 install_requires = [
     'multidict>=4.0',
     'aiohttp~=3.3.0',
@@ -37,7 +40,8 @@ dev_requires = [
 
 
 def read_src_version():
-    path = Path(__file__).parent / 'ai' / 'backend' / 'client' / '__init__.py'
+    path = (Path(__file__).parent / 'src' /
+            'ai' / 'backend' / 'client' / '__init__.py')
     src = path.read_text()
     m = re.search(r"^__version__ = '([^']+)'$", src, re.MULTILINE)
     assert m is not None, 'Could not read the version information!'
@@ -71,13 +75,10 @@ setup(
         'Topic :: Scientific/Engineering',
         'Topic :: Software Development',
     ],
-    packages=[
-        'ai.backend.client',
-        'ai.backend.client.asyncio',
-        'ai.backend.client.cli',
-        'ai.backend.client.cli.admin',
-    ],
+    package_dir={'': 'src'},
+    packages=find_namespace_packages(where='src', include='ai.backend.*'),
     python_requires='>=3.5',
+    setup_requires=setup_requires,
     install_requires=install_requires,
     extras_require={
         'dev': dev_requires,
