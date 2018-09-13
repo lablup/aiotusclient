@@ -20,10 +20,12 @@ _subparsers = dict()
 
 def register_command(*args, **kwargs):
 
-    def _register_command(handler: Callable[[argparse.Namespace], None], *,
-                          main_parser: ArgParserType=None,
-                          aliases: Sequence[str]=None,
-                         ) -> Callable[[argparse.Namespace], None]:  # noqa
+    def _register_command(
+        handler: Callable[[argparse.Namespace], None], *,
+        main_parser: ArgParserType=None,
+        aliases: Sequence[str]=None
+    ) -> Callable[[argparse.Namespace], None]:
+
         if main_parser is None:
             main_parser = global_argparser
         if id(main_parser) not in _subparsers:
