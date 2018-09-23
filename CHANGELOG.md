@@ -1,8 +1,8 @@
 Changes
 =======
 
-1.4.0 (to be released)
-----------------------
+1.4.0 (2018-09-23)
+------------------
 
  - Support download and deletion of virtual folder files.
    Check `backend.ai vfolder --help` for new commands!
