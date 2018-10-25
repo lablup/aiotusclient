@@ -181,15 +181,16 @@ class BaseKernel(BaseFunction):
         return resp
 
     def _download(self, files: Sequence[Union[str, Path]],
-                  show_progress: bool=False):
+                  dest: Union[str, Path]='.', show_progress: bool=False):
         resp = yield Request(self._session,
             'GET', '/kernel/{}/download'.format(self.kernel_id), {
                 'files': files,
-            })
+            }, streaming=True)
         chunk_size = 1 * 1024
+        file_names = None
         tqdm_obj = tqdm(desc='Downloading files',
                         unit='bytes', unit_scale=True,
-                        total=resp.stream_reader.total_bytes,
+                        total=resp.stream.total_bytes,
                         disable=not show_progress)
         with tqdm_obj as pbar:
             fp = None
@@ -204,7 +205,8 @@ class BaseKernel(BaseFunction):
                         if fp:
                             fp.close()
                             with tarfile.open(fp.name) as tarf:
-                                tarf.extractall()
+                                tarf.extractall(path=dest)
+                                file_names = tarf.getnames()
                             os.unlink(fp.name)
                         fp = tempfile.NamedTemporaryFile(suffix='.tar', delete=False)
                     elif part.startswith(b'Content-') or part == b'':
@@ -214,7 +216,47 @@ class BaseKernel(BaseFunction):
             if fp:
                 fp.close()
                 os.unlink(fp.name)
-        return resp
+        result = {'file_names': file_names}
+        return result
+
+    async def _adownload(self, files:Sequence[Union[str, Path]],
+                         dest: Union[str, Path]='.', show_progress: bool=False):
+        resp = await Request(self._session,
+            'GET', '/kernel/{}/download'.format(self.kernel_id), {
+                'files': files,
+            }, streaming=True).afetch()
+        chunk_size = 1 * 1024
+        file_names = None
+        tqdm_obj = tqdm(desc='Downloading files',
+                        unit='bytes', unit_scale=True,
+                        total=resp.stream.total_bytes,
+                        disable=not show_progress)
+        with tqdm_obj as pbar:
+            fp = None
+            while True:
+                chunk = await resp.aread(chunk_size)
+                if not chunk:
+                    break
+                pbar.update(len(chunk))
+                # TODO: more elegant parsing of multipart response?
+                for part in chunk.split(b'\r\n'):
+                    if part.startswith(b'--'):
+                        if fp:
+                            fp.close()
+                            with tarfile.open(fp.name) as tarf:
+                                tarf.extractall(path=dest)
+                                file_names = tarf.getnames()
+                            os.unlink(fp.name)
+                        fp = tempfile.NamedTemporaryFile(suffix='.tar', delete=False)
+                    elif part.startswith(b'Content-') or part == b'':
+                        continue
+                    else:
+                        fp.write(part)
+            if fp:
+                fp.close()
+                os.unlink(fp.name)
+        result = {'file_names': file_names}
+        return result
 
     def _list_files(self, path: Union[str, Path]='.'):
         resp = yield Request(self._session,
@@ -243,7 +285,10 @@ class BaseKernel(BaseFunction):
         self.get_logs  = self._call_base_method(self._get_logs)
         self.execute   = self._call_base_method(self._execute)
         self.upload    = self._call_base_method(self._upload)
-        self.download  = self._call_base_method(self._download)
+        if self._async:
+            self.download = self._adownload
+        else:
+            self.download = self._call_base_method(self._download)
         self.list_files = self._call_base_method(self._list_files)
 
     def __init_subclass__(cls):

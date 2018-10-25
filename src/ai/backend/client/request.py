@@ -175,14 +175,21 @@ class BaseRequest:
                     self.build_url(),
                     data=self.pack_content(),
                     headers=self.headers)
-                async with rqst_ctx as resp:
-                    if self.streaming:
-                        return StreamingResponse(
-                            self.session,
-                            resp,
-                            stream=resp.content,
-                            content_type=resp.content_type)
-                    else:
+                if self.streaming:
+                    # Context manager should not be used for stream response.
+                    # The response object is released as soon as exiting the
+                    # context, which also closes the connection needed for
+                    # stream reader.
+                    # According to the aiohttp doc, "it is not required to call
+                    # `release`" manually: https://goo.gl/KXmeP4.
+                    resp = await rqst_ctx
+                    return StreamingResponse(
+                        self.session,
+                        resp,
+                        stream=resp.content,
+                        content_type=resp.content_type)
+                else:
+                    async with rqst_ctx as resp:
                         body = await resp.read()
                         return Response(
                             self.session,
@@ -339,7 +346,7 @@ class StreamingResponse(BaseResponse):
         return self._session.worker_thread.execute(self.aread(n))
 
     async def aread(self, n=-1) -> bytes:
-        if self._stream.at_eof:
+        if self._stream.at_eof():
             return b''
         return await self._stream.read(n)
 
