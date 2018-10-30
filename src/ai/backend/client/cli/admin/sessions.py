@@ -17,7 +17,7 @@ def sessions(args):
         ('Session ID', 'sess_id'),
         ('Lang/runtime', 'lang'),
         ('Created At', 'created_at',),
-        ('Termianted At', 'terminated_at'),
+        ('Terminated At', 'terminated_at'),
         ('Status', 'status'),
         ('Memory Slot', 'mem_slot'),
         ('CPU Slot', 'cpu_slot'),
