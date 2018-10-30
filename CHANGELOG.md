@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.4.1 (2018-10-30)
+------------------
+
+ - Hotfix for regression in `Kernel.stream_pty()` method.
+
 1.4.0 (2018-09-23)
 ------------------
 
