@@ -227,7 +227,7 @@ class BaseKernel(BaseFunction):
         request = Request(self._session,
                           'GET', '/stream/kernel/{}/pty'.format(self.kernel_id))
         try:
-            ws = await request.connect_websocket()
+            _, ws = await request.connect_websocket()
         except aiohttp.ClientResponseError as e:
             raise BackendClientError(e.code, e.message)
         return StreamPty(self.kernel_id, ws)
