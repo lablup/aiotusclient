@@ -23,14 +23,14 @@ build_requires = [
     'twine>=1.11.0',
 ]
 test_requires = [
-    'pytest>=3.6.0',
+    'pytest~=3.9.0',
     'pytest-cov',
     'pytest-mock',
-    'pytest-asyncio>=0.8.0',
+    'pytest-asyncio>=0.9.0',
     'aioresponses>=0.4.2',
-    'asynctest',
+    'asynctest>=0.12.2',
     'codecov',
-    'flake8',
+    'flake8>=3.6',
 ]
 ci_requires = [
 ] + build_requires + test_requires

@@ -32,11 +32,11 @@ class BaseRequest:
         'OPTIONS'])
 
     def __init__(self, session: Session,
-                 method: str='GET',
-                 path: str=None,
-                 content: Mapping=None,
-                 streaming: bool=False,
-                 reporthook: Callable=None) -> None:
+                 method: str = 'GET',
+                 path: str = None,
+                 content: Mapping = None,
+                 streaming: bool = False,
+                 reporthook: Callable = None) -> None:
         '''
         Initialize an API request.
 
@@ -277,10 +277,10 @@ class Response(BaseResponse):
 
     def __init__(self, session: Session,
                  underlying_response: aiohttp.ClientResponse, *,
-                 body: Union[bytes, bytearray]=b'',
-                 content_type='text/plain',
-                 content_length=None,
-                 charset=None):
+                 body: Union[bytes, bytearray] = b'',
+                 content_type: str = 'text/plain',
+                 content_length: int = None,
+                 charset: str = None):
         super().__init__(session, underlying_response)
         self._body = body
         self._content_type = content_type
@@ -321,8 +321,8 @@ class StreamingResponse(BaseResponse):
 
     def __init__(self, session: Session,
                  underlying_response: aiohttp.ClientResponse, *,
-                 stream: aiohttp.streams.StreamReader=None,
-                 content_type='text/plain'):
+                 stream: aiohttp.streams.StreamReader = None,
+                 content_type: str = 'text/plain'):
         super().__init__(session, underlying_response)
         self._stream = stream
         self._content_type = content_type

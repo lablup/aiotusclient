@@ -77,7 +77,7 @@ class BaseKernel(BaseFunction):
         yield Request(self._session,
                       'POST', '/kernel/{}/interrupt'.format(self.kernel_id))
 
-    def _complete(self, code: str, opts: dict=None):
+    def _complete(self, code: str, opts: dict = None):
         opts = {} if opts is None else opts
         rqst = Request(self._session,
             'POST', '/kernel/{}/complete'.format(self.kernel_id), {
@@ -102,10 +102,10 @@ class BaseKernel(BaseFunction):
                              'GET', '/kernel/{}/logs'.format(self.kernel_id))
         return resp.json()
 
-    def _execute(self, run_id: str=None,
-                 code: str=None,
-                 mode: str='query',
-                 opts: dict=None):
+    def _execute(self, run_id: str = None,
+                 code: str = None,
+                 mode: str = 'query',
+                 opts: dict = None):
         opts = {} if opts is None else opts
         if mode in {'query', 'continue', 'input'}:
             assert code is not None  # but maybe empty due to continuation
@@ -144,8 +144,8 @@ class BaseKernel(BaseFunction):
         return resp.json()['result']
 
     def _upload(self, files: Sequence[Union[str, Path]],
-               basedir: Union[str, Path]=None,
-               show_progress: bool=False):
+               basedir: Union[str, Path] = None,
+               show_progress: bool = False):
         fields = []
         base_path = (Path.cwd() if basedir is None
                      else Path(basedir).resolve())
@@ -180,7 +180,7 @@ class BaseKernel(BaseFunction):
         return resp
 
     def _download(self, files: Sequence[Union[str, Path]],
-                  show_progress: bool=False):
+                  show_progress: bool = False):
         resp = yield Request(self._session,
             'GET', '/kernel/{}/download'.format(self.kernel_id), {
                 'files': files,
@@ -215,7 +215,7 @@ class BaseKernel(BaseFunction):
                 os.unlink(fp.name)
         return resp
 
-    def _list_files(self, path: Union[str, Path]='.'):
+    def _list_files(self, path: Union[str, Path] = '.'):
         resp = yield Request(self._session,
             'GET', '/kernel/{}/files'.format(self.kernel_id), {
                 'path': path,
