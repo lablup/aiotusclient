@@ -32,11 +32,11 @@ class BaseKernel(BaseFunction):
 
     @classmethod
     def _get_or_create(cls, lang: str,
-                       client_token: str=None,
-                       mounts: Iterable[str]=None,
-                       envs: Mapping[str, str]=None,
-                       resources: Mapping[str, int]=None,
-                       max_mem: int=0, exec_timeout: int=0) -> str:
+                       client_token: str = None,
+                       mounts: Iterable[str] = None,
+                       envs: Mapping[str, str] = None,
+                       resources: Mapping[str, int] = None,
+                       exec_timeout: int = 0) -> str:
         if client_token:
             assert 4 <= len(client_token) <= 64, \
                    'Client session token should be 4 to 64 characters long.'
@@ -53,9 +53,9 @@ class BaseKernel(BaseFunction):
             'config': {
                 'mounts': mounts,
                 'environ': envs,
-                'instanceMemory': resources.get('ram'),
-                'instanceCores': resources.get('cpu'),
-                'instanceGPUs': resources.get('gpu'),
+                'instanceMemory': resources.get('ram', None),
+                'instanceCores': resources.get('cpu', None),
+                'instanceGPUs': resources.get('gpu', None),
             },
         })
         data = resp.json()
@@ -77,7 +77,7 @@ class BaseKernel(BaseFunction):
         yield Request(self._session,
                       'POST', '/kernel/{}/interrupt'.format(self.kernel_id))
 
-    def _complete(self, code: str, opts: dict=None):
+    def _complete(self, code: str, opts: dict = None):
         opts = {} if opts is None else opts
         rqst = Request(self._session,
             'POST', '/kernel/{}/complete'.format(self.kernel_id), {
@@ -102,10 +102,10 @@ class BaseKernel(BaseFunction):
                              'GET', '/kernel/{}/logs'.format(self.kernel_id))
         return resp.json()
 
-    def _execute(self, run_id: str=None,
-                 code: str=None,
-                 mode: str='query',
-                 opts: dict=None):
+    def _execute(self, run_id: str = None,
+                 code: str = None,
+                 mode: str = 'query',
+                 opts: dict = None):
         opts = {} if opts is None else opts
         if mode in {'query', 'continue', 'input'}:
             assert code is not None  # but maybe empty due to continuation
@@ -145,8 +145,8 @@ class BaseKernel(BaseFunction):
         return resp.json()['result']
 
     def _upload(self, files: Sequence[Union[str, Path]],
-               basedir: Union[str, Path]=None,
-               show_progress: bool=False):
+               basedir: Union[str, Path] = None,
+               show_progress: bool = False):
         fields = []
         base_path = (Path.cwd() if basedir is None
                      else Path(basedir).resolve())
@@ -181,7 +181,8 @@ class BaseKernel(BaseFunction):
         return resp
 
     def _download(self, files: Sequence[Union[str, Path]],
-                  dest: Union[str, Path]='.', show_progress: bool=False):
+                  dest: Union[str, Path] = '.',
+                  show_progress: bool = False):
         resp = yield Request(self._session,
             'GET', '/kernel/{}/download'.format(self.kernel_id), {
                 'files': files,
@@ -219,8 +220,9 @@ class BaseKernel(BaseFunction):
         result = {'file_names': file_names}
         return result
 
-    async def _adownload(self, files:Sequence[Union[str, Path]],
-                         dest: Union[str, Path]='.', show_progress: bool=False):
+    async def _adownload(self, files: Sequence[Union[str, Path]],
+                         dest: Union[str, Path] = '.',
+                         show_progress: bool = False):
         resp = await Request(self._session,
             'GET', '/kernel/{}/download'.format(self.kernel_id), {
                 'files': files,
@@ -258,7 +260,7 @@ class BaseKernel(BaseFunction):
         result = {'file_names': file_names}
         return result
 
-    def _list_files(self, path: Union[str, Path]='.'):
+    def _list_files(self, path: Union[str, Path] = '.'):
         resp = yield Request(self._session,
             'GET', '/kernel/{}/files'.format(self.kernel_id), {
                 'path': path,
@@ -270,7 +272,7 @@ class BaseKernel(BaseFunction):
         request = Request(self._session,
                           'GET', '/stream/kernel/{}/pty'.format(self.kernel_id))
         try:
-            ws = await request.connect_websocket()
+            _, ws = await request.connect_websocket()
         except aiohttp.ClientResponseError as e:
             raise BackendClientError(e.code, e.message)
         return StreamPty(self.kernel_id, ws)

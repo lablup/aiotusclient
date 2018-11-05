@@ -69,7 +69,7 @@ def session(args):
         ('Role', 'role'),
         ('Lang/runtime', 'lang'),
         ('Created At', 'created_at',),
-        ('Termianted At', 'terminated_at'),
+        ('Terminated At', 'terminated_at'),
         ('Agent', 'agent'),
         ('Status', 'status',),
         ('Status Info', 'status_info',),
