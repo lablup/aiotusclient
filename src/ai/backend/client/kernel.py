@@ -32,11 +32,11 @@ class BaseKernel(BaseFunction):
 
     @classmethod
     def _get_or_create(cls, lang: str,
-                       client_token: str=None,
-                       mounts: Iterable[str]=None,
-                       envs: Mapping[str, str]=None,
-                       resources: Mapping[str, int]=None,
-                       max_mem: int=0, exec_timeout: int=0) -> str:
+                       client_token: str = None,
+                       mounts: Iterable[str] = None,
+                       envs: Mapping[str, str] = None,
+                       resources: Mapping[str, int] = None,
+                       exec_timeout: int = 0) -> str:
         if client_token:
             assert 4 <= len(client_token) <= 64, \
                    'Client session token should be 4 to 64 characters long.'
@@ -53,9 +53,9 @@ class BaseKernel(BaseFunction):
             'config': {
                 'mounts': mounts,
                 'environ': envs,
-                'instanceMemory': resources.get('ram'),
-                'instanceCores': resources.get('cpu'),
-                'instanceGPUs': resources.get('gpu'),
+                'instanceMemory': resources.get('ram', None),
+                'instanceCores': resources.get('cpu', None),
+                'instanceGPUs': resources.get('gpu', None),
             },
         })
         data = resp.json()
