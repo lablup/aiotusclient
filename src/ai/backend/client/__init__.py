@@ -6,7 +6,7 @@ __all__ = [
     session.__all__,  # noqa
 ]
 
-__version__ = '1.4.1'
+__version__ = '1.4.2'
 
 
 def get_user_agent():

@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.4.2 (2018-11-06)
+------------------
+
+ - Improve handling of unspecified resource shares.
+
+ - Internal updates for test cases and test dependencies.
+
 1.4.1 (2018-10-30)
 ------------------
 
