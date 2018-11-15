@@ -2,10 +2,11 @@ import json
 import os
 import tarfile
 import tempfile
-from typing import Iterable, Mapping, Sequence, Union
+from typing import Any, Iterable, Mapping, Sequence, Union
 from pathlib import Path
 import uuid
 
+import aiohttp
 import aiohttp.web
 from tqdm import tqdm
 
@@ -279,6 +280,36 @@ class BaseKernel(BaseFunction):
             raise BackendClientError(e.code, e.message)
         return StreamPty(self.kernel_id, ws)
 
+    # only supported in AsyncKernel
+    async def stream_execute(self, code: str = '', *,
+                             mode: str = 'query',
+                             opts: dict = None):
+        opts = {} if opts is None else opts
+        if mode == 'query':
+            opts = {}
+        elif mode == 'batch':
+            opts = {
+                'clean': opts.get('clean', None),
+                'build': opts.get('build', None),
+                'buildLog': bool(opts.get('buildLog', False)),
+                'exec': opts.get('exec', None),
+            }
+        else:
+            msg = 'Invalid stream-execution mode: {0}'.format(mode)
+            raise BackendClientError(msg)
+        request = Request(self._session,
+                          'GET', '/stream/kernel/{}/execute'.format(self.kernel_id))
+        try:
+            _, ws = await request.connect_websocket()
+        except aiohttp.ClientResponseError as e:
+            raise BackendClientError(e.code, e.message)
+        await ws.send_json({
+            'code': code,
+            'mode': mode,
+            'opts': opts,
+        })
+        return StreamExecute(self.kernel_id, ws)
+
     def __init__(self, kernel_id: str) -> None:
         self.kernel_id = kernel_id
         self.destroy   = self._call_base_method(self._destroy)
@@ -306,12 +337,10 @@ class Kernel(SyncFunctionMixin, BaseKernel):
     pass
 
 
-class StreamPty:
+class WebSocketResponse:
 
     '''
     A very thin wrapper of aiohttp.WebSocketResponse object.
-    It keeps the reference to the mother aiohttp.ClientSession object while the
-    connection is alive.
     '''
 
     def __init__(self, kernel_id, ws):
@@ -322,18 +351,53 @@ class StreamPty:
     def closed(self):
         return self.ws.closed
 
+    async def close(self):
+        await self.ws.close()
+
     def __aiter__(self):
         return self.ws.__aiter__()
 
     async def __anext__(self):
-        msg = await self.ws.__anext__()
-        return msg
+        return await self.ws.__anext__()
 
     def exception(self):
         return self.ws.exception()
 
-    async def send_str(self, raw_str):
+    async def send_str(self, raw_str: str):
+        if self.ws.closed:
+            raise aiohttp.ServerDisconnectedError('server disconnected')
         await self.ws.send_str(raw_str)
+
+    async def send_json(self, obj: Any):
+        if self.ws.closed:
+            raise aiohttp.ServerDisconnectedError('server disconnected')
+        await self.ws.send_json(obj)
+
+    async def send_bytes(self, data: bytes):
+        if self.ws.closed:
+            raise aiohttp.ServerDisconnectedError('server disconnected')
+        await self.ws.send_bytes(data)
+
+    async def receive_str(self) -> str:
+        if self.ws.closed:
+            raise aiohttp.ServerDisconnectedError('server disconnected')
+        return await self.ws.receive_str()
+
+    async def receive_json(self) -> Any:
+        if self.ws.closed:
+            raise aiohttp.ServerDisconnectedError('server disconnected')
+        return await self.ws.receive_json()
+
+    async def receive_bytes(self) -> bytes:
+        if self.ws.closed:
+            raise aiohttp.ServerDisconnectedError('server disconnected')
+        return await self.ws.receive_bytes()
+
+
+class StreamPty(WebSocketResponse):
+
+    def __init__(self, kernel_id, ws):
+        super().__init__(kernel_id, ws)
 
     async def resize(self, rows, cols):
         await self.ws.send_str(json.dumps({
@@ -347,5 +411,8 @@ class StreamPty:
             'type': 'restart',
         }))
 
-    async def close(self):
-        await self.ws.close()
+
+class StreamExecute(WebSocketResponse):
+
+    def __init__(self, kernel_id, ws):
+        super().__init__(kernel_id, ws)
