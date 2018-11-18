@@ -22,7 +22,6 @@ def sessions(args):
         ('Memory Slot', 'mem_slot'),
         ('CPU Slot', 'cpu_slot'),
         ('GPU Slot', 'gpu_slot'),
-        ('TPU Slot', 'tpu_slot'),
     ]
     if args.access_key is None:
         q = 'query($status:String) {' \
@@ -77,7 +76,6 @@ def session(args):
         ('Memory Slot', 'mem_slot'),
         ('CPU Slot', 'cpu_slot'),
         ('GPU Slot', 'gpu_slot'),
-        ('TPU Slot', 'tpu_slot'),
         ('Number of Queries', 'num_queries'),
         ('CPU Used', 'cpu_used'),
         ('Memory Max Bytes', 'mem_max_bytes'),
