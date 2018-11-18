@@ -213,12 +213,6 @@ def run(args):
         vprint_info = print_info
         vprint_wait = print_wait
         vprint_done = print_done
-    if not args.client_token:
-        args.client_token = token_hex(16)
-        vprint_wait('Creating a temporary kernel...')
-    else:
-        vprint_info('Client session token: {0}'.format(args.client_token))
-        vprint_wait('Connecting to the kernel...')
     if args.env is not None:
         envs = {k: v for k, v in map(lambda s: s.split('=', 1), args.env)}
     else:
@@ -268,7 +262,8 @@ def run(args):
             interpolated_exec = '*'
         case_set[(interpolated_envs, interpolated_build, interpolated_exec)] = 1
 
-    if len(case_set) > 1:
+    is_multi = (len(case_set) > 1)
+    if is_multi:
         if args.max_parallel <= 0:
             raise RuntimeError('The number maximum parallel sessions must be '
                                'a positive integer.')
@@ -282,11 +277,11 @@ def run(args):
                 print('env = {!r}, build = {!r}, exec = {!r}'
                       .format(pretty_env, case[1], case[2]))
 
-    def _run_legacy(session, args, idx, client_token, envs,
+    def _run_legacy(session, args, idx, session_id, envs,
                     clean_cmd, build_cmd, exec_cmd):
         try:
             kernel = session.Kernel.get_or_create(
-                args.lang, client_token,
+                args.lang, session_id,
                 mounts=args.mount,
                 envs=envs,
                 resources=resources)
@@ -347,12 +342,12 @@ def run(args):
                     else:
                         print('[{0}] Statistics is not available.'.format(idx))
 
-    async def _run(session, args, idx, client_token, envs,
+    async def _run(session, args, idx, session_id, envs,
                    clean_cmd, build_cmd, exec_cmd,
                    is_multi=False):
         try:
             kernel = await session.Kernel.get_or_create(
-                args.lang, client_token,
+                args.lang, session_id,
                 mounts=args.mount,
                 envs=envs,
                 resources=resources)
@@ -370,9 +365,9 @@ def run(args):
         else:
             log_dir = Path.home() / '.cache' / 'backend.ai' / 'client-logs'
             log_dir.mkdir(parents=True, exist_ok=True)
-            stdout = open(log_dir / '{0}.stdout.log'.format(client_token),
+            stdout = open(log_dir / '{0}.stdout.log'.format(session_id),
                           'w', encoding='utf-8')
-            stderr = open(log_dir / '{0}.stderr.log'.format(client_token),
+            stderr = open(log_dir / '{0}.stderr.log'.format(session_id),
                           'w', encoding='utf-8')
 
         try:
@@ -440,22 +435,32 @@ def run(args):
                     stderr.close()
 
     def _run_cases_legacy():
-        client_token_prefix = token_hex(4)
+        if args.session_id is None:
+            session_id_prefix = token_hex(5)
+        else:
+            session_id_prefix = args.session_id
+        vprint_info('Session token prefix: {0}'.format(session_id_prefix))
         vprint_info('In the legacy mode, all cases will run serially!')
         with Session() as session:
             for idx, case in enumerate(case_set.keys()):
-                client_token = '{0}-{1}'.format(client_token_prefix, idx)
+                if is_multi:
+                    session_id = '{0}-{1}'.format(session_id_prefix, idx)
+                else:
+                    session_id = session_id_prefix
                 envs = dict(case[0])
                 clean_cmd = args.clean if args.clean else '*'
                 build_cmd = case[1]
                 exec_cmd = case[2]
-                _run_legacy(session, args, idx, client_token, envs,
+                _run_legacy(session, args, idx, session_id, envs,
                             clean_cmd, build_cmd, exec_cmd)
 
     async def _run_cases():
         loop = current_loop()
-        client_token_prefix = token_hex(4)
-        is_multi = (len(case_set) > 1)
+        if args.session_id is None:
+            session_id_prefix = token_hex(5)
+        else:
+            session_id_prefix = args.session_id
+        vprint_info('Session token prefix: {0}'.format(session_id_prefix))
         if is_multi:
             print_info('Check out the stdout/stderr logs stored in '
                        '~/.cache/backend.ai/client-logs directory.')
@@ -463,13 +468,16 @@ def run(args):
             tasks = []
             # TODO: limit max-parallelism using aiojobs
             for idx, case in enumerate(case_set.keys()):
-                client_token = '{0}-{1}'.format(client_token_prefix, idx)
+                if is_multi:
+                    session_id = '{0}-{1}'.format(session_id_prefix, idx)
+                else:
+                    session_id = session_id_prefix
                 envs = dict(case[0])
                 clean_cmd = args.clean if args.clean else '*'
                 build_cmd = case[1]
                 exec_cmd = case[2]
                 t = loop.create_task(
-                    _run(session, args, idx, client_token, envs,
+                    _run(session, args, idx, session_id, envs,
                          clean_cmd, build_cmd, exec_cmd,
                          is_multi=is_multi))
                 tasks.append(t)
@@ -493,7 +501,7 @@ run.add_argument('lang',
                  help='The runtime or programming language name')
 run.add_argument('files', nargs='*', type=Path,
                  help='The code file(s). Can be added multiple times')
-run.add_argument('-t', '--client-token', metavar='SESSID',
+run.add_argument('-t', '--session-id', '--client-token', metavar='SESSID',
                  help='Specify a human-readable session ID or name. '
                       'If not set, a random hex string is used.')
 run.add_argument('-c', '--code', metavar='CODE',
