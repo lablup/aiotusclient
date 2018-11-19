@@ -231,13 +231,8 @@ Asynchronous API
        loop.close()
 
 The async version has all sync-version interfaces as coroutines but comes with additional
-features such as `stream_execute()` which streams the execution results via websockets and
-`stream_pty()` for interactive terminal streaming.
-
-Additionally, ``AsyncKernel`` offers async-only method ``stream_pty()``.
-It returns a ``StreamPty`` object which allows you to access a pseudo-tty of the kernel.
-``StreamPty`` works like an async-generator and provides methods to send stdin inputs
-as well as resize the terminal.
+features such as ``stream_execute()`` which streams the execution results via websockets and
+``stream_pty()`` for interactive terminal streaming.
 
 
 Troubleshooting (FAQ)
