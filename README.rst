@@ -155,7 +155,7 @@ Synchronous API
        run_id = None
        while True:
            result = kern.execute(run_id, code, mode=mode)
-           run_id = result['runId']
+           run_id = result['runId']  # keeps track of this particular run loop
            for rec in result.get('console', []):
                if rec[0] == 'stdout':
                    print(rec[1], end='', file=stdout)
@@ -194,15 +194,15 @@ Asynchronous API
 
    async def main():
        async with AsyncSession() as session:
-           kern = await session.Kernel.get_or_create('lua5', client_token='abc')
+           kern = await session.Kernel.get_or_create('lua5', client_token='mysession')
            code = 'print("hello world")'
            mode = 'query'
            stream = await kern.stream_execute(code, mode=mode)
+           # no need for explicit run_id since WebSocket connection represents it!
            async for result in stream:
                if result.type != aiohttp.WSMsgType.TEXT:
                    continue
                result = json.loads(result.data)
-               run_id = result['runId']
                for rec in result.get('console', []):
                    if rec[0] == 'stdout':
                        print(rec[1], end='', file=stdout)
