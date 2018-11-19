@@ -320,14 +320,12 @@ def run(args):
                 if not args.terminal:
                     exec_loop_sync(sys.stdout, sys.stderr, kernel, 'batch', '',
                                    opts=opts,
-                                   vprint_wait=vprint_wait,
                                    vprint_done=vprint_done)
             if args.terminal:
                 raise NotImplementedError('Terminal access is not supported in '
                                           'the legacy synchronous mode.')
             if args.code:
                 exec_loop_sync(sys.stdout, sys.stderr, kernel, 'query', args.code,
-                               vprint_wait=vprint_wait,
                                vprint_done=vprint_done)
             vprint_done('[{0}] Execution finished.'.format(idx))
         except BackendError as e:
