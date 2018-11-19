@@ -146,12 +146,35 @@ Synchronous API
 
 .. code-block:: python
 
-   from ai.backend.client import Kernel
+   from ai.backend.client import Session
 
-   kern = Kernel.get_or_create('lua5', client_token='abc')
-   result = kern.execute('print("hello world")', mode='query')
-   print(result['console'])
-   kern.destroy()
+   with Session() as session:
+       kern = session.Kernel.get_or_create('lua5', client_token='abc')
+       code = 'print("hello world")'
+       mode = 'query'
+       run_id = None
+       while True:
+           result = kern.execute(run_id, code, mode=mode)
+           run_id = result['runId']
+           for rec in result.get('console', []):
+               if rec[0] == 'stdout':
+                   print(rec[1], end='', file=stdout)
+               elif rec[0] == 'stderr':
+                   print(rec[1], end='', file=stderr)
+               else:
+                   handle_media(rec)
+           if result['status'] == 'finished':
+               break
+           elif result['status'] == 'waiting-input':
+               mode = 'input'
+               if result['options'].get('is_password', False):
+                   code = getpass.getpass()
+               else:
+                   code = input()
+           else:
+               mode = 'continued'
+               code = ''
+       kern.destroy()
 
 You need to take care of ``client_token`` because it determines whether to
 reuse kernel sessions or not.
@@ -165,13 +188,40 @@ Asynchronous API
 .. code-block:: python
 
    import asyncio
-   from ai.backend.client.asyncio import AsyncKernel
+   import json
+   import aiohttp
+   from ai.backend.client import AsyncSession
 
    async def main():
-       kern = await AsyncKernel.get_or_create('lua5', client_token='abc')
-       result = await kern.execute('print("hello world")', mode='query')
-       print(result['console'])
-       await kern.destroy()
+       async with AsyncSession() as session:
+           kern = await session.Kernel.get_or_create('lua5', client_token='abc')
+           code = 'print("hello world")'
+           mode = 'query'
+           stream = await kern.stream_execute(code, mode=mode)
+           async for result in stream:
+               if result.type != aiohttp.WSMsgType.TEXT:
+                   continue
+               result = json.loads(result.data)
+               run_id = result['runId']
+               for rec in result.get('console', []):
+                   if rec[0] == 'stdout':
+                       print(rec[1], end='', file=stdout)
+                   elif rec[0] == 'stderr':
+                       print(rec[1], end='', file=stderr)
+                   else:
+                       handle_media(rec)
+               if result['status'] == 'finished':
+                   break
+               elif result['status'] == 'waiting-input':
+                   mode = 'input'
+                   if result['options'].get('is_password', False):
+                       code = getpass.getpass()
+                   else:
+                       code = input()
+               else:
+                   mode = 'continued'
+                   code = ''
+           await kern.destroy()
 
    loop = asyncio.get_event_loop()
    try:
@@ -179,8 +229,9 @@ Asynchronous API
    finally:
        loop.close()
 
-All the methods of ``AsyncKernel`` objects are exactly same to the synchronous version,
-except that they are coroutines.
+The async version has all sync-version interfaces as coroutines but comes with additional
+features such as `stream_execute()` which streams the execution results via websockets and
+`stream_pty()` for interactive terminal streaming.
 
 Additionally, ``AsyncKernel`` offers async-only method ``stream_pty()``.
 It returns a ``StreamPty`` object which allows you to access a pseudo-tty of the kernel.
