@@ -149,7 +149,7 @@ Synchronous API (v1.2+)
    from ai.backend.client import Session
 
    with Session() as session:
-       kern = session.Kernel.get_or_create('lua5', client_token='abc')
+       kern = session.Kernel.get_or_create('lua5', client_token='mysession')
        code = 'print("hello world")'
        mode = 'query'
        run_id = None
