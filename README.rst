@@ -218,6 +218,7 @@ Asynchronous API
                        code = getpass.getpass()
                    else:
                        code = input()
+                   await stream.send_text(code)
                else:
                    mode = 'continued'
                    code = ''
