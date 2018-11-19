@@ -141,8 +141,8 @@ More commands?
 Please run ``backend.ai --help`` to see more commands.
 
 
-Synchronous API
----------------
+Synchronous API (v1.2+)
+-----------------------
 
 .. code-block:: python
 
@@ -182,8 +182,8 @@ Backend.AI cloud has a timeout so that it terminates long-idle kernel sessions,
 but within the timeout, any kernel creation requests with the same ``client_token``
 let Backend.AI cloud to reuse the kernel.
 
-Asynchronous API
-----------------
+Asynchronous API (v18.12+)
+--------------------------
 
 .. code-block:: python
 
