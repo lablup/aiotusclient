@@ -200,6 +200,22 @@ def _format_stats(stats):
     return tabulate(formatted)
 
 
+def _get_mem_slots(size, suffix):
+    size = float(size)
+    suffix = suffix.lower()
+    if suffix in ('k', 'kb', 'kib'):
+        return size / 2 ** 20
+    elif suffix in ('m', 'mb', 'mib'):
+        return size / 2 ** 10
+    elif suffix in ('g', 'gb', 'gib'):
+        return size
+    elif suffix in ('tb', 'tb', 'tib'):
+        return size * 2 ** 10
+    elif suffix in ('t', 'pb', 'pib'):
+        return size * 2 ** 20
+    return None
+
+
 @register_command
 def run(args):
     '''
@@ -229,6 +245,16 @@ def run(args):
         resources = {k: v for k, v in map(lambda s: s.split('=', 1), args.resources)}
     else:
         resources = None  # will use the defaults configured in the server
+
+    # Reverse humanized memory unit
+    mem = resources.pop('mem', None)
+    mem = resources.pop('ram', None) if mem is None else mem
+    if mem:
+        memlist = re.findall(r'[A-Za-z]+|[\d\.]+', mem)
+        if memlist and len(memlist) == 2:
+            memslot = _get_mem_slots(memlist[0], memlist[1])
+            if memslot:
+                resources['mem'] = memslot
 
     if not (1 <= args.cluster_size < 4):
         print('Invalid cluster size.', file=sys.stderr)
