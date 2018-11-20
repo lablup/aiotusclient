@@ -209,9 +209,9 @@ def _get_mem_slots(size, suffix):
         return size / 2 ** 10
     elif suffix in ('g', 'gb', 'gib'):
         return size
-    elif suffix in ('tb', 'tb', 'tib'):
+    elif suffix in ('t', 'tb', 'tib'):
         return size * 2 ** 10
-    elif suffix in ('t', 'pb', 'pib'):
+    elif suffix in ('p', 'pb', 'pib'):
         return size * 2 ** 20
     return None
 
