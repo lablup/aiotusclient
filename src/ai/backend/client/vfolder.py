@@ -227,7 +227,7 @@ class BaseVFolder(BaseFunction):
     def __init_subclass__(cls):
         cls.create = cls._call_base_clsmethod(cls._create)
         cls.list   = cls._call_base_clsmethod(cls._list)
-        cls.get    = cls._call_base_clsmethod(cls._get)
+        cls.get    = cls._get  # this is wrapper of constructor, not API func.
         cls.invitations = cls._call_base_clsmethod(cls._invitations)
         cls.accept_invitation = cls._call_base_clsmethod(cls._accept_invitation)
         cls.delete_invitation = cls._call_base_clsmethod(cls._delete_invitation)

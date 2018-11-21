@@ -12,7 +12,7 @@ import json
 
 from .auth import generate_signature
 from .exceptions import BackendClientError
-from .session import BaseSession, Session
+from .session import BaseSession, Session as SyncSession, AsyncSession
 
 __all__ = [
     'Request',
@@ -31,7 +31,7 @@ class BaseRequest:
         'PUT', 'PATCH', 'DELETE',
         'OPTIONS'])
 
-    def __init__(self, session: Session,
+    def __init__(self, session: BaseSession,
                  method: str = 'GET',
                  path: str = None,
                  content: Mapping = None,
@@ -155,6 +155,7 @@ class BaseRequest:
         '''
         Sends the request to the server.
         '''
+        assert isinstance(self.session, SyncSession)
         return self.session.worker_thread.execute(self.afetch(*args, **kwargs))
 
     async def afetch(self, *, timeout=None):
@@ -217,6 +218,7 @@ class BaseRequest:
 
         This method is a coroutine.
         '''
+        assert isinstance(self.session, AsyncSession)
         assert self.method == 'GET'
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
@@ -243,7 +245,7 @@ class BaseResponse:
         '_response', '_session',
     )
 
-    def __init__(self, session: Session,
+    def __init__(self, session: BaseSession,
                  underlying_response: aiohttp.ClientResponse):
         self._session = session
         self._response = underlying_response
@@ -275,7 +277,7 @@ class Response(BaseResponse):
         '_body', '_content_type', '_content_length', '_charset',
     )
 
-    def __init__(self, session: Session,
+    def __init__(self, session: BaseSession,
                  underlying_response: aiohttp.ClientResponse, *,
                  body: Union[bytes, bytearray] = b'',
                  content_type: str = 'text/plain',
@@ -319,7 +321,7 @@ class StreamingResponse(BaseResponse):
         '_stream', '_content_type',
     )
 
-    def __init__(self, session: Session,
+    def __init__(self, session: BaseSession,
                  underlying_response: aiohttp.ClientResponse, *,
                  stream: aiohttp.streams.StreamReader = None,
                  content_type: str = 'text/plain'):
