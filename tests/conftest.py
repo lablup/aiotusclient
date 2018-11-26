@@ -13,5 +13,15 @@ def defconfig():
 
 
 @pytest.fixture
+def example_keypair():
+    return ('AKIAIOSFODNN7EXAMPLE', 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY')
+
+
+@pytest.fixture
 def dummy_endpoint(defconfig):
-    return str(defconfig.endpoint) + '/v2/'
+    return str(defconfig.endpoint) + '/'
+
+
+@pytest.fixture
+def dummy_endpoint_versioned(defconfig):
+    return str(defconfig.endpoint) + '/v4/'

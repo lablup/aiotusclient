@@ -5,9 +5,8 @@ from ai.backend.client.session import Session
 
 def build_url(config, path):
     base_url = config.endpoint.path.rstrip('/')
-    major_ver = config.version.split('.', 1)[0]
     query_path = path.lstrip('/') if len(path) > 0 else ''
-    path = '{0}/{1}/{2}'.format(base_url, major_ver, query_path)
+    path = '{0}/{1}'.format(base_url, query_path)
     canonical_url = config.endpoint.with_path(path)
     return canonical_url
 
@@ -19,7 +18,7 @@ def test_create_vfolder():
                 'id': 'fake-vfolder-id',
                 'name': 'fake-vfolder-name',
             }
-            m.post(build_url(session.config, '/folders/'), status=201,
+            m.post(build_url(session.config, '/folders'), status=201,
                    payload=payload)
             resp = session.VFolder.create('fake-vfolder-name')
             assert resp == payload
@@ -38,7 +37,7 @@ def test_list_vfolders():
                     'id': 'fake-vfolder2-id'
                 }
             ]
-            m.get(build_url(session.config, '/folders/'), status=200,
+            m.get(build_url(session.config, '/folders'), status=200,
                   payload=payload)
             resp = session.VFolder.list()
             assert resp == payload
