@@ -309,7 +309,11 @@ class FetchContextManager:
     It provides both synchronouse and asynchronous contex manager interfaces.
     '''
 
-    __slots__ = ('session', 'rqst_ctx', 'response_cls', '_async_mode')
+    __slots__ = (
+        'session', 'rqst_ctx', 'response_cls',
+        'check_status',
+        '_async_mode',
+    )
 
     def __init__(self, session, rqst_ctx, *,
                  response_cls: Response = Response,
@@ -360,6 +364,10 @@ class WebSocketResponse:
     @property
     def session(self) -> BaseSession:
         return self._session
+
+    @property
+    def raw_weboscket(self) -> aiohttp.ClientWebSocketResponse:
+        return self._raw_ws
 
     @property
     def closed(self):
@@ -413,15 +421,18 @@ class WebSocketContextManager:
     A high-level wrapper of :class:`aiohttp._WSRequestContextManager`.
     '''
 
-    __slots__ = ('session', 'ws_ctx', 'response_cls', 'on_enter')
+    __slots__ = (
+        'session', 'ws_ctx', 'response_cls',
+        'on_enter',
+    )
 
     def __init__(self, session, ws_ctx, *,
                  on_enter: Callable = None,
                  response_cls: WebSocketResponse = WebSocketResponse):
         self.session = session
         self.ws_ctx = ws_ctx
-        self.on_enter = on_enter
         self.response_cls = WebSocketResponse
+        self.on_enter = on_enter
 
     async def __aenter__(self):
         try:
@@ -436,4 +447,4 @@ class WebSocketContextManager:
         return wrapped_ws
 
     async def __aexit__(self, *args):
-        return await self.ws_ctx.__axit__(*args)
+        return await self.ws_ctx.__aexit__(*args)

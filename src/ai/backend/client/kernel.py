@@ -259,15 +259,15 @@ class Kernel:
             return await resp.json()
 
     # only supported in AsyncKernel
-    async def stream_pty(self):
+    def stream_pty(self):
         request = Request(self.session,
                           'GET', '/stream/kernel/{}/pty'.format(self.kernel_id))
         return request.connect_websocket(response_cls=StreamPty)
 
     # only supported in AsyncKernel
-    async def stream_execute(self, code: str = '', *,
-                             mode: str = 'query',
-                             opts: dict = None):
+    def stream_execute(self, code: str = '', *,
+                       mode: str = 'query',
+                       opts: dict = None):
         opts = {} if opts is None else opts
         if mode == 'query':
             opts = {}
