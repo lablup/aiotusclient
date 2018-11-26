@@ -284,7 +284,7 @@ class Kernel:
         else:
             msg = 'Invalid stream-execution mode: {0}'.format(mode)
             raise BackendClientError(msg)
-        request = Request(self._session,
+        request = Request(self.session,
                           'GET', '/stream/kernel/{}/execute'.format(self.kernel_id))
         try:
             ws = await request.connect_websocket()
