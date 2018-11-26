@@ -214,6 +214,8 @@ class Request:
         assert self.method == 'GET'
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
+        # websocket is always a "binary" stream.
+        self.content_type = 'application/octet-stream'
         self._sign()
         ws_ctx = self.session.aiohttp_session.ws_connect(
             self._build_url(),
@@ -440,8 +442,9 @@ class WebSocketContextManager:
         except aiohttp.ClientError as e:
             msg = 'Request to the API endpoint has failed.\n' \
                   'Check your network connection and/or the server status.'
+            msg += '\n' + str(e)
             raise BackendClientError(msg) from e
-        wrapped_ws = self.response_cls(raw_ws)
+        wrapped_ws = self.response_cls(self.session, raw_ws)
         if self.on_enter is not None:
             await self.on_enter(wrapped_ws)
         return wrapped_ws
