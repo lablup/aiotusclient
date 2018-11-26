@@ -208,7 +208,7 @@ class Request:
             assert data.is_multipart
             # Let aiohttp fill up the content-type header including
             # multipart boundaries.
-            self.headers.pop('Content-Type')
+            self.headers.pop('Content-Type', None)
             return data
         else:
             return self._content
