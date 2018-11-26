@@ -158,11 +158,12 @@ Synchronous API (v1.2+)
            run_id = result['runId']  # keeps track of this particular run loop
            for rec in result.get('console', []):
                if rec[0] == 'stdout':
-                   print(rec[1], end='', file=stdout)
+                   print(rec[1], end='', file=sys.stdout)
                elif rec[0] == 'stderr':
-                   print(rec[1], end='', file=stderr)
+                   print(rec[1], end='', file=sys.stderr)
                else:
                    handle_media(rec)
+           sys.stdout.flush()
            if result['status'] == 'finished':
                break
            elif result['status'] == 'waiting-input':
@@ -205,11 +206,12 @@ Asynchronous API (v18.12+)
                result = json.loads(result.data)
                for rec in result.get('console', []):
                    if rec[0] == 'stdout':
-                       print(rec[1], end='', file=stdout)
+                       print(rec[1], end='', file=sys.stdout)
                    elif rec[0] == 'stderr':
-                       print(rec[1], end='', file=stderr)
+                       print(rec[1], end='', file=sys.stderr)
                    else:
                        handle_media(rec)
+               sys.stdout.flush()
                if result['status'] == 'finished':
                    break
                elif result['status'] == 'waiting-input':
