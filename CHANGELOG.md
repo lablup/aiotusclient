@@ -1,6 +1,20 @@
 Changes
 =======
 
+1.5.0 (2018-11-26)
+------------------
+
+ - Support API v4's authentication mechanism which skips the request body when
+   calculating auth signatures.  (This will be the preferred way in favor of
+   streaming-based APIs.)
+
+ - Rewrite the low-level request APIs and API function implementations.
+   Now all APIs are written in async codes first and then wrapped as synchronous APIs
+   if non-async Session is used.
+
+ - Due to a large amount of internal changes, we bump the version to v1.5.0
+   before going to v18.12.0 series.
+
 1.4.2 (2018-11-06)
 ------------------
 
