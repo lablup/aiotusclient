@@ -244,7 +244,7 @@ def run(args):
     if args.resources:
         resources = {k: v for k, v in map(lambda s: s.split('=', 1), args.resources)}
     else:
-        resources = None  # will use the defaults configured in the server
+        resources = {}  # use the defaults configured in the server
 
     # Reverse humanized memory unit
     mem = resources.pop('mem', None)
