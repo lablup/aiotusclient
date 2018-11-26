@@ -1,35 +1,39 @@
-from ai.backend.client.base import BaseFunction
+from ai.backend.client.base import api_function
 
 from .request import Request
 
 
-class BaseManager(BaseFunction):
+class Manager:
 
-    _session = None
+    session = None
 
+    @api_function
     @classmethod
-    def _status(cls):
-        resp = yield Request(cls._session, 'GET', '/manager/status', {
+    async def status(cls):
+        rqst = Request(cls._session, 'GET', '/manager/status')
+        rqst.set_json({
             'status': 'running',
         })
-        return resp.json()
+        async with rqst.fetch() as resp:
+            return resp.json()
 
+    @api_function
     @classmethod
-    def _freeze(cls, force_kill=False):
-        resp = yield Request(cls._session, 'PUT', '/manager/status', {
+    async def freeze(cls, force_kill=False):
+        rqst = Request(cls._session, 'PUT', '/manager/status')
+        rqst.set_json({
             'status': 'frozen',
             'force_kill': force_kill,
         })
-        assert resp.status == 204
+        async with rqst.fetch() as resp:
+            assert resp.status == 204
 
+    @api_function
     @classmethod
-    def _unfreeze(cls):
-        resp = yield Request(cls._session, 'PUT', '/manager/status', {
+    async def unfreeze(cls):
+        rqst = Request(cls._session, 'PUT', '/manager/status')
+        rqst.set_json({
             'status': 'running',
         })
-        assert resp.status == 204
-
-    def __init_subclass__(cls):
-        cls.status = cls._call_base_clsmethod(cls._status)
-        cls.freeze = cls._call_base_clsmethod(cls._freeze)
-        cls.unfreeze = cls._call_base_clsmethod(cls._unfreeze)
+        async with rqst.fetch() as resp:
+            assert resp.status == 204

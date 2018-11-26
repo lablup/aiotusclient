@@ -10,8 +10,11 @@ def generate_signature(method, version, endpoint,
     '''
     hash_type = hash_type
     hostname = endpoint._val.netloc  # FIXME: migrate to public API
-    if content_type.startswith('multipart/'):
+    if version >= 'v4.20181215':
         content = b''
+    else:
+        if content_type.startswith('multipart/'):
+            content = b''
     body_hash = hashlib.new(hash_type, content).hexdigest()
 
     sign_str = '{}\n/{}\n{}\nhost:{}\ncontent-type:{}\nx-backendai-version:{}\n{}'.format(  # noqa
