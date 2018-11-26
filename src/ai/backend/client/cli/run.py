@@ -318,7 +318,8 @@ def run(args):
                 cluster_size=args.cluster_size,
                 mounts=args.mount,
                 envs=envs,
-                resources=resources)
+                resources=resources,
+                tag=args.tag)
         except BackendError as e:
             print_fail('[{0}] {1}'.format(idx, e))
             return
@@ -384,7 +385,8 @@ def run(args):
                 cluster_size=args.cluster_size,
                 mounts=args.mount,
                 envs=envs,
-                resources=resources)
+                resources=resources,
+                tag=args.tag)
         except BackendError as e:
             print_fail('[{0}] {1}'.format(idx, e))
             return
@@ -575,6 +577,8 @@ run.add_argument('-m', '--mount', type=str, action='append',
 run.add_argument('-s', '--stats', action='store_true', default=False,
                  help='Show resource usage statistics after termination '
                       '(only works if "--rm" is given)')
+run.add_argument('--tag', type=str, default=None,
+                 help='User-defined tag string to annotate sessions.')
 run.add_argument('-r', '--resources', metavar='KEY=VAL', type=str, action='append',
                  help='Set computation resources (e.g: -r cpu=2 -r mem=0.2 -r gpu=1)'
                  '. 1 slot of cpu/gpu represents 1 core. The unit of mem(ory) '

@@ -39,7 +39,8 @@ class Kernel:
                             envs: Mapping[str, str] = None,
                             resources: Mapping[str, int] = None,
                             cluster_size: int = 1,
-                            exec_timeout: int = 0) -> str:
+                            exec_timeout: int = 0,
+                            tag: str = None) -> 'Kernel':
         if client_token:
             assert 4 <= len(client_token) <= 64, \
                    'Client session token should be 4 to 64 characters long.'
@@ -53,6 +54,7 @@ class Kernel:
         rqst = Request(cls.session, 'POST', '/kernel/create')
         rqst.set_json({
             'lang': lang,
+            'tag': tag,
             'clientSessionToken': client_token,
             'config': {
                 'mounts': mounts,
