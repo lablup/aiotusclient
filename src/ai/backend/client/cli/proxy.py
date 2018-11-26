@@ -153,7 +153,7 @@ async def websocket_handler(request):
         api_rqst = Request(
             session, request.method, path, request.content,
             content_type=request.content_type)
-        _, up_conn = await api_rqst.connect_websocket()
+        up_conn = await api_rqst.connect_websocket()
         down_conn = web.WebSocketResponse()
         await down_conn.prepare(request)
         web_socket_proxy = WebSocketProxy(up_conn, down_conn)

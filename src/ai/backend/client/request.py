@@ -252,14 +252,12 @@ class Request:
         assert self.method == 'GET'
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
+        self._sign()
         try:
-            self._sign()
-            client = self.session.aiohttp_session
-            ws = await client.ws_connect(self._build_url(), headers=self.headers)
-            return client, ws
-        except (asyncio.CancelledError, asyncio.TimeoutError):
-            # These exceptions must be bubbled up.
-            raise
+            ws = await self.session.aiohttp_session.ws_connect(
+                self._build_url(),
+                headers=self.headers)
+            return ws
         except aiohttp.ClientError as e:
             msg = 'Request to the API endpoint has failed.\n' \
                   'Check your network connection and/or the server status.'

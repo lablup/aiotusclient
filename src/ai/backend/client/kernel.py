@@ -262,7 +262,7 @@ class Kernel:
         request = Request(self.session,
                           'GET', '/stream/kernel/{}/pty'.format(self.kernel_id))
         try:
-            _, ws = await request.connect_websocket()
+            ws = await request.connect_websocket()
         except aiohttp.ClientResponseError as e:
             raise BackendClientError(e.code, e.message)
         return StreamPty(self.kernel_id, ws)
@@ -287,7 +287,7 @@ class Kernel:
         request = Request(self._session,
                           'GET', '/stream/kernel/{}/execute'.format(self.kernel_id))
         try:
-            _, ws = await request.connect_websocket()
+            ws = await request.connect_websocket()
         except aiohttp.ClientResponseError as e:
             raise BackendClientError(e.code, e.message)
         await ws.send_json({
