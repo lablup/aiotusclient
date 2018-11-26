@@ -198,32 +198,32 @@ Asynchronous API (v18.12+)
            kern = await session.Kernel.get_or_create('lua5', client_token='mysession')
            code = 'print("hello world")'
            mode = 'query'
-           stream = await kern.stream_execute(code, mode=mode)
-           # no need for explicit run_id since WebSocket connection represents it!
-           async for result in stream:
-               if result.type != aiohttp.WSMsgType.TEXT:
-                   continue
-               result = json.loads(result.data)
-               for rec in result.get('console', []):
-                   if rec[0] == 'stdout':
-                       print(rec[1], end='', file=sys.stdout)
-                   elif rec[0] == 'stderr':
-                       print(rec[1], end='', file=sys.stderr)
+           async with kern.stream_execute(code, mode=mode) as stream:
+               # no need for explicit run_id since WebSocket connection represents it!
+               async for result in stream:
+                   if result.type != aiohttp.WSMsgType.TEXT:
+                       continue
+                   result = json.loads(result.data)
+                   for rec in result.get('console', []):
+                       if rec[0] == 'stdout':
+                           print(rec[1], end='', file=sys.stdout)
+                       elif rec[0] == 'stderr':
+                           print(rec[1], end='', file=sys.stderr)
+                       else:
+                           handle_media(rec)
+                   sys.stdout.flush()
+                   if result['status'] == 'finished':
+                       break
+                   elif result['status'] == 'waiting-input':
+                       mode = 'input'
+                       if result['options'].get('is_password', False):
+                           code = getpass.getpass()
+                       else:
+                           code = input()
+                       await stream.send_text(code)
                    else:
-                       handle_media(rec)
-               sys.stdout.flush()
-               if result['status'] == 'finished':
-                   break
-               elif result['status'] == 'waiting-input':
-                   mode = 'input'
-                   if result['options'].get('is_password', False):
-                       code = getpass.getpass()
-                   else:
-                       code = input()
-                   await stream.send_text(code)
-               else:
-                   mode = 'continued'
-                   code = ''
+                       mode = 'continued'
+                       code = ''
            await kern.destroy()
 
    loop = asyncio.get_event_loop()
