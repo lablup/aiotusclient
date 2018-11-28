@@ -41,7 +41,6 @@ class APIConfig:
         'endpoint': 'https://api.backend.ai',
         'version': 'v4.20181215',
         'hash_type': 'sha256',
-        'vfolder_mounts': [],
     }
 
     def __init__(self, *,
@@ -62,10 +61,9 @@ class APIConfig:
         self._secret_key = secret_key if secret_key else get_env('SECRET_KEY')
         self._hash_type = hash_type.lower() if hash_type else \
                           self.DEFAULTS['hash_type']
-        self._vfolder_mounts = (
-            _clean_tokens(vfolder_mounts) if vfolder_mounts else
-            get_env('VFOLDER_MOUNTS', self.DEFAULTS['vfolder_mounts'],
-                    clean=_clean_tokens))
+        arg_vfolders = set(vfolder_mounts) if vfolder_mounts else set()
+        env_vfolders = set(get_env('VFOLDER_MOUNTS', [], clean=_clean_tokens))
+        self._vfolder_mounts = [*(arg_vfolders | env_vfolders)]
 
     @property
     def endpoint(self) -> URL:
