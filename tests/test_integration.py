@@ -249,15 +249,13 @@ def test_kernel_execution_batch_mode(py3_kernel):
         f.flush()
         f.seek(0)
         py3_kernel.upload([f.name])
-    console, n = exec_loop(py3_kernel, 'batch', '', {
+    console, _ = exec_loop(py3_kernel, 'batch', '', {
         'build': '',
-        'exec': 'python {}'.format(f.name),
+        'exec': 'python {}'.format(Path(f.name).name),
     })
     assert 'hello world' in console['stdout']
     assert 'RuntimeError' in console['stderr']
     assert len(console['media']) == 0
-    info = py3_kernel.get_info()
-    assert info['numQueriesExecuted'] == n + 1
 
 
 @pytest.mark.integration
@@ -278,7 +276,7 @@ def test_kernel_execution_with_vfolder_mounts(intgr_config):
                 ])
                 console, n = exec_loop(kernel, 'batch', '', {
                     'build': '',
-                    'exec': 'python {}/{}'.format(vfname, f.name),
+                    'exec': 'python {}'.format(Path(f.name).name),
                 })
                 assert 'hello world' in console['stdout']
                 assert 'RuntimeError' in console['stderr']
@@ -287,6 +285,9 @@ def test_kernel_execution_with_vfolder_mounts(intgr_config):
                 kernel.destroy()
         finally:
             vfolder.destroy()
+
+
+# TODO: add test cases for batch mode build/clean commands
 
 
 @pytest.mark.integration
