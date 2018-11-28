@@ -230,6 +230,19 @@ def test_kernel_execution_query_mode(py3_kernel):
 
 
 @pytest.mark.integration
+def test_kernel_get_or_create_reuse(intgr_config):
+    with Session(config=intgr_config) as sess:
+        try:
+            # Sessions with same token and same language must be reused.
+            t = token_hex(6)
+            kernel1 = sess.Kernel.get_or_create('python:latest', client_token=t)
+            kernel2 = sess.Kernel.get_or_create('python:latest', client_token=t)
+            assert kernel1.kernel_id == kernel2.kernel_id
+        finally:
+            kernel1.destroy()
+
+
+@pytest.mark.integration
 def test_kernel_execution_batch_mode(py3_kernel):
     with tempfile.NamedTemporaryFile('w', suffix='.py', dir=Path.cwd()) as f:
         f.write('print("hello world")\nraise RuntimeError()\n')
