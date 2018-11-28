@@ -263,20 +263,20 @@ def test_kernel_execution_with_vfolder_mounts(intgr_config):
     with Session(config=intgr_config) as sess:
         vfname = 'vftest-' + token_hex(4)
         sess.VFolder.create(vfname)
+        vfolder = sess.VFolder(vfname)
         try:
-            vfolder = sess.VFolder(vfname)
             with tempfile.NamedTemporaryFile('w', suffix='.py', dir=Path.cwd()) as f:
                 f.write('print("hello world")\nraise RuntimeError()\n')
                 f.flush()
                 f.seek(0)
                 vfolder.upload([f.name])
+            kernel = sess.Kernel.get_or_create('python:latest', mounts=[
+                vfname
+            ])
             try:
-                kernel = sess.Kernel.get_or_create('python:latest', mounts=[
-                    vfname
-                ])
                 console, n = exec_loop(kernel, 'batch', '', {
                     'build': '',
-                    'exec': 'python {}'.format(Path(f.name).name),
+                    'exec': 'python {}/{}'.format(vfname, Path(f.name).name),
                 })
                 assert 'hello world' in console['stdout']
                 assert 'RuntimeError' in console['stderr']
@@ -284,10 +284,11 @@ def test_kernel_execution_with_vfolder_mounts(intgr_config):
             finally:
                 kernel.destroy()
         finally:
-            vfolder.destroy()
+            vfolder.delete()
 
 
 # TODO: add test cases for batch mode build/clean commands
+# TODO: add test cases for vfolder functions including invitations
 
 
 @pytest.mark.integration
