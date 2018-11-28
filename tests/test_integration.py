@@ -196,18 +196,25 @@ def py3_kernel(intgr_config):
         kernel.destroy()
 
 
-def exec_loop(kernel, mode, code, opts):
+def exec_loop(kernel, mode, code, opts=None):
     # The server may return continuation if kernel preparation
     # takes a little longer time (a few seconds).
     console = []
     num_queries = 0
     run_id = token_hex(8)
     while True:
-        result = kernel.execute(run_id, code if num_queries == 0 else '')
+        result = kernel.execute(
+            run_id,
+            code=code if num_queries == 0 else '',
+            mode=mode,
+            opts=opts)
         num_queries += 1
         console.extend(result['console'])
         if result['status'] == 'finished':
             break
+        code = ''
+        mode = 'continue'
+        opts = None
     return aggregate_console(console), num_queries
 
 
@@ -256,18 +263,18 @@ def test_kernel_restart(py3_kernel):
     with open("test.txt", "r") as f:
         print(f.read())
     ''').strip()
-    console, n = exec_loop(py3_kernel, first_code)
+    console, n = exec_loop(py3_kernel, 'query', first_code)
     num_queries += n
     assert 'first' in console['stdout']
     assert console['stderr'] == ''
     assert len(console['media']) == 0
     py3_kernel.restart()
     num_queries += 1
-    console, n = exec_loop(py3_kernel, second_code_name_error)
+    console, n = exec_loop(py3_kernel, 'query', second_code_name_error)
     num_queries += n
     assert 'NameError' in console['stderr']
     assert len(console['media']) == 0
-    console, n = exec_loop(py3_kernel, second_code_file_check)
+    console, n = exec_loop(py3_kernel, 'query', second_code_file_check)
     num_queries += n
     assert 'helloo?' in console['stdout']
     assert console['stderr'] == ''
