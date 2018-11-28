@@ -31,8 +31,10 @@ suite.  Of course, the service must be fully configured as follows:
 '''
 
 import textwrap
+import tempfile
 import time
 import uuid
+from pathlib import Path
 
 import pytest
 
@@ -194,7 +196,7 @@ def py3_kernel(intgr_config):
         kernel.destroy()
 
 
-def exec_loop(kernel, code):
+def exec_loop(kernel, mode, code, opts):
     # The server may return continuation if kernel preparation
     # takes a little longer time (a few seconds).
     console = []
@@ -210,8 +212,27 @@ def exec_loop(kernel, code):
 
 
 @pytest.mark.integration
-def test_kernel_execution(py3_kernel):
-    console, n = exec_loop(py3_kernel, 'print("hello world"); raise RuntimeError()')
+def test_kernel_execution_query_mode(py3_kernel):
+    code = 'print("hello world"); raise RuntimeError()'
+    console, n = exec_loop(py3_kernel, 'query', code, None)
+    assert 'hello world' in console['stdout']
+    assert 'RuntimeError' in console['stderr']
+    assert len(console['media']) == 0
+    info = py3_kernel.get_info()
+    assert info['numQueriesExecuted'] == n + 1
+
+
+@pytest.mark.integration
+def test_kernel_execution_batch_mode(py3_kernel):
+    with tempfile.NamedTemporaryFile('w', suffix='.py', dir=Path.cwd()) as f:
+        f.write('print("hello world")\nraise RuntimeError()\n')
+        f.flush()
+        f.seek(0)
+        py3_kernel.upload([f.name])
+    console, n = exec_loop(py3_kernel, 'batch', '', {
+        'build': '',
+        'exec': 'python {}'.format(f.name),
+    })
     assert 'hello world' in console['stdout']
     assert 'RuntimeError' in console['stderr']
     assert len(console['media']) == 0
