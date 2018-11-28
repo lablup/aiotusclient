@@ -261,6 +261,35 @@ def test_kernel_execution_batch_mode(py3_kernel):
 
 
 @pytest.mark.integration
+def test_kernel_execution_with_vfolder_mounts(intgr_config):
+    with Session(config=intgr_config) as sess:
+        vfname = 'vftest-' + token_hex(4)
+        sess.VFolder.create(vfname)
+        try:
+            vfolder = sess.VFolder(vfname)
+            with tempfile.NamedTemporaryFile('w', suffix='.py', dir=Path.cwd()) as f:
+                f.write('print("hello world")\nraise RuntimeError()\n')
+                f.flush()
+                f.seek(0)
+                vfolder.upload([f.name])
+            try:
+                kernel = sess.Kernel.get_or_create('python:latest', mounts=[
+                    vfname
+                ])
+                console, n = exec_loop(kernel, 'batch', '', {
+                    'build': '',
+                    'exec': 'python {}/{}'.format(vfname, f.name),
+                })
+                assert 'hello world' in console['stdout']
+                assert 'RuntimeError' in console['stderr']
+                assert len(console['media']) == 0
+            finally:
+                kernel.destroy()
+        finally:
+            vfolder.destroy()
+
+
+@pytest.mark.integration
 def test_kernel_restart(py3_kernel):
     num_queries = 1  # first query is done by py3_kernel fixture (creation)
     first_code = textwrap.dedent('''
