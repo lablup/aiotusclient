@@ -207,7 +207,7 @@ def exec_loop(kernel, mode, code, opts=None, user_inputs=None):
     while True:
         result = kernel.execute(
             run_id,
-            code=code if num_queries == 0 else '',
+            code=code if num_queries == 0 or mode == 'input' else '',
             mode=mode,
             opts=opts)
         num_queries += 1
