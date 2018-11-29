@@ -196,12 +196,14 @@ def py3_kernel(intgr_config):
         kernel.destroy()
 
 
-def exec_loop(kernel, mode, code, opts=None):
+def exec_loop(kernel, mode, code, opts=None, user_inputs=None):
     # The server may return continuation if kernel preparation
     # takes a little longer time (a few seconds).
     console = []
     num_queries = 0
     run_id = token_hex(8)
+    if user_inputs is None:
+        user_inputs = []
     while True:
         result = kernel.execute(
             run_id,
@@ -212,9 +214,14 @@ def exec_loop(kernel, mode, code, opts=None):
         console.extend(result['console'])
         if result['status'] == 'finished':
             break
-        code = ''
-        mode = 'continue'
-        opts = None
+        elif result['status'] == 'waiting-input':
+            mode = 'input'
+            code = user_inputs.pop(0)
+            opts = None
+        else:
+            mode = 'continue'
+            code = ''
+            opts = None
     return aggregate_console(console), num_queries
 
 
@@ -227,6 +234,15 @@ def test_kernel_execution_query_mode(py3_kernel):
     assert len(console['media']) == 0
     info = py3_kernel.get_info()
     assert info['numQueriesExecuted'] == n + 1
+
+
+@pytest.mark.integration
+def test_kernel_execution_query_mode_user_input(py3_kernel):
+    name = token_hex(8)
+    code = 'name = input("your name? "); print(f"hello, {name}")'
+    console, n = exec_loop(py3_kernel, 'query', code, None, user_inputs=[name])
+    assert 'your name?' in console['stdout']
+    assert f'hello, {name}' in console['stdout']
 
 
 @pytest.mark.integration
@@ -259,6 +275,22 @@ def test_kernel_execution_batch_mode(py3_kernel):
 
 
 @pytest.mark.integration
+def test_kernel_execution_batch_mode_user_input(py3_kernel):
+    name = token_hex(8)
+    with tempfile.NamedTemporaryFile('w', suffix='.py', dir=Path.cwd()) as f:
+        f.write('name = input("your name? "); print(f"hello, {name}")')
+        f.flush()
+        f.seek(0)
+        py3_kernel.upload([f.name])
+    console, _ = exec_loop(py3_kernel, 'batch', '', {
+        'build': '',
+        'exec': 'python {}'.format(Path(f.name).name),
+    }, user_inputs=[name])
+    assert 'your name?' in console['stdout']
+    assert f'hello, {name}' in console['stdout']
+
+
+@pytest.mark.integration
 def test_kernel_execution_with_vfolder_mounts(intgr_config):
     with Session(config=intgr_config) as sess:
         vfname = 'vftest-' + token_hex(4)
@@ -287,8 +319,11 @@ def test_kernel_execution_with_vfolder_mounts(intgr_config):
             vfolder.delete()
 
 
+# TODO: add test cases for execution with custom env-vars
+# TODO: add test cases for execution via websockets
 # TODO: add test cases for batch mode build/clean commands
 # TODO: add test cases for vfolder functions including invitations
+# TODO: add test cases for service ports (future)
 
 
 @pytest.mark.integration
