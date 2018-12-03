@@ -168,7 +168,7 @@ class Request:
                                f.stream,
                                filename=f.filename,
                                content_type=f.content_type)
-            assert data.is_multipart
+            assert data.is_multipart, 'Failed to pack files as multipart.'
             # Let aiohttp fill up the content-type header including
             # multipart boundaries.
             self.headers.pop('Content-Type', None)
@@ -192,7 +192,8 @@ class Request:
         You may use this method either with plain synchronous Session or
         AsyncSession.
         '''
-        assert self.method in self._allowed_methods
+        assert self.method in self._allowed_methods, \
+               'Disallowed HTTP method: {}'.format(self.method)
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
         if self.content_type is not None:
@@ -209,8 +210,9 @@ class Request:
         '''
         Creates a WebSocket connection.
         '''
-        assert isinstance(self.session, AsyncSession)
-        assert self.method == 'GET'
+        assert isinstance(self.session, AsyncSession), \
+               'Cannot use websockets with sessions in the synchronous mode'
+        assert self.method == 'GET', 'Invalid websocket method'
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
         # websocket is always a "binary" stream.
@@ -340,7 +342,8 @@ class FetchContextManager:
                                      async_mode=self._async_mode)
         except aiohttp.ClientError as e:
             msg = 'Request to the API endpoint has failed.\n' \
-                  'Check your network connection and/or the server status.'
+                  'Check your network connection and/or the server status.\n' \
+                  'Error detail: {!r}'.format(e)
             raise BackendClientError(msg) from e
 
     def __exit__(self, *args):
@@ -440,8 +443,8 @@ class WebSocketContextManager:
             raw_ws = await self.ws_ctx.__aenter__()
         except aiohttp.ClientError as e:
             msg = 'Request to the API endpoint has failed.\n' \
-                  'Check your network connection and/or the server status.'
-            msg += '\n' + str(e)
+                  'Check your network connection and/or the server status.\n' \
+                  'Error detail: {!r}'.format(e)
             raise BackendClientError(msg) from e
         wrapped_ws = self.response_cls(self.session, raw_ws)
         if self.on_enter is not None:

@@ -9,7 +9,6 @@ from pathlib import Path
 import re
 import string
 import sys
-import traceback
 
 import aiohttp
 from humanize import naturalsize
@@ -21,7 +20,7 @@ from ..compat import current_loop, token_hex
 from ..exceptions import BackendError
 from ..session import Session, AsyncSession
 from .pretty import (
-    print_info, print_wait, print_done, print_fail, print_warn,
+    print_info, print_wait, print_done, print_error, print_fail, print_warn,
     format_info,
 )
 
@@ -320,8 +319,8 @@ def run(args):
                 envs=envs,
                 resources=resources,
                 tag=args.tag)
-        except BackendError as e:
-            print_fail('[{0}] {1}'.format(idx, e))
+        except Exception as e:
+            print_error(e)
             return
         if kernel.created:
             vprint_done('[{0}] Session {0} is ready.'.format(idx, kernel.kernel_id))
@@ -355,12 +354,8 @@ def run(args):
                 exec_loop_sync(sys.stdout, sys.stderr, kernel, 'query', args.code,
                                vprint_done=vprint_done)
             vprint_done('[{0}] Execution finished.'.format(idx))
-        except BackendError as e:
-            print_fail('[{0}] {1}'.format(idx, e))
-            sys.exit(1)
-        except Exception:
-            print_fail('[{0}] Execution failed!'.format(idx))
-            traceback.print_exc()
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
         finally:
             if args.rm:
@@ -602,8 +597,8 @@ def terminate(args):
             try:
                 kernel = session.Kernel(sess)
                 ret = kernel.destroy()
-            except BackendError as e:
-                print_fail(str(e))
+            except Exception  as e:
+                print_error(e)
                 has_failure = True
             if has_failure:
                 sys.exit(1)

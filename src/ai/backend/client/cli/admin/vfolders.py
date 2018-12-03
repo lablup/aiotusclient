@@ -2,9 +2,8 @@ import sys
 
 from tabulate import tabulate
 
-from ...exceptions import BackendError
 from ...session import Session
-from ..pretty import print_fail
+from ..pretty import print_error
 from . import admin
 
 
@@ -28,8 +27,8 @@ def vfolders(args):
     with Session() as session:
         try:
             resp = session.Admin.query(q)
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
         print(tabulate((item.values() for item in resp['vfolders']),
                        headers=(item[0] for item in fields)))

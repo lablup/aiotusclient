@@ -26,7 +26,7 @@ class VFolder:
     @api_function
     @classmethod
     async def create(cls, name: str, host: str = None):
-        assert _rx_slug.search(name) is not None
+        assert _rx_slug.search(name) is not None, 'Invalid vfolder name format'
         rqst = Request(cls.session, 'POST', '/folders')
         rqst.set_json({
             'name': name,

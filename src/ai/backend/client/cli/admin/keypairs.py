@@ -2,9 +2,8 @@ import sys
 
 from tabulate import tabulate
 
-from ...exceptions import BackendError
 from ...session import Session
-from ..pretty import print_fail
+from ..pretty import print_error, print_fail
 from . import admin
 
 
@@ -33,8 +32,8 @@ def keypairs(args):
         try:
             items = session.KeyPair.list(args.user_id, args.is_active,
                                          fields=(item[1] for item in fields))
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
         if len(items) == 0:
             print('There are no matching keypairs associated '
@@ -72,8 +71,8 @@ def add(args):
                 resource_policy=args.resource_policy,
                 rate_limit=args.rate_limit,
                 concurrency_limit=args.concurrency_limit)
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
         if not data['ok']:
             print_fail('KeyPair creation has failed: {0}'
