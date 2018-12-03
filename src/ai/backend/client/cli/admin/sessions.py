@@ -2,9 +2,8 @@ import sys
 
 from tabulate import tabulate
 
-from ...exceptions import BackendError
 from ...session import Session
-from ..pretty import print_fail
+from ..pretty import print_error
 from . import admin
 
 
@@ -39,8 +38,8 @@ def sessions(args):
     with Session() as session:
         try:
             resp = session.Admin.query(q, v)
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
         if len(resp['compute_sessions']) == 0:
             print('There are no compute sessions currently running.')
@@ -95,8 +94,8 @@ def session(args):
     with Session() as session:
         try:
             resp = session.Admin.query(q, v)
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
         if resp['compute_session']['sess_id'] is None:
             print('There is no such running compute session.')

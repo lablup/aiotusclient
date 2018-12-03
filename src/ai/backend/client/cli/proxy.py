@@ -7,7 +7,7 @@ from aiohttp import web
 from aiohttp.client_exceptions import ClientResponseError, ClientConnectorError
 
 from . import register_command
-from .pretty import print_info, print_fail
+from .pretty import print_info, print_error, print_fail
 from ..exceptions import BackendAPIError, BackendClientError
 from ..request import Request
 from ..session import AsyncSession
@@ -138,8 +138,7 @@ async def web_handler(request):
             status=503,
             reason="Service Unavailable")
     except Exception as e:
-        print_fail('websocket_handler: Internal server error')
-        print(e, file=sys.stderr)
+        print_error(e)
         return web.Response(
             body="Something has gone wrong.",
             status=500,
@@ -172,8 +171,7 @@ async def websocket_handler(request):
             status=503,
             reason="Service Unavailable")
     except Exception as e:
-        print_fail('websocket_handler: Internal server error')
-        print(e, file=sys.stderr)
+        print_error(e)
         return web.Response(
             body="Something has gone wrong.",
             status=500,

@@ -1,8 +1,7 @@
 import sys
 
 from . import register_command
-from .pretty import print_wait, print_done, print_fail
-from ..exceptions import BackendError
+from .pretty import print_wait, print_done, print_error
 from ..session import Session
 
 
@@ -19,8 +18,8 @@ def logs(args):
             logs = result.get('logs') if 'logs' in result else ''
             print(logs)
             print_done('End of logs.')
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
 
 

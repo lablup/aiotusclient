@@ -60,7 +60,8 @@ class FetchContextManager:
         self.async_mode = True
 
     def __enter__(self):
-        assert isinstance(self.session, SyncSession)
+        assert isinstance(self.session, SyncSession), \
+               'Cannot reuse fetch context manager'
         self.async_mode = False
         return self.session.worker_thread.execute(self.__aenter__())
 
@@ -205,7 +206,7 @@ class Request:
                                f.stream,
                                filename=f.filename,
                                content_type=f.content_type)
-            assert data.is_multipart
+            assert data.is_multipart, 'Failed to pack files as multipart.'
             # Let aiohttp fill up the content-type header including
             # multipart boundaries.
             self.headers.pop('Content-Type', None)
@@ -229,7 +230,8 @@ class Request:
         You may use this method either with plain synchronous Session or
         AsyncSession.
         '''
-        assert self.method in self._allowed_methods
+        assert self.method in self._allowed_methods, \
+               'Disallowed HTTP method: {}'.format(self.method)
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
         if self.content_type is not None:
@@ -248,8 +250,9 @@ class Request:
 
         This method is a coroutine.
         '''
-        assert isinstance(self.session, AsyncSession)
-        assert self.method == 'GET'
+        assert isinstance(self.session, AsyncSession), \
+               'Cannot use websockets with sessions in the synchronous mode'
+        assert self.method == 'GET', 'Invalid websocket method'
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
         try:
@@ -262,7 +265,8 @@ class Request:
             raise
         except aiohttp.ClientError as e:
             msg = 'Request to the API endpoint has failed.\n' \
-                  'Check your network connection and/or the server status.'
+                  'Check your network connection and/or the server status.\n' \
+                  'Error detail: {!r}'.format(e)
             raise BackendClientError(msg) from e
 
 

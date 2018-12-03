@@ -128,7 +128,8 @@ class Kernel:
                       opts: dict = None):
         opts = opts if opts is not None else {}
         if mode in {'query', 'continue', 'input'}:
-            assert code is not None  # but maybe empty due to continuation
+            assert code is not None, \
+                   'The code argument must be a valid string even when empty.'
             rqst = Request(self.session,
                 'POST', '/kernel/{}'.format(self.kernel_id))
             rqst.set_json({

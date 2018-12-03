@@ -2,7 +2,6 @@ from argparse import Namespace
 import getpass
 from pathlib import Path
 import sys
-import traceback
 
 from humanize import naturalsize
 from tabulate import tabulate
@@ -10,9 +9,8 @@ from tabulate import tabulate
 from . import register_command
 from .admin.sessions import session
 from ..compat import token_hex
-from ..exceptions import BackendError
 from ..session import Session
-from .pretty import print_info, print_wait, print_done, print_fail
+from .pretty import print_info, print_wait, print_done, print_error, print_fail
 
 
 def exec_loop(kernel, code, mode, opts=None,
@@ -118,8 +116,8 @@ def run(args):
                 mounts=args.mount,
                 envs=envs,
                 resources=resources)
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             return
         if kernel.created:
             vprint_done('Session {0} is ready.'.format(kernel.kernel_id))
@@ -146,12 +144,8 @@ def run(args):
             if args.code:
                 exec_loop(kernel, args.code, 'query',
                           vprint_wait=vprint_wait, vprint_done=vprint_done)
-        except BackendError as e:
-            print_fail(str(e))
-            sys.exit(1)
-        except Exception:
-            print_fail('Execution failed!')
-            traceback.print_exc()
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
         finally:
             if args.rm:
@@ -213,8 +207,8 @@ def terminate(args):
             try:
                 kernel = session.Kernel(sess)
                 ret = kernel.destroy()
-            except BackendError as e:
-                print_fail(str(e))
+            except Exception  as e:
+                print_error(e)
                 has_failure = True
             if has_failure:
                 sys.exit(1)

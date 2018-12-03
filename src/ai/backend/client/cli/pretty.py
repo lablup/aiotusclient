@@ -4,8 +4,11 @@ import io
 import os
 import sys
 import textwrap
+import traceback
 
 from tqdm import tqdm
+
+from ..exceptions import BackendAPIError
 
 __all__ = (
     'PrintStatus', 'print_pretty', 'print_info', 'print_wait',
@@ -50,6 +53,35 @@ print_info = functools.partial(print_pretty, status=PrintStatus.NONE)
 print_wait = functools.partial(print_pretty, status=PrintStatus.WAITING)
 print_done = functools.partial(print_pretty, status=PrintStatus.DONE)
 print_fail = functools.partial(print_pretty, status=PrintStatus.FAILED)
+
+
+def print_error(exc: Exception, *, file=None):
+    if file is None:
+        file = sys.stderr
+    indicator = '\x1b[91m\u2718' if file.isatty() else '\u2718'
+    if file.isatty():
+        print('\x1b[2K', end='', file=file)
+    if isinstance(exc, BackendAPIError):
+        msg = ('{}: '.format(exc.__class__.__name__) +
+               '{0} {1}\n'.format(exc.status, exc.reason) +
+               '{0[title]}'.format(exc.data))
+        content = exc.data.get('content', None)
+        if content:
+            msg += '\n' + content
+    else:
+        args = exc.args if exc.args else ['']
+        msg = ('{}: {}\n'.format(exc.__class__.__name__,
+                                 str(args[0])) +
+               '{}'.format('\n'.join(map(str, args[1:]))))
+        msg += ('*** Traceback ***\n' +
+                ''.join(traceback.format_tb(exc.__traceback__)).strip())
+    text = textwrap.indent(msg, '  ')
+    text = indicator + text[1:]
+    if file.isatty():
+        text += '\x1b[0m'
+    print('{0}\r'.format(text), end='', file=file)
+    print('', file=file)
+    file.flush()
 
 
 class ProgressReportingReader(io.BufferedReader):

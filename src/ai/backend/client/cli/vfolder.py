@@ -7,8 +7,7 @@ from tabulate import tabulate
 
 from . import register_command
 from ..config import get_config
-from .pretty import print_wait, print_done, print_fail
-from ..exceptions import BackendError
+from .pretty import print_wait, print_done, print_error, print_fail
 from ..session import Session
 
 
@@ -36,8 +35,8 @@ def list(args):
             rows = (tuple(vf[key] for _, key in fields) for vf in resp)
             hdrs = (display_name for display_name, _ in fields)
             print(tabulate(rows, hdrs))
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
 
 
@@ -48,8 +47,8 @@ def create(args):
         try:
             result = session.VFolder.create(args.name)
             print('Virtual folder "{0}" is created.'.format(result['name']))
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
 
 
@@ -62,8 +61,8 @@ def delete(args):
     with Session() as session:
         try:
             session.VFolder(args.name).delete()
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
 
 
@@ -81,8 +80,8 @@ def info(args):
             print('- Owner:', result['is_owner'])
             print('- Permission:', result['permission'])
             print('- Number of files: {0}'.format(result['numFiles']))
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
 
 
@@ -99,8 +98,8 @@ def upload(args):
         try:
             session.VFolder(args.name).upload(args.filenames, show_progress=True)
             print_done('Done.')
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
 
 
@@ -119,8 +118,8 @@ def download(args):
         try:
             session.VFolder(args.name).download(args.filenames, show_progress=True)
             print_done('Done.')
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
 
 
@@ -150,8 +149,8 @@ def mkdir(args):
         try:
             session.VFolder(args.name).mkdir(args.path)
             print_done('Done.')
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
 
 
@@ -177,8 +176,8 @@ def rm(args):
                     args.filenames,
                     recursive=args.recursive)
                 print_done('Done.')
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
 
 
@@ -211,8 +210,8 @@ def ls(args):
                 table.append(row)
             print_done('Retrived.')
             print(tabulate(table, headers=headers))
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
 
 
 ls.add_argument('name', type=str, help='The name of a virtual folder.')
@@ -226,7 +225,8 @@ def invite(args):
     """
     with Session() as session:
         try:
-            assert args.perm in ['rw', 'ro']
+            assert args.perm in ['rw', 'ro'], \
+                   'Invalid permission: {}'.format(args.perm)
             result = session.VFolder(args.name).invite(args.perm, args.emails)
             invited_ids = result.get('invited_ids', [])
             if len(invited_ids) > 0:
@@ -235,8 +235,8 @@ def invite(args):
                     print('\t- ' + invitee)
             else:
                 print('No users found. Invitation was not sent.')
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
 
 
@@ -291,6 +291,6 @@ def invitations(args):
                         break
                     elif action.lower() == 'c':
                         break
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
             sys.exit(1)
