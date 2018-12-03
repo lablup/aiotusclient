@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.5.1 (2018-12-03)
+------------------
+
+ - Display CLI errors with more details, including server-generated extra messages
+   and fully formatted exception arguments line-by-line.
+
+ - Fix a regression bug in the kernel file download API.
+
 1.5.0 (2018-11-26)
 ------------------
 
