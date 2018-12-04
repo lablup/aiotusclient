@@ -44,14 +44,28 @@ class Kernel:
                             mounts: Iterable[str] = None,
                             envs: Mapping[str, str] = None,
                             resources: Mapping[str, int] = None,
-                            exec_timeout: int = 0) -> str:
+                            exec_timeout: int = 0) -> 'Kernel':
         '''
         Get-or-creates a compute session.
+        If *client_token* is ``None``, it creates a new compute session as long as
+        the server has enough resources and your API key has remaining quota.
+        If *client_token* is a valid string and there is an existing compute session
+        with the same token and the same *lang*, then it returns the :class:`Kernel`
+        instance representing the existing session.
 
-        :returns: The unique identifier of the created compute session.
-            You may construct a new :class:`Kernel` instance from it
-            for further interaction, but keep in mind that you must
-            use the ``Kernel`` class from the same session.
+        :param lang: The image name and tag for the compute session.
+            Example: ``python:3.6-ubuntu``.
+            Check out the full list of available images in your server using (TODO:
+            new API).
+        :param client_token: A client-side identifier to seamlessly reuse the compute
+            session already created.
+        :param mounts: The list of vfolder names that belongs to the currrent API
+            access key.
+        :param envs: The environment variables which always bypasses the jail policy.
+        :param resources: The resource specification. (TODO: details)
+        :param exec_timeout: (deprecated)
+
+        :returns: The :class:`Kernel` instance.
         '''
         if client_token:
             assert 4 <= len(client_token) <= 64, \
@@ -88,6 +102,8 @@ class Kernel:
     async def destroy(self):
         '''
         Destroys the compute session.
+        Since the server literally kills the container(s), all ongoing executions are
+        forcibly interrupted.
         '''
         rqst = Request(self.session,
                        'DELETE', '/kernel/{}'.format(self.kernel_id))
