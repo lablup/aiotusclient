@@ -234,6 +234,11 @@ class Kernel:
             If the paths include directories, the location of them in the compute
             session is calculated from the relative path to *basedir* and all
             intermediate parent directories are automatically created if not exists.
+
+            For example, if a file path is ``/home/user/test/data.txt`` (or
+            ``test/data.txt``) where *basedir* is ``/home/user`` (or the current
+            working directory is ``/home/user``), the uploaded file is located at
+            ``/home/work/test/data.txt`` in the compute session container.
         :param basedir: The directory prefix where the files reside.
             The default value is the current working directory.
         :param show_progress: Displays a progress bar during uploads.
