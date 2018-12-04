@@ -28,12 +28,12 @@ author = 'Lablup Inc.'
 version = subprocess.check_output(
     'git symbolic-ref --short -q HEAD',
     shell=True,
-).decode('utf-8')
+).decode('utf-8').strip()
 # The full version, including alpha/beta/rc tags
 release = subprocess.check_output(
     'git describe --abbrev=0 --tags',
     shell=True,
-).decode('utf-8')
+).decode('utf-8').strip()
 
 
 # -- General configuration ---------------------------------------------------
