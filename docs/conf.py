@@ -19,7 +19,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'Backend.AI Client SDK for Python Documentation'
+project = 'Backend.AI Client SDK for Python'
 copyright = '2018, Joongi Kim'
 author = 'Joongi Kim'
 
@@ -133,7 +133,7 @@ latex_elements = {
 latex_documents = [
     (master_doc,
      'BackendAIClientSDKforPythonDocumentation.tex',
-     'Backend.AI Client SDK for Python Documentation Documentation',
+     'Backend.AI Client SDK for Python Documentation',
      'Joongi Kim', 'manual'),
 ]
 
@@ -145,7 +145,7 @@ latex_documents = [
 man_pages = [
     (master_doc,
      'backendaiclientsdkforpythondocumentation',
-     'Backend.AI Client SDK for Python Documentation Documentation',
+     'Backend.AI Client SDK for Python Documentation',
      [author], 1)
 ]
 
@@ -158,7 +158,7 @@ man_pages = [
 texinfo_documents = [
     (master_doc,
      'BackendAIClientSDKforPythonDocumentation',
-     'Backend.AI Client SDK for Python Documentation Documentation',
+     'Backend.AI Client SDK for Python Documentation',
      author,
      'BackendAIClientSDKforPythonDocumentation',
      'Backend.AI Client SDK fro Python',
