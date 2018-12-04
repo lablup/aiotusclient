@@ -6,5 +6,5 @@ Virtual Folder Functions
 .. currentmodule:: ai.backend.client.vfolder
 
 .. autoclass:: ai.backend.client.vfolder.VFolder
-   :members:
-   :undoc-members:
+  :members:
+  :undoc-members:

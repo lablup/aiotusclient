@@ -6,13 +6,10 @@ Client Session
 .. currentmodule:: ai.backend.client.session
 
 .. autoclass:: ai.backend.client.session.BaseSession
-   :members:
-   :undoc-members:
+  :members:
 
 .. autoclass:: ai.backend.client.session.Session
-   :members:
-   :undoc-members:
+  :members:
 
 .. autoclass:: ai.backend.client.session.AsyncSession
-   :members:
-   :undoc-members:
+  :members:

@@ -54,6 +54,10 @@ class _SyncWorkerThread(threading.Thread):
 
 
 class BaseSession(metaclass=abc.ABCMeta):
+    '''
+    The base abstract class for sessions.
+    '''
+
     __slots__ = (
         '_config', '_closed', 'aiohttp_session',
         'Admin', 'Agent', 'Kernel', 'KeyPair', 'VFolder',
@@ -65,20 +69,30 @@ class BaseSession(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def close(self):
+        '''
+        Terminates the session and releases underlying resources.
+        '''
         raise NotImplementedError
 
     @property
-    def closed(self):
+    def closed(self) -> bool:
+        '''
+        Checks if the session is closed.
+        '''
         return self._closed
 
     @property
     def config(self):
+        '''
+        The configuration used by this session object.
+        '''
         return self._config
 
 
 class Session(BaseSession):
     '''
     An API client session that makes API requests synchronously.
+    You may call (almost) all function proxy methods like a plain Python function.
     '''
 
     __slots__ = BaseSession.__slots__ + (
@@ -112,24 +126,50 @@ class Session(BaseSession):
             **Admin.__dict__,
             'session': self,
         })
+        '''
+        The :class:`~ai.backend.client.admin.Admin` function proxy
+        bound to this session.
+        '''
         self.Agent = type('Agent', (BaseFunction, ), {
             **Agent.__dict__,
             'session': self,
         })
+        '''
+        The :class:`~ai.backend.client.agent.Agent` function proxy
+        bound to this session.
+        '''
         self.Kernel = type('Kernel', (BaseFunction, ), {
             **Kernel.__dict__,
             'session': self,
         })
+        '''
+        The :class:`~ai.backend.client.kernel.Kernel` function proxy
+        bound to this session.
+        '''
         self.KeyPair = type('KeyPair', (BaseFunction, ), {
             **KeyPair.__dict__,
             'session': self,
         })
+        '''
+        The :class:`~ai.backend.client.keypair.KeyPair` function proxy
+        bound to this session.
+        '''
         self.VFolder = type('VFolder', (BaseFunction, ), {
             **VFolder.__dict__,
             'session': self,
         })
+        '''
+        The :class:`~ai.backend.client.vfolder.VFolder` function proxy
+        bound to this session.
+        '''
 
     def close(self):
+        '''
+        Terminates the session.  It schedules the ``close()`` coroutine
+        of the underlying aiohttp session and then enqueues a sentinel
+        object to indicate termination.  Then it waits until the worker
+        thread to self-terminate by joining.
+        '''
         if self._closed:
             return
         self._closed = True
@@ -139,6 +179,10 @@ class Session(BaseSession):
 
     @property
     def worker_thread(self):
+        '''
+        The thread that internally executes the asynchronous implementations
+        of the given API functions.
+        '''
         return self._worker_thread
 
     def __enter__(self):
@@ -153,6 +197,7 @@ class Session(BaseSession):
 class AsyncSession(BaseSession):
     '''
     An API client session that makes API requests asynchronously using coroutines.
+    You may call all function proxy methods like a coroutine.
     '''
 
     __slots__ = BaseSession.__slots__ + ()
@@ -179,22 +224,42 @@ class AsyncSession(BaseSession):
             **Admin.__dict__,
             'session': self,
         })
+        '''
+        The :class:`~ai.backend.client.admin.Admin` function proxy
+        bound to this session.
+        '''
         self.Agent = type('Agent', (BaseFunction, ), {
             **Agent.__dict__,
             'session': self,
         })
+        '''
+        The :class:`~ai.backend.client.agent.Agent` function proxy
+        bound to this session.
+        '''
         self.Kernel = type('Kernel', (BaseFunction, ), {
             **Kernel.__dict__,
             'session': self,
         })
+        '''
+        The :class:`~ai.backend.client.kernel.Kernel` function proxy
+        bound to this session.
+        '''
         self.KeyPair = type('KeyPair', (BaseFunction, ), {
             **KeyPair.__dict__,
             'session': self,
         })
+        '''
+        The :class:`~ai.backend.client.keypair.KeyPair` function proxy
+        bound to this session.
+        '''
         self.VFolder = type('VFolder', (BaseFunction, ), {
             **VFolder.__dict__,
             'session': self,
         })
+        '''
+        The :class:`~ai.backend.client.vfolder.VFolder` function proxy
+        bound to this session.
+        '''
 
     async def close(self):
         if self._closed:
