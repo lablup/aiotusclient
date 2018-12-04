@@ -26,6 +26,12 @@ class Kernel:
     The term 'kernel' is now deprecated and we prefer 'compute sessions'.
     However, for historical reasons and to avoid confusion with client sessions, we
     keep the backward compatibility with the naming of this API function class.
+
+    For multi-container sessions, all methods take effects to the master container
+    only, except :func:`~Kernel.destroy` and :func:`~Kernel.restart` methods.
+    So it is the user's responsibility to distribute uploaded files to multiple
+    containers using explicit copies or virtual folders which are commonly mounted to
+    all containers belonging to the same compute session.
     '''
 
     session = None
@@ -40,7 +46,7 @@ class Kernel:
                             resources: Mapping[str, int] = None,
                             exec_timeout: int = 0) -> str:
         '''
-        Get or create a compute session.
+        Get-or-creates a compute session.
 
         :returns: The unique identifier of the created compute session.
             You may construct a new :class:`Kernel` instance from it
@@ -116,7 +122,7 @@ class Kernel:
     @api_function
     async def complete(self, code: str, opts: dict = None) -> Iterable[str]:
         '''
-        Get the auto-completion candidates from the given code string,
+        Gets the auto-completion candidates from the given code string,
         as if a user has pressed the tab key just after the code in
         IDEs.
 
