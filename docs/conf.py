@@ -12,7 +12,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
@@ -79,6 +79,12 @@ pygments_style = None
 # a list of builtin themes.
 #
 html_theme = 'alabaster'
+
+if os.environ.get('DOC_BUILD_MODE', ''):
+    branch = os.environ['DOC_BUILD_BRANCH']
+    html_baseurl = f'/backend.ai-client-py/{branch}/html/'
+else:
+    html_baseurl = ''
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
