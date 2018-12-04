@@ -13,6 +13,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import subprocess
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
@@ -20,13 +21,19 @@ import os
 # -- Project information -----------------------------------------------------
 
 project = 'Backend.AI Client SDK for Python'
-copyright = '2018, Joongi Kim'
-author = 'Joongi Kim'
+copyright = '2018, Lablup Inc.'
+author = 'Lablup Inc.'
 
 # The short X.Y version
-version = '1.5'
+version = subprocess.check_output(
+    'git symbolic-ref --short -q HEAD',
+    shell=True,
+).decode('utf-8')
 # The full version, including alpha/beta/rc tags
-release = '1.5'
+release = subprocess.check_output(
+    'git describe --abbrev=0 --tags',
+    shell=True,
+).decode('utf-8')
 
 
 # -- General configuration ---------------------------------------------------
@@ -42,7 +49,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
-    'sphinxcontrib.asyncio',
+    'sphinxcontrib_trio',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -81,8 +88,7 @@ pygments_style = None
 html_theme = 'alabaster'
 
 if os.environ.get('DOC_BUILD_MODE', ''):
-    branch = os.environ['DOC_BUILD_BRANCH']
-    html_baseurl = f'/backend.ai-client-py/{branch}/html/'
+    html_baseurl = f'/backend.ai-client-py/{version}/html/'
 else:
     html_baseurl = ''
 

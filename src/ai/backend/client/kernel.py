@@ -22,9 +22,11 @@ __all__ = (
 class Kernel:
 
     '''
-    Implements the request creation and response handling logic,
-    while delegating the process of request sending to the subclasses
-    via the generator protocol.
+    Provides various interactions with compute sessions in Backend.AI.
+
+    The term 'kernel' is now deprecated and we prefer 'compute sessions'.
+    However, for historical reasons, we keep the backward compatibility
+    with the naming of this API function class.
     '''
 
     session = None
@@ -37,6 +39,9 @@ class Kernel:
                             envs: Mapping[str, str] = None,
                             resources: Mapping[str, int] = None,
                             exec_timeout: int = 0) -> str:
+        '''
+        Get or create a compute session.
+        '''
         if client_token:
             assert 4 <= len(client_token) <= 64, \
                    'Client session token should be 4 to 64 characters long.'
