@@ -5,11 +5,15 @@ Client Session
 
 .. currentmodule:: ai.backend.client.session
 
-.. autoclass:: ai.backend.client.session.BaseSession
+.. autoclass:: BaseSession
   :members:
 
-.. autoclass:: ai.backend.client.session.Session
+.. autoclass:: Session
   :members:
 
-.. autoclass:: ai.backend.client.session.AsyncSession
+  .. autoattribute:: config
+
+.. autoclass:: AsyncSession
   :members:
+
+  .. autoattribute:: config

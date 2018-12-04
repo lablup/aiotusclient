@@ -1,3 +1,21 @@
+'''
+This module is the first place to begin with your Python programs
+that use Backend.AI API functions.
+
+The high-level API functions cannot be used alone -- you must initiate a session
+because each session provides *proxy attributes* that represent API functions and run
+on the session itself.
+To achieve this, internally session objcets construct new types from
+:class:`~ai.backend.client.base.BaseFunction` classes and the attributes in each API
+function classes, and makes the new types bound to itself.
+
+Creating new types every time when creating a new session instance may look weird,
+but it is the most convenient way to provide *class-methods* in the API function
+classes to work with specific *session instances*.
+Also, session objects are intended to live long following the process' lifecycle,
+instead of being created and disposed whenever making API requests.
+'''
+
 import abc
 import asyncio
 import threading
@@ -93,6 +111,8 @@ class Session(BaseSession):
     '''
     An API client session that makes API requests synchronously.
     You may call (almost) all function proxy methods like a plain Python function.
+    It provides a context manager interface to ensure closing of the session
+    upon errors and scope exits.
     '''
 
     __slots__ = BaseSession.__slots__ + (
@@ -100,13 +120,6 @@ class Session(BaseSession):
     )
 
     def __init__(self, *, config: APIConfig = None):
-        '''
-        Initialize a API client session.
-
-        :param APIConfig config: The API configuration.  If set to ``None``, it will
-                                 use the global configuration which is read from the
-                                 environment variables.
-        '''
         super().__init__(config=config)
         self._worker_thread = _SyncWorkerThread()
         self._worker_thread.start()
@@ -198,18 +211,13 @@ class AsyncSession(BaseSession):
     '''
     An API client session that makes API requests asynchronously using coroutines.
     You may call all function proxy methods like a coroutine.
+    It provides an async context manager interface to ensure closing of the session
+    upon errors and scope exits.
     '''
 
     __slots__ = BaseSession.__slots__ + ()
 
     def __init__(self, *, config: APIConfig = None):
-        '''
-        Initialize a API client session.
-
-        :param APIConfig config: The API configuration.  If set to ``None``, it will
-                                 use the global configuration which is read from the
-                                 environment variables.
-        '''
         super().__init__(config=config)
 
         self.aiohttp_session = aiohttp.ClientSession()

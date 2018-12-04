@@ -21,17 +21,18 @@ __all__ = [
 ]
 
 
-'''
-The type alias for the set of allowed types for request content.
-'''
 RequestContent = Union[
     bytes, bytearray, str,
     aiohttp.StreamReader,
     io.IOBase,
     None,
 ]
+'''
+The type alias for the set of allowed types for request content.
+'''
 
 
+AttachedFile = namedtuple('AttachedFile', 'filename stream content_type')
 '''
 A struct that represents an attached file to the API request.
 
@@ -44,7 +45,6 @@ A struct that represents an attached file to the API request.
 :param str content_type: The content type for the stream.  For arbitrary
                          binary data, use "application/octet-stream".
 '''
-AttachedFile = namedtuple('AttachedFile', 'filename stream content_type')
 
 
 class FetchContextManager:

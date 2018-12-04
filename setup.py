@@ -39,6 +39,7 @@ dev_requires = [
 ] + build_requires + test_requires
 docs_requires = [
     'sphinx>=1.8',
+    'sphinxcontrib-asyncio>=0.2.0',
 ]
 
 

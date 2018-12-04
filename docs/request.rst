@@ -1,18 +1,20 @@
-Low-level Request API
-=====================
+Request API
+===========
 
 .. automodule:: ai.backend.client.request
 
 .. currentmodule:: ai.backend.client.request
 
-.. autoclass:: ai.backend.client.request.Request
+.. autoclass:: Request
    :members:
    :undoc-members:
 
-.. autoclass:: ai.backend.client.request.Response
+.. autoclass:: Response
    :members:
    :undoc-members:
 
-.. autoclass:: ai.backend.client.request.FetchContextManager
+.. autoclass:: FetchContextManager
    :members:
    :undoc-members:
+
+.. autoclass:: AttachedFile

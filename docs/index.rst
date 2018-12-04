@@ -8,16 +8,27 @@ Backend.AI Client SDK for Python
 
 .. toctree::
    :maxdepth: 2
-   :caption: Programming APIs:
+   :caption: Getting Started:
 
    examples
-   config
    session
+   config
+
+.. toctree::
+   :maxdepth: 2
+   :caption: High-level Function Reference:
+
+   base
    agent
    kernel
    keypair
    vfolder
    admin
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Low-level SDK Reference:
+
    request
    exceptions
 
@@ -25,7 +36,7 @@ Backend.AI Client SDK for Python
    :maxdepth: 2
    :caption: Command-line Interface:
 
-   cli
+   cli.examples
 
 
 Indices and tables

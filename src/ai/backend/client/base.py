@@ -1,3 +1,12 @@
+'''
+This module defines a few utilities that ease complexities to support
+both synchronous and asynchronous API functions, using some tricks
+with Python metaclasses.
+
+Unless your are contributing to the client SDK, probably you won't
+have to use this module directly.
+'''
+
 import functools
 
 __all__ = (
@@ -36,7 +45,8 @@ def api_function(meth):
 class APIFunctionMeta(type):
     '''
     Converts all methods marked with :func:`api_function` into
-    session-aware methods.
+    session-aware methods that are either plain Python functions
+    or coroutines.
     '''
 
     def __init__(cls, name, bases, attrs, **kwargs):
@@ -52,4 +62,8 @@ class APIFunctionMeta(type):
 
 
 class BaseFunction(metaclass=APIFunctionMeta):
+    '''
+    The class used to build API functions proxies bound to specific session
+    instances.
+    '''
     session = None

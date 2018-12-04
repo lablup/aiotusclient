@@ -1,5 +1,5 @@
-Admin APIs
-==========
+Admin Functions
+===============
 
 .. automodule:: ai.backend.client.admin
 

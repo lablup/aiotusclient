@@ -1,21 +1,61 @@
+'''
+The configuration for Backend.AI API includes the endpoint URL prefix, API
+keypairs (access and secret keys), and a few others.
+
+There are two ways to set the configuration:
+
+1. Setting environment variables before running your program that uses this SDK.
+2. Manually creating :class:`APIConfig` instance and creating sessions with it.
+
+The list of supported environment variables are:
+
+* ``BACKEND_ENDPOINT``
+* ``BACKEND_ACCESS_KEY``
+* ``BACKEND_SECRET_KEY``
+* ``BACKEND_VFOLDER_MOUNTS``
+
+Other configurations are set to defaults.
+
+Note that when you use our client-side Jupyter integration,
+``BACKEND_VFOLDER_MOUNTS`` is the only way to attach your virtual folders to the
+notebook kernels.
+'''
+
 import os
 from yarl import URL
-from typing import Iterable, Tuple, Union
+from typing import Any, Callable, Iterable, Tuple, Union
 
 __all__ = [
+    'get_config',
+    'set_config',
     'APIConfig',
 ]
 
 _config = None
 
 
-def get_env(name, default=None, clean=lambda v: v):
-    v = os.environ.get('BACKEND_' + name)
+def get_env(key: str, default: Any = None, clean: Callable = lambda v: v):
+    '''
+    Retrieves a configuration value from the environment variables.
+    The given *key* is uppercased and prefixed by ``"BACKEND_"`` and then
+    ``"SORNA_"`` if the former does not exist.
+
+    :param key: The key name.
+    :param default: The default value returned when there is no corresponding
+        environment variable.
+    :param clean: A single-argument function that is applied to the result of lookup
+        (in both successes and the default value for failures).
+        The default is returning the value as-is.
+
+    :returns: The value processed by the *clean* function.
+    '''
+    key = key.upper()
+    v = os.environ.get('BACKEND_' + key)
     if v is None:
-        v = os.environ.get('SORNA_' + name)
+        v = os.environ.get('SORNA_' + key)
     if v is None:
         if default is None:
-            raise KeyError(name)
+            raise KeyError(key)
         v = default
     return clean(v)
 
@@ -36,6 +76,24 @@ def _clean_tokens(v):
 
 
 class APIConfig:
+    '''
+    Represents a set of API client configurations.
+    The access key and secret key are mandatory -- they must be set in either
+    environment variables or as the explicit arguments.
+
+    :param endpoint: The URL prefix to make API requests via HTTP/HTTPS.
+    :param version: The API protocol version.
+    :param user_agent: A custom user-agent string which is sent to the API
+        server as a ``User-Agent`` HTTP header.
+    :param access_key: The API access key.
+    :param secret_key: The API secret key.
+    :param hash_type: The hash type to generate per-request authentication
+        signatures.
+    :param vfolder_mounts: A list of vfolder names (that must belong to the given
+        access key) to be automatically mounted upon any
+        :func:`Kernel.get_or_create()
+        <ai.backend.client.kernel.Kernel.get_or_create>` calls.
+    '''
 
     DEFAULTS = {
         'endpoint': 'https://api.backend.ai',
@@ -43,6 +101,9 @@ class APIConfig:
         'hash_type': 'sha256',
         'vfolder_mounts': [],
     }
+    '''
+    The default values except the access and secret keys.
+    '''
 
     def __init__(self, *,
                  endpoint: Union[URL, str] = None,
@@ -69,34 +130,47 @@ class APIConfig:
 
     @property
     def endpoint(self) -> URL:
+        '''The configured endpoint URL prefix.'''
         return self._endpoint
 
     @property
     def user_agent(self) -> str:
+        '''The configured user agent string.'''
         return self._user_agent
 
     @property
     def access_key(self) -> str:
+        '''The configured API access key.'''
         return self._access_key
 
     @property
     def secret_key(self) -> str:
+        '''The configured API secret key.'''
         return self._secret_key
 
     @property
     def version(self) -> str:
+        '''The configured API protocol version.'''
         return self._version
 
     @property
     def hash_type(self) -> str:
+        '''The configured hash algorithm for API authentication signatures.'''
         return self._hash_type
 
     @property
     def vfolder_mounts(self) -> Tuple[str, ...]:
+        '''The configured auto-mounted vfolder list.'''
         return self._vfolder_mounts
 
 
 def get_config():
+    '''
+    Returns the configuration for the current process.
+    If there is no explicitly set :class:`APIConfig` instance,
+    it will generate a new one from the current environment variables
+    and defaults.
+    '''
     global _config
     if _config is None:
         _config = APIConfig()
@@ -104,5 +178,8 @@ def get_config():
 
 
 def set_config(conf: APIConfig):
+    '''
+    Sets the configuration used throughout the current process.
+    '''
     global _config
     _config = conf
