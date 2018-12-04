@@ -118,7 +118,7 @@ def run(args):
                 resources=resources)
         except Exception as e:
             print_error(e)
-            return
+            sys.exit(1)
         if kernel.created:
             vprint_done('Session {0} is ready.'.format(kernel.kernel_id))
         else:
@@ -207,7 +207,7 @@ def terminate(args):
             try:
                 kernel = session.Kernel(sess)
                 ret = kernel.destroy()
-            except Exception  as e:
+            except Exception as e:
                 print_error(e)
                 has_failure = True
             if has_failure:

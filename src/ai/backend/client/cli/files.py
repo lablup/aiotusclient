@@ -1,12 +1,12 @@
 from datetime import datetime
 import json
 from pathlib import Path
+import sys
 
 from tabulate import tabulate
 
 from . import register_command
-from .pretty import print_wait, print_done, print_fail
-from ..exceptions import BackendError
+from .pretty import print_wait, print_done, print_error, print_fail
 from ..session import Session
 
 
@@ -21,8 +21,9 @@ def upload(args):
             kernel = session.Kernel(args.sess_id_or_alias)
             kernel.upload(args.files, show_progress=True)
             print_done('Uploaded.')
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
 
 
 upload.add_argument('sess_id_or_alias', metavar='NAME',
@@ -43,8 +44,9 @@ def download(args):
             kernel = session.Kernel(args.sess_id_or_alias)
             kernel.download(args.files, show_progress=True)
             print_done('Downloaded.')
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
 
 
 download.add_argument('sess_id_or_alias', metavar='NAME',
@@ -67,7 +69,7 @@ def ls(args):
 
             if 'errors' in result and result['errors']:
                 print_fail(result['errors'])
-                return
+                sys.exit(1)
 
             files = json.loads(result['files'])
             table = []
@@ -80,8 +82,9 @@ def ls(args):
             print_done('Retrived.')
             print('Path in container:', result['abspath'], end='')
             print(tabulate(table, headers=headers))
-        except BackendError as e:
-            print_fail(str(e))
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
 
 
 ls.add_argument('sess_id_or_alias', metavar='SESSID',
