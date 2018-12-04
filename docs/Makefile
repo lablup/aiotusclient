@@ -20,5 +20,6 @@ help:
 
 release: Makefile
 	# pass env-vars
+	BRANCH=$(shell git symbolic-ref --short -q HEAD)
 	@DOC_BUILD_MODE=release \
 	$(SPHINXBUILD) -M html "$(SOURCEDIR)" "../../client-py.ghpages/$(BRANCH)" $(SPHINXOPTS) $(O)
