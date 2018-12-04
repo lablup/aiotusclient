@@ -1,26 +1,3 @@
-'''
-The configuration for Backend.AI API includes the endpoint URL prefix, API
-keypairs (access and secret keys), and a few others.
-
-There are two ways to set the configuration:
-
-1. Setting environment variables before running your program that uses this SDK.
-2. Manually creating :class:`APIConfig` instance and creating sessions with it.
-
-The list of supported environment variables are:
-
-* ``BACKEND_ENDPOINT``
-* ``BACKEND_ACCESS_KEY``
-* ``BACKEND_SECRET_KEY``
-* ``BACKEND_VFOLDER_MOUNTS``
-
-Other configurations are set to defaults.
-
-Note that when you use our client-side Jupyter integration,
-``BACKEND_VFOLDER_MOUNTS`` is the only way to attach your virtual folders to the
-notebook kernels.
-'''
-
 import os
 from yarl import URL
 from typing import Any, Callable, Iterable, Tuple, Union
@@ -34,7 +11,9 @@ __all__ = [
 _config = None
 
 
-def get_env(key: str, default: Any = None, clean: Callable = lambda v: v):
+def get_env(key: str,
+            default: Any = None,
+            clean: Callable[[str], Any] = lambda v: v):
     '''
     Retrieves a configuration value from the environment variables.
     The given *key* is uppercased and prefixed by ``"BACKEND_"`` and then

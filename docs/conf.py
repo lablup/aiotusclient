@@ -50,6 +50,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'sphinxcontrib_trio',
+    'sphinx_autodoc_typehints',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -202,4 +203,21 @@ epub_exclude_files = ['search.html']
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {
+    'python': ('http://docs.python.org/3', None),
+    'multidict':
+        ('https://multidict.readthedocs.io/en/stable/', None),
+    'yarl':
+        ('https://yarl.readthedocs.io/en/stable/', None),
+    'aiohttp':
+        ('https://aiohttp.readthedocs.io/en/stable/', None),
+}
+
+autodoc_default_options = {
+    'no-members': None,
+    'no-undoc-members': None,
+    'inherited-members': None,
+    'ignore-module-all': None,
+    'member-order': 'bysource',
+}
+autodoc_member_order = 'bysource'

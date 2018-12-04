@@ -20,16 +20,16 @@ __all__ = (
 
 
 class Kernel:
-
     '''
     Provides various interactions with compute sessions in Backend.AI.
 
     The term 'kernel' is now deprecated and we prefer 'compute sessions'.
-    However, for historical reasons, we keep the backward compatibility
-    with the naming of this API function class.
+    However, for historical reasons and to avoid confusion with client sessions, we
+    keep the backward compatibility with the naming of this API function class.
     '''
 
     session = None
+    '''The client session instance that this function class is bound to.'''
 
     @api_function
     @classmethod
@@ -41,6 +41,11 @@ class Kernel:
                             exec_timeout: int = 0) -> str:
         '''
         Get or create a compute session.
+
+        :returns: The unique identifier of the created compute session.
+            You may construct a new :class:`Kernel` instance from it
+            for further interaction, but keep in mind that you must
+            use the ``Kernel`` class from the same session.
         '''
         if client_token:
             assert 4 <= len(client_token) <= 64, \
@@ -75,6 +80,9 @@ class Kernel:
 
     @api_function
     async def destroy(self):
+        '''
+        Destroys the compute session.
+        '''
         rqst = Request(self.session,
                        'DELETE', '/kernel/{}'.format(self.kernel_id))
         async with rqst.fetch() as resp:
@@ -83,6 +91,11 @@ class Kernel:
 
     @api_function
     async def restart(self):
+        '''
+        Restarts the compute session.
+        The server force-destroys the current running container(s), but keeps their
+        temporary scratch directories intact.
+        '''
         rqst = Request(self.session,
                        'PATCH', '/kernel/{}'.format(self.kernel_id))
         async with rqst.fetch():
@@ -90,13 +103,32 @@ class Kernel:
 
     @api_function
     async def interrupt(self):
+        '''
+        Tries to interrupt the current ongoing code execution.
+        This may fail without any explicit errors depending on the code being
+        executed.
+        '''
         rqst = Request(self.session,
                        'POST', '/kernel/{}/interrupt'.format(self.kernel_id))
         async with rqst.fetch():
             pass
 
     @api_function
-    async def complete(self, code: str, opts: dict = None):
+    async def complete(self, code: str, opts: dict = None) -> Iterable[str]:
+        '''
+        Get the auto-completion candidates from the given code string,
+        as if a user has pressed the tab key just after the code in
+        IDEs.
+
+        Depending on the language of the compute session, this feature
+        may not be supported.  Unsupported sessions returns an empty list.
+
+        :param code: An (incomplete) code text.
+        :param opts: Additional information about the current cursor position,
+            such as row, col, line and the remainder text.
+
+        :returns: An ordered list of strings.
+        '''
         opts = {} if opts is None else opts
         rqst = Request(self.session,
             'POST', '/kernel/{}/complete'.format(self.kernel_id))
@@ -114,6 +146,9 @@ class Kernel:
 
     @api_function
     async def get_info(self):
+        '''
+        Retrieves a brief information about the compute session.
+        '''
         rqst = Request(self.session,
                        'GET', '/kernel/{}'.format(self.kernel_id))
         async with rqst.fetch() as resp:
@@ -121,6 +156,9 @@ class Kernel:
 
     @api_function
     async def get_logs(self):
+        '''
+        Retrieves the console log of the compute session container.
+        '''
         rqst = Request(self.session,
                        'GET', '/kernel/{}/logs'.format(self.kernel_id))
         async with rqst.fetch() as resp:
@@ -131,6 +169,17 @@ class Kernel:
                       code: str = None,
                       mode: str = 'query',
                       opts: dict = None):
+        '''
+        Executes a code snippet directly in the compute session or sends a set of
+        build/clean/execute commands to the compute session.
+
+        :param run_id:
+        :param code:
+        :param mode:
+        :param opts:
+
+        :returns: A dictionary that describes the execution result.
+        '''
         opts = opts if opts is not None else {}
         if mode in {'query', 'continue', 'input'}:
             assert code is not None, \
@@ -176,6 +225,19 @@ class Kernel:
     async def upload(self, files: Sequence[Union[str, Path]],
                      basedir: Union[str, Path] = None,
                      show_progress: bool = False):
+        '''
+        Uploads the given list of files to the compute session.
+        You may refer them in the batch-mode execution or from the code
+        executed in the server afterwards.
+
+        :param files: The list of file paths in the client-side.
+            If the paths include directories, the location of them in the compute
+            session is calculated from the relative path to *basedir* and all
+            intermediate parent directories are automatically created if not exists.
+        :param basedir: The directory prefix where the files reside.
+            The default value is the current working directory.
+        :param show_progress: Displays a progress bar during uploads.
+        '''
         base_path = (Path.cwd() if basedir is None
                      else Path(basedir).resolve())
         files = [Path(file).resolve() for file in files]
@@ -211,6 +273,15 @@ class Kernel:
     async def download(self, files: Sequence[Union[str, Path]],
                        dest: Union[str, Path] = '.',
                        show_progress: bool = False):
+        '''
+        Downloads the given list of files from the compute session.
+
+        :param files: The list of file paths in the compute session.
+            If they are relative paths, the path is calculated from
+            ``/home/work`` in the compute session container.
+        :param dest: The destination directory in the client-side.
+        :param show_progress: Displays a progress bar during downloads.
+        '''
         rqst = Request(self.session,
                        'GET', '/kernel/{}/download'.format(self.kernel_id))
         rqst.set_json({
@@ -253,6 +324,12 @@ class Kernel:
 
     @api_function
     async def list_files(self, path: Union[str, Path] = '.'):
+        '''
+        Gets the list of files in the given path inside the compute session
+        container.
+
+        :param path: The directory path in the compute session.
+        '''
         rqst = Request(self.session,
             'GET', '/kernel/{}/files'.format(self.kernel_id), {
                 'path': path,
@@ -262,6 +339,12 @@ class Kernel:
 
     # only supported in AsyncKernel
     async def stream_pty(self):
+        '''
+        Opens a pseudo-terminal of the kernel (if supported) streamed via
+        websockets.
+
+        :returns: a :class:`StreamPty` object.
+        '''
         request = Request(self.session,
                           'GET', '/stream/kernel/{}/pty'.format(self.kernel_id))
         try:
@@ -274,9 +357,7 @@ class Kernel:
 class StreamPty:
 
     '''
-    A very thin wrapper of aiohttp.WebSocketResponse object.
-    It keeps the reference to the mother aiohttp.ClientSession object while the
-    connection is alive.
+    A very thin wrapper of :class:`aiohttp.ClientWebSocketResponse` object.
     '''
 
     def __init__(self, kernel_id, ws):
