@@ -6,6 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
+BRANCH        = $(shell git symbolic-ref --short -q HEAD)
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -20,6 +21,5 @@ help:
 
 release: Makefile
 	# pass env-vars
-	BRANCH=$(shell git symbolic-ref --short -q HEAD)
 	@DOC_BUILD_MODE=release \
 	$(SPHINXBUILD) -M html "$(SOURCEDIR)" "../../client-py.ghpages/$(BRANCH)" $(SPHINXOPTS) $(O)
