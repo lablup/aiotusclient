@@ -195,10 +195,22 @@ class Kernel:
         Executes a code snippet directly in the compute session or sends a set of
         build/clean/execute commands to the compute session.
 
-        :param run_id:
-        :param code:
-        :param mode:
-        :param opts:
+        For more details about using this API, please refer :doc:`the official API
+        documentation <user-api/intro>`.
+
+        :param run_id: A unique identifier for a particular run loop.  In the
+            first call, it may be ``None`` so that the server auto-assigns one.
+            Subsequent calls must use the returned ``runId`` value to request
+            continuation or to send user inputs.
+        :param code: A code snippet as string.  In the continuation requests, it
+            must be an empty string.  When sending user inputs, this is where the
+            user input string is stored.
+        :param mode: A constant string which is one of ``"query"``, ``"batch"``,
+            ``"continue"``, and ``"user-input"``.
+        :param opts: A dict for specifying additional options. Mainly used in the
+            batch mode to specify build/clean/execution commands.
+            See :ref:`the API object reference <batch-execution-query-object>`
+            for details.
 
         :returns: A dictionary that describes the execution result.
         '''

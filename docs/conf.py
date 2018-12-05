@@ -211,6 +211,8 @@ intersphinx_mapping = {
         ('https://yarl.readthedocs.io/en/stable/', None),
     'aiohttp':
         ('https://aiohttp.readthedocs.io/en/stable/', None),
+    'backendai':
+        ('http://docs.backend.ai/en/latest/', None),
 }
 
 autodoc_default_options = {
