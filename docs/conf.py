@@ -14,6 +14,7 @@
 #
 import os
 import subprocess
+from pathlib import Path
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
@@ -23,9 +24,6 @@ if on_rtd:
     subprocess.run('pip install -U "pip>=18.0" "setuptools>=40.1"', shell=True)
     subprocess.run('pip install -e "..[docs]"', shell=True)
 
-from pprint import pprint
-pprint(os.environ)
-
 
 # -- Project information -----------------------------------------------------
 
@@ -33,16 +31,20 @@ project = 'Backend.AI Client SDK for Python'
 copyright = '2018, Lablup Inc.'
 author = 'Lablup Inc.'
 
-# The short X.Y version
-version = subprocess.check_output(
-    'git symbolic-ref --short -q HEAD',
-    shell=True,
-).decode('utf-8').strip()
-# The full version, including alpha/beta/rc tags
-release = subprocess.check_output(
-    'git describe --abbrev=0 --tags',
-    shell=True,
-).decode('utf-8').strip()
+if on_rtd:
+    version = Path.cwd().resolve().parent.name
+    release = version
+else:
+    # The short X.Y version
+    version = subprocess.check_output(
+        'git symbolic-ref --short -q HEAD',
+        shell=True,
+    ).decode('utf-8').strip()
+    # The full version, including alpha/beta/rc tags
+    release = subprocess.check_output(
+        'git describe --abbrev=0 --tags',
+        shell=True,
+    ).decode('utf-8').strip()
 
 
 # -- General configuration ---------------------------------------------------
