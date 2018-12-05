@@ -17,8 +17,11 @@ import subprocess
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-subprocess.run('pip install -U "pip>=18.0" "setuptools>=40.1"', shell=True)
-subprocess.run('pip install -e ".[docs]"', shell=True)
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+
+if on_rtd:
+    subprocess.run('pip install -U "pip>=18.0" "setuptools>=40.1"', shell=True)
+    subprocess.run('pip install -e "..[docs]"', shell=True)
 
 
 # -- Project information -----------------------------------------------------
