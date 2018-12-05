@@ -23,6 +23,9 @@ if on_rtd:
     subprocess.run('pip install -U "pip>=18.0" "setuptools>=40.1"', shell=True)
     subprocess.run('pip install -e "..[docs]"', shell=True)
 
+from pprint import pprint
+pprint(os.environ)
+
 
 # -- Project information -----------------------------------------------------
 
