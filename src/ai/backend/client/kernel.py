@@ -212,7 +212,7 @@ class Kernel:
             See :ref:`the API object reference <batch-execution-query-object>`
             for details.
 
-        :returns: A dictionary that describes the execution result.
+        :returns: :ref:`An execution result object <execution-result-object>`
         '''
         opts = opts if opts is not None else {}
         if mode in {'query', 'continue', 'input'}:
