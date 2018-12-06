@@ -14,7 +14,7 @@ class WSProxy:
 
     def __init__(self, session: AsyncSession, kernel, reader, writer):
         self.session = session
-        self.path = f"/wsproxy/{kernel.kernel_id}/stream"
+        self.path = f"/stream/kernel/{kernel.kernel_id}/wsproxy"
         self.reader = reader
         self.writer = writer
 
