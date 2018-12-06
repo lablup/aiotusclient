@@ -1,5 +1,5 @@
-CLI Examples
-============
+Examples
+========
 
 .. note::
 
