@@ -199,20 +199,26 @@ def _format_stats(stats):
     return tabulate(formatted)
 
 
-def _get_mem_slots(size, suffix):
-    size = float(size)
-    suffix = suffix.lower()
+def _get_mem_slots(memslot):
+    """Accept MB unit, and convert to GB"""
+    assert 0 < len(memslot) < 3
+    size = float(memslot[0])
+    suffix = memslot[1].lower() if len(memslot) == 2 else None
+    mod_size = None
     if suffix in ('k', 'kb', 'kib'):
-        return size / 2 ** 20
+        mod_size = size / 2 ** 10
     elif suffix in ('m', 'mb', 'mib'):
-        return size / 2 ** 10
+        mod_size = size
     elif suffix in ('g', 'gb', 'gib'):
-        return size
+        mod_size = size * 2 ** 10
     elif suffix in ('t', 'tb', 'tib'):
-        return size * 2 ** 10
+        mod_size = size * 2 ** 20
     elif suffix in ('p', 'pb', 'pib'):
-        return size * 2 ** 20
-    return None
+        mod_size = size * 2 ** 30
+    else:
+        mod_size = size
+    mod_size = mod_size / (2 ** 10) if mod_size else None
+    return mod_size
 
 
 @register_command
@@ -250,8 +256,8 @@ def run(args):
     mem = resources.pop('ram', None) if mem is None else mem
     if mem:
         memlist = re.findall(r'[A-Za-z]+|[\d\.]+', mem)
-        if memlist and len(memlist) == 2:
-            memslot = _get_mem_slots(memlist[0], memlist[1])
+        if memlist:
+            memslot = _get_mem_slots(memlist)
             if memslot:
                 resources['mem'] = memslot
 
