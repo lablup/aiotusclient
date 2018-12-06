@@ -1,0 +1,6 @@
+# We install these in docs/conf.py beacuse RTD does not support customization
+# of pip and setuptools versions officially.
+
+# -e .[docs]
+# setuptools>=40.1.0
+# pip>=18.0

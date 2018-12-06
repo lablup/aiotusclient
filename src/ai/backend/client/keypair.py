@@ -11,6 +11,7 @@ __all__ = (
 class KeyPair:
 
     session = None
+    '''The client session instance that this function class is bound to.'''
 
     @api_function
     @classmethod

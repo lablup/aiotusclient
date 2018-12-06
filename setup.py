@@ -37,6 +37,12 @@ ci_requires = [
 dev_requires = [
     'pytest-sugar>=0.9.1',
 ] + build_requires + test_requires
+docs_requires = [
+    'sphinx>=1.7,<1.8',
+    'sphinx_rtd_theme>=0.4.2',
+    'sphinxcontrib-trio>=1.0.1',
+    'sphinx-autodoc-typehints>=1.5.2',
+]
 
 
 def read_src_version():
@@ -84,6 +90,7 @@ setup(
         'dev': dev_requires,
         'test': test_requires,
         'ci': ci_requires,
+        'docs': docs_requires,
     },
     data_files=[],
     entry_points={

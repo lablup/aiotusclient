@@ -36,7 +36,8 @@ def api_function(meth):
 class APIFunctionMeta(type):
     '''
     Converts all methods marked with :func:`api_function` into
-    session-aware methods.
+    session-aware methods that are either plain Python functions
+    or coroutines.
     '''
     _async = True
 
@@ -53,4 +54,8 @@ class APIFunctionMeta(type):
 
 
 class BaseFunction(metaclass=APIFunctionMeta):
+    '''
+    The class used to build API functions proxies bound to specific session
+    instances.
+    '''
     session = None
