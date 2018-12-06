@@ -13,14 +13,25 @@ works as plain Python functions or returns awaitables.
 
 .. autoclass:: Request
    :members:
-   :undoc-members:
+   :exclude-members: fetch, connect_websocket
+
+   .. automethod:: fetch
+      :with:
+      :async-with: Response
+
+   .. automethod:: connect_websocket
+      :async-with: WebSocketResponse or its derivatives
 
 .. autoclass:: Response
    :members:
-   :undoc-members:
+
+.. autoclass:: WebSocketResponse
+   :members:
 
 .. autoclass:: FetchContextManager
    :members:
-   :undoc-members:
+
+.. autoclass:: WebSocketContextManager
+   :members:
 
 .. autoclass:: AttachedFile

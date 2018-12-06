@@ -185,12 +185,32 @@ class Request:
 
     # TODO: attach rate-limit information
 
-    def fetch(self, **kwargs):
+    def fetch(self, **kwargs) -> 'FetchContextManager':
         '''
         Sends the request to the server and reads the response.
 
         You may use this method either with plain synchronous Session or
-        AsyncSession.
+        AsyncSession.  Both the followings patterns are valid:
+
+        .. code:: python
+
+          from ai.backend.client.request import Request
+          from ai.backend.client.session import Session
+
+          with Session() as sess:
+            rqst = Request(sess, 'GET', ...)
+            with rqst.fetch() as resp:
+              print(resp.text())
+
+        .. code:: python
+
+          from ai.backend.client.request import Request
+          from ai.backend.client.session import AsyncSession
+
+          async with AsyncSession() as sess:
+            rqst = Request(sess, 'GET', ...)
+            async with rqst.fetch() as resp:
+              print(await resp.text())
         '''
         assert self.method in self._allowed_methods, \
                'Disallowed HTTP method: {}'.format(self.method)
@@ -206,9 +226,14 @@ class Request:
             headers=self.headers)
         return FetchContextManager(self.session, rqst_ctx, **kwargs)
 
-    def connect_websocket(self, **kwargs):
+    def connect_websocket(self, **kwargs) -> 'WebSocketContextManager':
         '''
         Creates a WebSocket connection.
+
+        .. warning::
+
+          This method only works with
+          :class:`~ai.backend.client.session.AsyncSession`.
         '''
         assert isinstance(self.session, AsyncSession), \
                'Cannot use websockets with sessions in the synchronous mode'
@@ -422,7 +447,7 @@ class WebSocketResponse:
 
 class WebSocketContextManager:
     '''
-    A high-level wrapper of :class:`aiohttp._WSRequestContextManager`.
+    The context manager returned by :func:`Request.connect_websocket`.
     '''
 
     __slots__ = (
