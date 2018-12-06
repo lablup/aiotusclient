@@ -17,9 +17,12 @@ def agent(args):
         ('Status', 'status'),
         ('Region', 'region'),
         ('First Contact', 'first_contact'),
-        ('Mem.Slots', 'mem_slots'),
+        ('Mem Slots', 'mem_slots'),
+        ('Used Mem Slots', 'used_mem_slots'),
         ('CPU Slots', 'cpu_slots'),
+        ('Used CPU Slots', 'used_cpu_slots'),
         ('GPU Slots', 'gpu_slots'),
+        ('Used GPU Slots', 'used_gpu_slots'),
     ]
     with Session() as session:
         try:
