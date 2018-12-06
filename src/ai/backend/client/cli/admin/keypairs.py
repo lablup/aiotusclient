@@ -43,6 +43,7 @@ def keypairs(args):
     List and manage keypairs.
     To show all keypairs or other user's, your access key must have the admin
     privilege.
+    (admin privilege required)
     '''
     fields = [
         ('User ID', 'user_id'),

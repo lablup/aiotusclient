@@ -11,6 +11,7 @@ from . import admin
 def agents(args):
     '''
     List and manage agents.
+    (admin privilege required)
     '''
     fields = [
         ('ID', 'id'),
