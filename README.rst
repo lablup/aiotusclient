@@ -9,6 +9,10 @@ Backend.AI Client
    :target: https://pypi.org/project/backend.ai-client/
    :alt: Python Versions
 
+.. image:: https://readthedocs.org/projects/backendai-client-sdk-for-python/badge/?version=latest
+   :target: https://docs.client-py.backend.ai/en/latest/?badge=latest
+   :alt: SDK Documentation
+
 .. image:: https://travis-ci.org/lablup/backend.ai-client-py.svg?branch=master
    :target: https://travis-ci.org/lablup/backend.ai-client-py
    :alt: Build Status (Linux)
@@ -97,7 +101,7 @@ Python module path like:
 .. code-block:: console
 
    $ lcc main.c mylib.c mylib.h
-   
+
 Since the client version 1.1.5, the sessions are no longer automatically cleaned up.
 To do that, add ``--rm`` option to the ``run`` command, like Docker CLI.
 
