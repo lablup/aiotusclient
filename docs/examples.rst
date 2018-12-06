@@ -37,6 +37,12 @@ This is the minimal code to execute a code snippet with this client SDK.
               code = ''
       kern.destroy()
 
+You need to take care of ``client_token`` because it determines whether to
+reuse kernel sessions or not.
+Backend.AI cloud has a timeout so that it terminates long-idle kernel sessions,
+but within the timeout, any kernel creation requests with the same ``client_token``
+let Backend.AI cloud to reuse the kernel.
+
 
 Batch mode
 ~~~~~~~~~~
@@ -124,3 +130,59 @@ Currently the following behaviors are well-defined:
 * For ``application/x-sorna-drawing``, the content is a JSON string that represents a
   set of vector drawing commands to be replayed the client-side (e.g., Javascript on
   browsers)
+
+
+Asynchronous-mode Execution
+---------------------------
+
+.. code-block:: python
+
+  import asyncio
+  import json
+  import aiohttp
+  from ai.backend.client import AsyncSession
+
+  async def main():
+      async with AsyncSession() as session:
+          kern = await session.Kernel.get_or_create('lua5', client_token='mysession')
+          code = 'print("hello world")'
+          mode = 'query'
+          async with kern.stream_execute(code, mode=mode) as stream:
+              # no need for explicit run_id since WebSocket connection represents it!
+              async for result in stream:
+                  if result.type != aiohttp.WSMsgType.TEXT:
+                      continue
+                  result = json.loads(result.data)
+                  for rec in result.get('console', []):
+                      if rec[0] == 'stdout':
+                          print(rec[1], end='', file=sys.stdout)
+                      elif rec[0] == 'stderr':
+                          print(rec[1], end='', file=sys.stderr)
+                      else:
+                          handle_media(rec)
+                  sys.stdout.flush()
+                  if result['status'] == 'finished':
+                      break
+                  elif result['status'] == 'waiting-input':
+                      mode = 'input'
+                      if result['options'].get('is_password', False):
+                          code = getpass.getpass()
+                      else:
+                          code = input()
+                      await stream.send_text(code)
+                  else:
+                      mode = 'continued'
+                      code = ''
+          await kern.destroy()
+
+  loop = asyncio.get_event_loop()
+  try:
+      loop.run_until_complete(main())
+  finally:
+      loop.close()
+
+The async version has all sync-version interfaces as coroutines but comes with additional
+features such as ``stream_execute()`` which streams the execution results via websockets and
+``stream_pty()`` for interactive terminal streaming.
+
+.. versionadded:: 1.5
