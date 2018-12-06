@@ -21,8 +21,11 @@ from pathlib import Path
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
 if on_rtd:
-    subprocess.run('pip install -U "pip>=18.0" "setuptools>=40.1"', shell=True)
-    subprocess.run('pip install -e "..[docs]"', shell=True)
+    try:
+        from ai.backend.client import request  # noqa
+    except ImportError:
+        subprocess.run('pip install -U "pip>=18.0" "setuptools>=40.1"', shell=True)
+        subprocess.run('pip install -e "..[docs]"', shell=True)
 
 
 # -- Project information -----------------------------------------------------
