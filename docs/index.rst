@@ -37,7 +37,7 @@ Then install the client library from PyPI.
 
 .. code-block:: console
 
-   (venv-backend-ai) $ pip install -U pip wheel setuptools
+   (venv-backend-ai) $ pip install -U pip setuptools
    (venv-backend-ai) $ pip install backend.ai-client
 
 Set your API keypair as environment variables:
@@ -47,7 +47,17 @@ Set your API keypair as environment variables:
    (venv-backend-ai) $ export BACKEND_ACCESS_KEY=AKIA...
    (venv-backend-ai) $ export BACKEND_SECRET_KEY=...
 
-Check out more details at :doc:`gsg/config` and :doc:`gsg/examples`.
+And then try the first commands:
+
+.. code-block:: console
+
+   (venv-backend-ai) $ backend.ai --help
+   ...
+   (venv-backend-ai) $ backend.ai ps
+   ...
+
+Check out more details about :doc:`client configuration <gsg/config>`, :doc:`command-line
+examples <cli/examples>`, and :doc:`code examples <gsg/examples>`.
 
 
 .. toctree::
