@@ -223,7 +223,7 @@ intersphinx_mapping = {
     'aiohttp':
         ('https://aiohttp.readthedocs.io/en/stable/', None),
     'backendai':
-        ('http://docs.backend.ai/en/latest/', None),
+        ('https://docs.backend.ai/en/latest/', None),
 }
 
 autodoc_default_options = {
