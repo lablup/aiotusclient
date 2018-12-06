@@ -108,6 +108,8 @@ class KeyPair:
         Returns the keypair's information such as resource limits.
 
         :param fields: Additional per-agent query fields to fetch.
+
+        .. versionadded:: 18.12
         '''
         if fields is None:
             fields = (

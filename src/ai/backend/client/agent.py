@@ -71,6 +71,8 @@ class Agent:
     async def info(self, fields: Iterable[str] = None) -> dict:
         '''
         Returns the agent's information including resource capacity and usage.
+
+        .. versionadded:: 18.12
         '''
         if fields is None:
             fields = (
