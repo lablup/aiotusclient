@@ -8,6 +8,37 @@ from . import admin
 
 
 @admin.register_command
+def agent(args):
+    '''
+    Show the information about the given agent.
+    '''
+    fields = [
+        ('ID', 'id'),
+        ('Status', 'status'),
+        ('Region', 'region'),
+        ('First Contact', 'first_contact'),
+        ('Mem.Slots', 'mem_slots'),
+        ('CPU Slots', 'cpu_slots'),
+        ('GPU Slots', 'gpu_slots'),
+    ]
+    with Session() as session:
+        try:
+            agent = session.Agent(args.id)
+            info = agent.info(fields=(item[1] for item in fields))
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        rows = []
+        for name, key in fields:
+            rows.append((name, info[key]))
+        print(tabulate(rows, headers=('Field', 'Value')))
+
+
+agent.add_argument('-i', '--id', type=str, required=True,
+                   help='The agent ID to inspect.')
+
+
+@admin.register_command
 def agents(args):
     '''
     List and manage agents.
@@ -16,6 +47,7 @@ def agents(args):
     fields = [
         ('ID', 'id'),
         ('Status', 'status'),
+        ('Region', 'region'),
         ('First Contact', 'first_contact'),
         ('Mem Slots', 'mem_slots'),
         ('Used Mem Slots', 'used_mem_slots'),

@@ -1,4 +1,4 @@
-from typing import Iterable, Union
+from typing import Iterable, Sequence, Union
 
 from .base import api_function
 from .request import Request
@@ -21,7 +21,11 @@ class KeyPair:
                      resource_policy: str = None,
                      rate_limit: int = None,
                      concurrency_limit: int = None,
-                     fields: Iterable[str] = None):
+                     fields: Iterable[str] = None) -> dict:
+        '''
+        Creates a new keypair with the given options.
+        You need an admin privilege for this operation.
+        '''
         if fields is None:
             fields = ('access_key', 'secret_key')
         uid_type = 'Int!' if isinstance(user_id, int) else 'String!'
@@ -54,7 +58,11 @@ class KeyPair:
     @classmethod
     async def list(cls, user_id: Union[int, str] = None,
                    is_active: bool = None,
-                   fields: Iterable[str] = None):
+                   fields: Iterable[str] = None) -> Sequence[dict]:
+        '''
+        Lists the keypairs.
+        You need an admin privilege for this operation.
+        '''
         if fields is None:
             fields = (
                 'access_key', 'secret_key',
@@ -92,7 +100,12 @@ class KeyPair:
         self.access_key = access_key
 
     @api_function
-    async def info(self, fields: Iterable[str] = None):
+    async def info(self, fields: Iterable[str] = None) -> dict:
+        '''
+        Returns the keypair's information such as resource limits.
+
+        :param fields: Additional per-agent query fields to fetch.
+        '''
         if fields is None:
             fields = (
                 'access_key', 'secret_key',
@@ -114,8 +127,18 @@ class KeyPair:
 
     @api_function
     async def activate(self):
+        '''
+        Activates this keypair.
+        You need an admin privilege for this operation.
+        '''
         raise NotImplementedError
 
     @api_function
     async def deactivate(self):
+        '''
+        Deactivates this keypair.
+        Deactivated keypairs cannot make any API requests
+        unless activated again by an administrator.
+        You need an admin privilege for this operation.
+        '''
         raise NotImplementedError
