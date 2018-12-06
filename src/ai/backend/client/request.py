@@ -192,7 +192,7 @@ class Request:
         You may use this method either with plain synchronous Session or
         AsyncSession.  Both the followings patterns are valid:
 
-        .. code:: python
+        .. code-block:: python3
 
           from ai.backend.client.request import Request
           from ai.backend.client.session import Session
@@ -202,7 +202,7 @@ class Request:
             with rqst.fetch() as resp:
               print(resp.text())
 
-        .. code:: python
+        .. code-block:: python3
 
           from ai.backend.client.request import Request
           from ai.backend.client.session import AsyncSession

@@ -42,6 +42,7 @@ docs_requires = [
     'sphinx_rtd_theme>=0.4.2',
     'sphinxcontrib-trio>=1.0.1',
     'sphinx-autodoc-typehints>=1.5.2',
+    'pygments>=2.1',
 ]
 
 

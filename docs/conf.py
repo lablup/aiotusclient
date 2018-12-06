@@ -15,8 +15,18 @@
 import os
 import subprocess
 from pathlib import Path
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import re
+
+_init_path = (Path(__file__).parent.parent / 'src' /
+              'ai' / 'backend' / 'client' / '__init__.py')
+_init_text = _init_path.read_text()
+try:
+    _version_info = re.search(
+        r"^__version__ = '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(?P<tag>.*)?'$",  # noqa
+        _init_text, re.M).groupdict()
+except IndexError:
+    raise RuntimeError('Unable to determine version.')
+
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
@@ -34,20 +44,10 @@ project = 'Backend.AI Client SDK for Python'
 copyright = '2018, Lablup Inc.'
 author = 'Lablup Inc.'
 
-if on_rtd:
-    version = Path.cwd().resolve().parent.name
-    release = version
-else:
-    # The short X.Y version
-    version = subprocess.check_output(
-        'git symbolic-ref --short -q HEAD',
-        shell=True,
-    ).decode('utf-8').strip()
-    # The full version, including alpha/beta/rc tags
-    release = subprocess.check_output(
-        'git describe --abbrev=0 --tags',
-        shell=True,
-    ).decode('utf-8').strip()
+# The short X.Y version.
+version = '{major}.{minor}'.format(**_version_info)
+# The full version, including alpha/beta/rc tags.
+release = '{major}.{minor}.{patch}{tag}'.format(**_version_info)
 
 
 # -- General configuration ---------------------------------------------------
@@ -94,6 +94,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
+highlight_language = 'python3'
+
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -101,11 +103,6 @@ pygments_style = None
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
-
-if os.environ.get('DOC_BUILD_MODE', ''):
-    html_baseurl = f'/backend.ai-client-py/{version}/html/'
-else:
-    html_baseurl = ''
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -189,7 +186,7 @@ texinfo_documents = [
      'Backend.AI Client SDK for Python Documentation',
      author,
      'BackendAIClientSDKforPythonDocumentation',
-     'Backend.AI Client SDK fro Python',
+     'Backend.AI Client SDK for Python',
      'Miscellaneous'),
 ]
 

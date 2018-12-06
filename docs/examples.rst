@@ -9,7 +9,7 @@ Query mode
 
 This is the minimal code to execute a code snippet with this client SDK.
 
-.. code:: python
+.. code-block:: python3
 
   import sys
   from ai.backend.client import Session
@@ -50,7 +50,7 @@ Batch mode
 You first need to upload the files after creating the session and construct a
 ``opts`` struct.
 
-.. code:: python
+.. code-block:: python3
 
   import sys
   from ai.backend.client import Session
@@ -91,7 +91,7 @@ Handling user inputs
 Inside the while-loop for ``kern.execute()`` above,
 change the if-block for ``result['status']`` as follows:
 
-.. code:: python
+.. code:: python3
 
   ...
   if result['status'] == 'finished':
@@ -115,7 +115,7 @@ Handling multi-media outputs
 
 The ``handle_media()`` function used above examples would look like:
 
-.. code:: python
+.. code-block:: python3
 
   def handle_media(record):
       media_type = record[0]  # MIME-Type string
@@ -135,7 +135,11 @@ Currently the following behaviors are well-defined:
 Asynchronous-mode Execution
 ---------------------------
 
-.. code-block:: python
+The async version has all sync-version interfaces as coroutines but comes with additional
+features such as ``stream_execute()`` which streams the execution results via websockets and
+``stream_pty()`` for interactive terminal streaming.
+
+.. code-block:: python3
 
   import asyncio
   import json
@@ -180,9 +184,5 @@ Asynchronous-mode Execution
       loop.run_until_complete(main())
   finally:
       loop.close()
-
-The async version has all sync-version interfaces as coroutines but comes with additional
-features such as ``stream_execute()`` which streams the execution results via websockets and
-``stream_pty()`` for interactive terminal streaming.
 
 .. versionadded:: 1.5
