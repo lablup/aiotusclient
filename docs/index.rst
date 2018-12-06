@@ -22,6 +22,7 @@ Backend.AI Client SDK for Python
    agent
    kernel
    keypair
+   manager
    vfolder
 
 .. toctree::
