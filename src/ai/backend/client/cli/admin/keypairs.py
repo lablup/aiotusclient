@@ -11,6 +11,8 @@ from . import admin
 def keypairs(args):
     '''
     List and manage keypairs.
+    To show all keypairs or other user's, your access key must have the admin
+    privilege.
     '''
     fields = [
         ('User ID', 'user_id'),
@@ -26,7 +28,7 @@ def keypairs(args):
     ]
     try:
         args.user_id = int(args.user_id)
-    except ValueError:
+    except (TypeError, ValueError):
         pass  # string-based user ID for Backend.AI v1.4+
     with Session() as session:
         try:
@@ -43,9 +45,9 @@ def keypairs(args):
                        headers=(item[0] for item in fields)))
 
 
-keypairs.add_argument('-u', '--user-id', type=str, default='0',
+keypairs.add_argument('-u', '--user-id', type=str, default=None,
                       help='Show keypairs of this given user. '
-                           '[default: 0]')
+                           '[default: show all]')
 keypairs.add_argument('--is-active', type=bool, default=None,
                       help='Filter keypairs by activation.')
 
