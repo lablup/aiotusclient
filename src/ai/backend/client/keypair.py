@@ -9,6 +9,9 @@ __all__ = (
 
 
 class KeyPair:
+    '''
+    Provides interactions with keypairs.
+    '''
 
     session = None
     '''The client session instance that this function class is bound to.'''
