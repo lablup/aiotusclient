@@ -581,9 +581,9 @@ run.add_argument('-s', '--stats', action='store_true', default=False,
 run.add_argument('--tag', type=str, default=None,
                  help='User-defined tag string to annotate sessions.')
 run.add_argument('-r', '--resources', metavar='KEY=VAL', type=str, action='append',
-                 help='Set computation resources (e.g: -r cpu=2 -r mem=0.2 -r gpu=1)'
+                 help='Set computation resources (e.g: -r cpu=2 -r mem=256 -r gpu=1)'
                  '. 1 slot of cpu/gpu represents 1 core. The unit of mem(ory) '
-                 'is GiB.')
+                 'is MiB.')
 run.add_argument('-q', '--quiet', action='store_true', default=False,
                  help='Hide execution details but show only the kernel outputs.')
 run.add_argument('--legacy', action='store_true', default=False,
