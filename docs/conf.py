@@ -159,7 +159,7 @@ latex_documents = [
     (master_doc,
      'BackendAIClientSDKforPythonDocumentation.tex',
      'Backend.AI Client SDK for Python Documentation',
-     'Joongi Kim', 'manual'),
+     author, 'manual'),
 ]
 
 
