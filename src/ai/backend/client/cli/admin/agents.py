@@ -58,6 +58,8 @@ def agents(args):
         ('Used CPU Slots', 'used_cpu_slots'),
         ('GPU Slots', 'gpu_slots'),
         ('Used GPU Slots', 'used_gpu_slots'),
+        ('CPU %', 'cpu_cur_pct'),
+        ('Mem Usage (MiB)', 'mem_cur_mbytes'),
     ]
     with Session() as session:
         try:
