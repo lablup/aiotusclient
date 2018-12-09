@@ -17,10 +17,12 @@ def agent(args):
         ('Status', 'status'),
         ('Region', 'region'),
         ('First Contact', 'first_contact'),
-        ('Mem Slots', 'mem_slots'),
-        ('Used Mem Slots', 'used_mem_slots'),
-        ('CPU Slots', 'cpu_slots'),
-        ('Used CPU Slots', 'used_cpu_slots'),
+        ('Total CPU Core(s)', 'cpu_slots'),
+        ('Allocated CPU Core(s)', 'used_cpu_slots'),
+        ('CPU Usage (%)', 'cpu_cur_pct'),
+        ('Total Memory (MiB)', 'mem_slots'),
+        ('Allocated Memory (MiB)', 'used_mem_slots'),
+        ('Used Memory (MiB)', 'mem_cur_bytes'),
         ('GPU Slots', 'gpu_slots'),
         ('Used GPU Slots', 'used_gpu_slots'),
     ]
@@ -33,6 +35,8 @@ def agent(args):
             sys.exit(1)
         rows = []
         for name, key in fields:
+            if key == 'mem_cur_bytes':
+                info[key] = round(info[key] / 2 ** 20, 1)
             rows.append((name, info[key]))
         print(tabulate(rows, headers=('Field', 'Value')))
 
@@ -52,14 +56,14 @@ def agents(args):
         ('Status', 'status'),
         ('Region', 'region'),
         ('First Contact', 'first_contact'),
-        ('Mem Slots', 'mem_slots'),
-        ('Used Mem Slots', 'used_mem_slots'),
-        ('CPU Slots', 'cpu_slots'),
-        ('Used CPU Slots', 'used_cpu_slots'),
+        ('Total CPU Core(s)', 'cpu_slots'),
+        ('Allocated CPU Core(s)', 'used_cpu_slots'),
+        ('CPU Usage (%)', 'cpu_cur_pct'),
+        ('Total Memory (MiB)', 'mem_slots'),
+        ('Allocated Memory (MiB)', 'used_mem_slots'),
+        ('Used Memory (MiB)', 'mem_cur_bytes'),
         ('GPU Slots', 'gpu_slots'),
         ('Used GPU Slots', 'used_gpu_slots'),
-        ('CPU %', 'cpu_cur_pct'),
-        ('Mem Usage (MiB)', 'mem_cur_mbytes'),
     ]
     with Session() as session:
         try:
@@ -71,6 +75,8 @@ def agents(args):
         if len(items) == 0:
             print('There are no matching agents.')
             return
+        for item in items:
+            item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
         print(tabulate((item.values() for item in items),
                        headers=(item[0] for item in fields)))
 

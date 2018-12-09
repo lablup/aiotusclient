@@ -19,8 +19,10 @@ def sessions(args):
         ('Created At', 'created_at',),
         ('Terminated At', 'terminated_at'),
         ('Status', 'status'),
-        ('Memory Slot', 'mem_slot'),
-        ('CPU Slot', 'cpu_slot'),
+        ('Total CPU Core(s)', 'cpu_slot'),
+        ('CPU Usage (%)', 'cpu_cur_pct'),
+        ('Total Memory (MiB)', 'mem_slot'),
+        ('Used Memory (MiB)', 'mem_cur_bytes'),
         ('GPU Slot', 'gpu_slot'),
     ]
     if args.access_key is None:
@@ -45,6 +47,8 @@ def sessions(args):
         if len(resp['compute_sessions']) == 0:
             print('There are no compute sessions currently running.')
             return
+        for item in resp['compute_sessions']:
+            item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
         print(tabulate((item.values() for item in resp['compute_sessions']),
                        headers=(item[0] for item in fields)))
 
@@ -74,13 +78,14 @@ def session(args):
         ('Agent', 'agent'),
         ('Status', 'status',),
         ('Status Info', 'status_info',),
-        ('Memory Slot', 'mem_slot'),
-        ('CPU Slot', 'cpu_slot'),
+        ('Total CPU Core(s)', 'cpu_slot'),
+        ('CPU Used', 'cpu_used'),
+        ('CPU Usage (%)', 'cpu_cur_pct'),
+        ('Total Memory (MiB)', 'mem_slot'),
+        ('Used Memory (MiB)', 'mem_cur_bytes'),
+        ('Max Used Memory (MiB)', 'mem_max_bytes'),
         ('GPU Slot', 'gpu_slot'),
         ('Number of Queries', 'num_queries'),
-        ('CPU Used', 'cpu_used'),
-        ('Memory Max Bytes', 'mem_max_bytes'),
-        ('Memory Current Bytes', 'mem_cur_bytes'),
         ('Network RX Bytes', 'net_rx_bytes'),
         ('Network TX Bytes', 'net_tx_bytes'),
         ('IO Read Bytes', 'io_read_bytes'),
@@ -104,6 +109,8 @@ def session(args):
             return
         print('Session detail:\n---------------')
         for i, value in enumerate(resp['compute_session'].values()):
+            if fields[i][1] in ['mem_cur_bytes', 'mem_max_bytes']:
+                value = round(value / 2 ** 20, 1)
             print(fields[i][0] + ': ' + str(value))
 
 
