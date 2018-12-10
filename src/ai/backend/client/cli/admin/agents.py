@@ -17,14 +17,14 @@ def agent(args):
         ('Status', 'status'),
         ('Region', 'region'),
         ('First Contact', 'first_contact'),
-        ('Total CPU Core(s)', 'cpu_slots'),
-        ('Allocated CPU Core(s)', 'used_cpu_slots'),
+        ('Total CPU Cores', 'cpu_slots'),
+        ('Allocated CPU Cores', 'used_cpu_slots'),
         ('CPU Usage (%)', 'cpu_cur_pct'),
         ('Total Memory (MiB)', 'mem_slots'),
         ('Allocated Memory (MiB)', 'used_mem_slots'),
         ('Used Memory (MiB)', 'mem_cur_bytes'),
-        ('GPU Slots', 'gpu_slots'),
-        ('Used GPU Slots', 'used_gpu_slots'),
+        ('Total GPU Cores', 'gpu_slots'),
+        ('Used GPU Cores', 'used_gpu_slots'),
     ]
     with Session() as session:
         try:
@@ -56,14 +56,14 @@ def agents(args):
         ('Status', 'status'),
         ('Region', 'region'),
         ('First Contact', 'first_contact'),
-        ('Total CPU Core(s)', 'cpu_slots'),
-        ('Allocated CPU Core(s)', 'used_cpu_slots'),
+        ('Total CPU Cores', 'cpu_slots'),
+        ('Allocated CPU Cores', 'used_cpu_slots'),
         ('CPU Usage (%)', 'cpu_cur_pct'),
         ('Total Memory (MiB)', 'mem_slots'),
         ('Allocated Memory (MiB)', 'used_mem_slots'),
         ('Used Memory (MiB)', 'mem_cur_bytes'),
-        ('GPU Slots', 'gpu_slots'),
-        ('Used GPU Slots', 'used_gpu_slots'),
+        ('Total GPU Cores', 'gpu_slots'),
+        ('Used GPU Cores', 'used_gpu_slots'),
     ]
     with Session() as session:
         try:
