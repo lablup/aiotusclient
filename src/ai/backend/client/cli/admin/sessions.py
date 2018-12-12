@@ -14,15 +14,18 @@ def sessions(args):
     '''
     fields = [
         ('Session ID', 'sess_id'),
-        ('Lang/runtime', 'lang'),
-        ('Tag', 'tag'),
-        ('Created At', 'created_at',),
-        ('Terminated At', 'terminated_at'),
-        ('Status', 'status'),
-        ('Memory Slot', 'mem_slot'),
-        ('CPU Slot', 'cpu_slot'),
-        ('GPU Slot', 'gpu_slot'),
     ]
+    if not args.id_only:
+        fields.extend([
+            ('Lang/runtime', 'lang'),
+            ('Tag', 'tag'),
+            ('Created At', 'created_at',),
+            ('Terminated At', 'terminated_at'),
+            ('Status', 'status'),
+            ('Memory Slot', 'mem_slot'),
+            ('CPU Slot', 'cpu_slot'),
+            ('GPU Slot', 'gpu_slot'),
+        ])
     if args.access_key is None:
         q = 'query($status:String) {' \
             '  compute_sessions(status:$status) { $fields }' \
@@ -45,8 +48,12 @@ def sessions(args):
         if len(resp['compute_sessions']) == 0:
             print('There are no compute sessions currently running.')
             return
-        print(tabulate((item.values() for item in resp['compute_sessions']),
-                       headers=(item[0] for item in fields)))
+        if args.id_only:
+            for item in resp['compute_sessions']:
+                print(item['sess_id'], end=' ')
+        else:
+            print(tabulate((item.values() for item in resp['compute_sessions']),
+                           headers=(item[0] for item in fields)))
 
 
 sessions.add_argument('--status', type=str, default='RUNNING',
@@ -57,6 +64,8 @@ sessions.add_argument('--status', type=str, default='RUNNING',
 sessions.add_argument('--access-key', type=str, default=None,
                       help='Get sessions for a specific access key '
                            '(only works if you are a super-admin)')
+sessions.add_argument('--id-only', action='store_true', default=False,
+                      help='Display session ids only.')
 
 
 @admin.register_command

@@ -13,4 +13,9 @@ def ps(args):
     inner_args = Namespace()
     inner_args.status = 'RUNNING'
     inner_args.access_key = None
+    inner_args.id_only = args.id_only
     sessions(inner_args)
+
+
+ps.add_argument('--id-only', action='store_true', default=False,
+                help='Display session ids only.')
