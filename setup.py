@@ -12,11 +12,11 @@ install_requires = [
     'attrs>=18.0',       # to avoid pip10 resolver issue
     'namedlist>=1.6',
     'python-dateutil>=2.5',
-    'ConfigArgParse==0.12.0',
     'tabulate>=0.7.7',
     'tqdm~=4.21',
     'humanize>=0.5.1',
     'yarl>=1.1.1',
+    'Click>=7.0',
 ]
 build_requires = [
     'wheel>=0.31.0',

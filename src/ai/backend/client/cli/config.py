@@ -1,10 +1,11 @@
-from . import register_command
 from .. import __version__
 from ..config import get_config
 
+import click
 
-@register_command
-def config(args):
+
+@click.command()
+def config():
     '''
     Shows the current configuration.
     '''

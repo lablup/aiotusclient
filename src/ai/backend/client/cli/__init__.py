@@ -1,108 +1,77 @@
-import argparse
-import functools
-from pathlib import Path
-import sys
-from typing import Callable, Sequence, Union
-
-import configargparse
+import click
 
 from .pretty import print_fail
 
-ArgParserType = Union[argparse.ArgumentParser, configargparse.ArgumentParser]
 
-global_argparser = configargparse.ArgumentParser(
-    prog='backend.ai',
-    description='Backend.AI command line interface',
-    formatter_class=configargparse.ArgumentDefaultsHelpFormatter,
-)
-_subparsers = dict()
+# def main():
 
+#     import ai.backend.client.cli.config # noqa
+#     import ai.backend.client.cli.run    # noqa
+#     import ai.backend.client.cli.proxy  # noqa
+#     import ai.backend.client.cli.admin  # noqa
+#     import ai.backend.client.cli.admin.keypairs  # noqa
+#     import ai.backend.client.cli.admin.sessions  # noqa
+#     import ai.backend.client.cli.admin.agents    # noqa
+#     import ai.backend.client.cli.admin.vfolders  # noqa
+#     import ai.backend.client.cli.manager  # noqa
+#     import ai.backend.client.cli.vfolder # noqa
+#     import ai.backend.client.cli.ps     # noqa
+#     import ai.backend.client.cli.logs   # noqa
+#     import ai.backend.client.cli.files           # noqa
+#     import ai.backend.client.cli.app  # noqa
 
-def register_command(*args, **kwargs):
+#     if len(sys.argv) <= 1:
+#         global_argparser.print_help()
+#         return
 
-    def _register_command(
-        handler: Callable[[argparse.Namespace], None], *,
-        main_parser: ArgParserType = None,
-        aliases: Sequence[str] = None
-    ) -> Callable[[argparse.Namespace], None]:
+#     mode = Path(sys.argv[0]).stem
 
-        if main_parser is None:
-            main_parser = global_argparser
-        if id(main_parser) not in _subparsers:
-            subparsers = main_parser.add_subparsers(title='commands',
-                                                    dest='command')
-            _subparsers[id(main_parser)] = subparsers
-        else:
-            subparsers = _subparsers[id(main_parser)]
+#     if mode == '__main__':
+#         pass
+#     elif mode == 'lcc':
+#         sys.argv.insert(1, 'c')
+#         sys.argv.insert(1, 'run')
+#     elif mode == 'lpython':
+#         sys.argv.insert(1, 'python')
+#         sys.argv.insert(1, 'run')
 
-        @functools.wraps(handler)
-        def wrapped(args):
-            return handler(args)
-
-        doc_summary = handler.__doc__.split('\n\n')[0]
-        inner_parser = subparsers.add_parser(
-            handler.__name__.replace('_', '-'),
-            aliases=[] if aliases is None else aliases,
-            description=handler.__doc__,
-            formatter_class=configargparse.ArgumentDefaultsHelpFormatter,
-            help=doc_summary)
-        inner_parser.set_defaults(function=wrapped)
-        wrapped.register_command = functools.partial(
-            register_command,
-            main_parser=inner_parser)
-        wrapped._parser = inner_parser
-        wrapped.add_argument = inner_parser.add_argument
-        return wrapped
-
-    if (len(args) == 1 and (
-            len(kwargs) == 0 or (len(kwargs) == 1 and 'main_parser' in kwargs)) and
-            callable(args[0])):
-        return _register_command(*args, **kwargs)
-    return lambda handler: _register_command(handler, *args, **kwargs)
+#     args = global_argparser.parse_args()
+#     if hasattr(args, 'function'):
+#         args.function(args)
+#     else:
+#         print_fail('The command is not specified or unrecognized.')
 
 
-@register_command
-def help(args):
-    '''
-    Shows the help.
-    '''
-    global_argparser.print_help()
+@click.group(invoke_without_command=True)
+@click.version_option()
+@click.pass_context
+def main(ctx):
+    if ctx.invoked_subcommand is None:
+        click.echo(main.get_help(ctx))
 
 
-def main():
+def _attach_command():
+    from .admin import admin        # noqa
+    from .config import config      # noqa
+    from .app import app            # noqa
+    from .files import upload, download, ls     # noqa
+    from .logs import logs          # noqa
+    from .manager import manager    # noqa
+    from .proxy import proxy        # noqa
+    from .ps import ps              # noqa
+    from .vfolder import vfolder    # noqa
 
-    import ai.backend.client.cli.config # noqa
-    import ai.backend.client.cli.run    # noqa
-    import ai.backend.client.cli.proxy  # noqa
-    import ai.backend.client.cli.admin  # noqa
-    import ai.backend.client.cli.admin.keypairs  # noqa
-    import ai.backend.client.cli.admin.sessions  # noqa
-    import ai.backend.client.cli.admin.agents    # noqa
-    import ai.backend.client.cli.admin.vfolders  # noqa
-    import ai.backend.client.cli.manager  # noqa
-    import ai.backend.client.cli.vfolder # noqa
-    import ai.backend.client.cli.ps     # noqa
-    import ai.backend.client.cli.logs   # noqa
-    import ai.backend.client.cli.files           # noqa
-    import ai.backend.client.cli.app  # noqa
+    main.add_command(admin)
+    main.add_command(config)
+    main.add_command(app)
+    main.add_command(upload)
+    main.add_command(download)
+    main.add_command(ls)
+    main.add_command(logs)
+    main.add_command(manager)
+    main.add_command(proxy)
+    # main.add_command(ps)
+    # main.add_command(vfolder)
 
-    if len(sys.argv) <= 1:
-        global_argparser.print_help()
-        return
 
-    mode = Path(sys.argv[0]).stem
-
-    if mode == '__main__':
-        pass
-    elif mode == 'lcc':
-        sys.argv.insert(1, 'c')
-        sys.argv.insert(1, 'run')
-    elif mode == 'lpython':
-        sys.argv.insert(1, 'python')
-        sys.argv.insert(1, 'run')
-
-    args = global_argparser.parse_args()
-    if hasattr(args, 'function'):
-        args.function(args)
-    else:
-        print_fail('The command is not specified or unrecognized.')
+_attach_command()

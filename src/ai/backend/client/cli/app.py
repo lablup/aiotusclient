@@ -1,11 +1,10 @@
 import asyncio
 import aiohttp
+import click
 from ..request import Request
 from ..session import AsyncSession
 from ..compat import token_hex
 from .pretty import print_info
-
-from . import register_command
 
 
 class WSProxy:
@@ -95,14 +94,18 @@ class ProxyRunner:
         await self.session.close()
 
 
-@register_command
-def app(args):
+@click.command()
+@click.argument('app')
+@click.option('--bind', type=str, default='localhost',
+              help='The IP/host address to bind this proxy.')
+@click.option('-p', '--port', type=int, default=8080,
+              help='The TCP port to accept non-encrypted non-authorized API requests.')
+def app(app, bind, port):
     """
-    Run the web app via backend.ai
+    Run the web app via backend.ai. APP can be run via http (BETA).
     """
-
     loop = asyncio.get_event_loop()
-    r = ProxyRunner(args.app, args.bind, args.port, loop)
+    r = ProxyRunner(app, bind, port, loop)
     loop.run_until_complete(r.ready())
     try:
         loop.run_forever()
@@ -111,12 +114,3 @@ def app(args):
     print_info("Shutting down....")
     loop.run_until_complete(r.close())
     print_info("Done")
-
-
-app.add_argument('app',
-                 help='Run an app via http (BETA)')
-app.add_argument('--bind', type=str, default='localhost',
-                   help='The IP/host address to bind this proxy.')
-app.add_argument('-p', '--port', type=int, default=8080,
-                   help='The TCP port to accept non-encrypted non-authorized '
-                        'API requests.')

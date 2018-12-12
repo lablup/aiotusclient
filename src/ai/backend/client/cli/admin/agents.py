@@ -1,14 +1,16 @@
 import sys
 
+import click
 from tabulate import tabulate
 
 from ...session import Session
 from ..pretty import print_error
-from . import admin
 
 
-@admin.register_command
-def agent(args):
+@click.command()
+@click.option('-i', '--id', 'agent_id', required=True,
+              help='The agent Id to inspect.')
+def agent(agent_id):
     '''
     Show the information about the given agent.
     '''
@@ -26,7 +28,7 @@ def agent(args):
     ]
     with Session() as session:
         try:
-            agent = session.Agent(args.id)
+            agent = session.Agent(agent_id)
             info = agent.info(fields=(item[1] for item in fields))
         except Exception as e:
             print_error(e)
@@ -37,12 +39,10 @@ def agent(args):
         print(tabulate(rows, headers=('Field', 'Value')))
 
 
-agent.add_argument('-i', '--id', type=str, required=True,
-                   help='The agent ID to inspect.')
-
-
-@admin.register_command
-def agents(args):
+@click.command()
+@click.option('-s', '--status', type=str, default='ALIVE',
+              help='Filter agents by the given status.')
+def agents(status):
     '''
     List and manage agents.
     (admin privilege required)
@@ -61,8 +61,7 @@ def agents(args):
     ]
     with Session() as session:
         try:
-            items = session.Agent.list(args.status,
-                                       fields=(item[1] for item in fields))
+            items = session.Agent.list(status, fields=(item[1] for item in fields))
         except Exception as e:
             print_error(e)
             sys.exit(1)
@@ -71,7 +70,3 @@ def agents(args):
             return
         print(tabulate((item.values() for item in items),
                        headers=(item[0] for item in fields)))
-
-
-agents.add_argument('-s', '--status', type=str, default='ALIVE',
-                    help='Filter agents by the given status.')
