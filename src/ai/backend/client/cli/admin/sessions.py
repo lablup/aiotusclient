@@ -50,7 +50,7 @@ def sessions(args):
             return
         if args.id_only:
             for item in resp['compute_sessions']:
-                print(item['sess_id'], end=' ')
+                print(item['sess_id'])
         else:
             print(tabulate((item.values() for item in resp['compute_sessions']),
                            headers=(item[0] for item in fields)))
