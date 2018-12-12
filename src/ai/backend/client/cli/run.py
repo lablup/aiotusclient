@@ -632,10 +632,10 @@ def start(args):
             sys.exit(1)
         else:
             if kernel.created:
-                print_info('Session ID {0} is already running and ready.'
+                print_info('Session ID {0} is created and ready.'
                            .format(session_id))
             else:
-                print_info('Session ID {0} is created and ready.'
+                print_info('Session ID {0} is already running and ready.'
                            .format(session_id))
 
 
