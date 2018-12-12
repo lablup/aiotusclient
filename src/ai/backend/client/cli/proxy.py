@@ -1,10 +1,8 @@
 import asyncio
 import re
-import sys
 
 import aiohttp
 from aiohttp import web
-from aiohttp.client_exceptions import ClientResponseError, ClientConnectorError
 
 from . import register_command
 from .pretty import print_info, print_error, print_fail
