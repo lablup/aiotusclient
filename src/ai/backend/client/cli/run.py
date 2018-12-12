@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import string
 import sys
+import traceback
 
 import aiohttp
 from humanize import naturalsize
@@ -221,6 +222,31 @@ def _get_mem_slots(memslot):
     return mod_size
 
 
+def _prepare_resource_arg(args):
+    if args.resources:
+        resources = {k: v for k, v in map(lambda s: s.split('=', 1), args.resources)}
+    else:
+        resources = {}  # use the defaults configured in the server
+    # Reverse humanized memory unit
+    mem = resources.pop('mem', None)
+    mem = resources.pop('ram', None) if mem is None else mem
+    if mem:
+        memlist = re.findall(r'[A-Za-z]+|[\d\.]+', mem)
+        if memlist:
+            memslot = _get_mem_slots(memlist)
+            if memslot:
+                resources['mem'] = memslot
+    return resources
+
+
+def _prepare_env_arg(args):
+    if args.env is not None:
+        envs = {k: v for k, v in map(lambda s: s.split('=', 1), args.env)}
+    else:
+        envs = {}
+    return envs
+
+
 @register_command
 def run(args):
     '''
@@ -234,10 +260,6 @@ def run(args):
         vprint_info = print_info
         vprint_wait = print_wait
         vprint_done = print_done
-    if args.env is not None:
-        envs = {k: v for k, v in map(lambda s: s.split('=', 1), args.env)}
-    else:
-        envs = {}
     if args.files and args.code:
         print('You can run only either source files or command-line '
               'code snippet.', file=sys.stderr)
@@ -246,20 +268,9 @@ def run(args):
         print('You should provide the command-line code snippet using '
               '"-c" option if run without files.', file=sys.stderr)
         sys.exit(1)
-    if args.resources:
-        resources = {k: v for k, v in map(lambda s: s.split('=', 1), args.resources)}
-    else:
-        resources = {}  # use the defaults configured in the server
 
-    # Reverse humanized memory unit
-    mem = resources.pop('mem', None)
-    mem = resources.pop('ram', None) if mem is None else mem
-    if mem:
-        memlist = re.findall(r'[A-Za-z]+|[\d\.]+', mem)
-        if memlist:
-            memslot = _get_mem_slots(memlist)
-            if memslot:
-                resources['mem'] = memslot
+    envs = _prepare_env_arg(args)
+    resources = _prepare_resource_arg(args)
 
     if not (1 <= args.cluster_size < 4):
         print('Invalid cluster size.', file=sys.stderr)
@@ -535,7 +546,8 @@ def run(args):
 
 
 run.add_argument('lang',
-                 help='The runtime or programming language name')
+                 help='The name (and version/platform tags appended after a colon) '
+                      'of session runtime or programming language.')
 run.add_argument('files', nargs='*', type=Path,
                  help='The code file(s). Can be added multiple times')
 run.add_argument('-t', '--session-id', '--client-token', metavar='SESSID',
@@ -589,6 +601,64 @@ run.add_argument('-q', '--quiet', action='store_true', default=False,
 run.add_argument('--legacy', action='store_true', default=False,
                  help='Use the legacy synchronous polling mode to '
                       'fetch console outputs.')
+
+
+@register_command
+def start(args):
+    '''
+    Prepare and start a single compute session without executing codes.
+    You may use the created session to execute codes using the "run" command
+    or connect to an application service provided by the session using the "app"
+    command.
+    '''
+    if args.session_id is None:
+        session_id = token_hex(5)
+    else:
+        session_id = args.session_id
+    envs = _prepare_env_arg(args)
+    resources = _prepare_resource_arg(args)
+    with Session() as session:
+        try:
+            kernel = session.Kernel.get_or_create(
+                args.lang,
+                client_token=session_id,
+                cluster_size=args.cluster_size,
+                mounts=args.mount,
+                envs=envs,
+                resources=resources,
+                tag=args.tag)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        else:
+            if kernel.created:
+                print_info('Session ID {0} is already running and ready.'
+                           .format(session_id))
+            else:
+                print_info('Session ID {0} is created and ready.'
+                           .format(session_id))
+
+
+start.add_argument('lang',
+                   help='The name (and version/platform tags appended after a colon)'
+                        ' of session runtime or programming language.')
+start.add_argument('-t', '--session-id', '--client-token', metavar='SESSID',
+                   help='Specify a human-readable session ID or name. '
+                        'If not set, a random hex string is used.')
+start.add_argument('-e', '--env', metavar='KEY=VAL', type=str, action='append',
+                   help='Environment variable '
+                        '(may appear multiple times)')
+start.add_argument('-m', '--mount', type=str, action='append',
+                   help='User-owned virtual folder names to mount')
+start.add_argument('--tag', type=str, default=None,
+                   help='User-defined tag string to annotate sessions.')
+start.add_argument('-r', '--resources', metavar='KEY=VAL', type=str, action='append',
+                   help='Set computation resources used by the session '
+                        '(e.g: -r cpu=2 -r mem=256 -r gpu=1).'
+                        '1 slot of cpu/gpu represents 1 core. '
+                        'The unit of mem(ory) is MiB.')
+start.add_argument('--cluster-size', metavar='NUMBER', type=int, default=1,
+                   help='The size of cluster in number of containers.')
 
 
 @register_command(aliases=['rm', 'kill'])
