@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import string
 import sys
+import traceback
 
 import aiohttp
 import click
@@ -221,7 +222,33 @@ def _get_mem_slots(memslot):
     return mod_size
 
 
+def _prepare_resource_arg(args):
+    if args.resources:
+        resources = {k: v for k, v in map(lambda s: s.split('=', 1), args.resources)}
+    else:
+        resources = {}  # use the defaults configured in the server
+    # Reverse humanized memory unit
+    mem = resources.pop('mem', None)
+    mem = resources.pop('ram', None) if mem is None else mem
+    if mem:
+        memlist = re.findall(r'[A-Za-z]+|[\d\.]+', mem)
+        if memlist:
+            memslot = _get_mem_slots(memlist)
+            if memslot:
+                resources['mem'] = memslot
+    return resources
+
+
+def _prepare_env_arg(args):
+    if args.env is not None:
+        envs = {k: v for k, v in map(lambda s: s.split('=', 1), args.env)}
+    else:
+        envs = {}
+    return envs
+
+
 @click.command()
+@click.pass_context
 @click.argument('lang')
 @click.argument('files', nargs=-1, type=click.Path())
 @click.option('-t', '--session-id', '--client-token', metavar='SESSID',
@@ -279,7 +306,8 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
     Depending on the session ID you give (default is random),
     it may reuse an existing session or create a new one.
 
-    LANG: The runtime or programming language name.
+    LANG: The name (and version/platform tags appended after a colon) of session
+          runtime or programming language.')
     FILES: The code file(s). Can be added multiple times.
     '''
     if quiet:
@@ -288,10 +316,6 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
         vprint_info = print_info
         vprint_wait = print_wait
         vprint_done = print_done
-    if env is not None:
-        envs = {k: v for k, v in map(lambda s: s.split('=', 1), env)}
-    else:
-        envs = {}
     if files and code:
         print('You can run only either source files or command-line '
               'code snippet.', file=sys.stderr)
@@ -300,20 +324,9 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
         print('You should provide the command-line code snippet using '
               '"-c" option if run without files.', file=sys.stderr)
         sys.exit(1)
-    if resources:
-        resources = {k: v for k, v in map(lambda s: s.split('=', 1), resources)}
-    else:
-        resources = {}  # use the defaults configured in the server
 
-    # Reverse humanized memory unit
-    mem = resources.pop('mem', None)
-    mem = resources.pop('ram', None) if mem is None else mem
-    if mem:
-        memlist = re.findall(r'[A-Za-z]+|[\d\.]+', mem)
-        if memlist:
-            memslot = _get_mem_slots(memlist)
-            if memslot:
-                resources['mem'] = memslot
+    envs = _prepare_env_arg(ctx.args)
+    resources = _prepare_resource_arg(ctx.args)
 
     if not (1 <= cluster_size < 4):
         print('Invalid cluster size.', file=sys.stderr)
@@ -542,7 +555,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 clean_cmd = clean if clean else '*'
                 build_cmd = case[1]
                 exec_cmd = case[2]
-                _run_legacy(session, args, idx, session_id, envs,
+                _run_legacy(session, ctx.args, idx, session_id, envs,
                             clean_cmd, build_cmd, exec_cmd)
 
     async def _run_cases():
@@ -568,7 +581,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 build_cmd = case[1]
                 exec_cmd = case[2]
                 t = loop.create_task(
-                    _run(session, args, idx, session_id, envs,
+                    _run(session, ctx.args, idx, session_id, envs,
                          clean_cmd, build_cmd, exec_cmd,
                          is_multi=is_multi))
                 tasks.append(t)
@@ -588,6 +601,64 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
             loop.close()
 
 
+@click.command()
+@click.pass_context
+@click.argument('lang')
+@click.option('-t', '--session-id', '--client-token', metavar='SESSID',
+              help='Specify a human-readable session ID or name. '
+                   'If not set, a random hex string is used.')
+@click.option('-e', '--env', metavar='KEY=VAL', type=str, action='append',
+              help='Environment variable (may appear multiple times)')
+@click.option('-m', '--mount', type=str, action='append',
+              help='User-owned virtual folder names to mount')
+@click.option('--tag', type=str, default=None,
+              help='User-defined tag string to annotate sessions.')
+@click.option('-r', '--resources', metavar='KEY=VAL', type=str, action='append',
+              help='Set computation resources used by the session '
+                   '(e.g: -r cpu=2 -r mem=256 -r gpu=1).'
+                   '1 slot of cpu/gpu represents 1 core. '
+                   'The unit of mem(ory) is MiB.')
+@click.option('--cluster-size', metavar='NUMBER', type=int, default=1,
+              help='The size of cluster in number of containers.')
+def start(lang, session_id, env, mount, resources, cluster_size):
+    '''
+    Prepare and start a single compute session without executing codes.
+    You may use the created session to execute codes using the "run" command
+    or connect to an application service provided by the session using the "app"
+    command.
+
+
+    LANG: The name (and version/platform tags appended after a colon) of session
+          runtime or programming language.
+    '''
+    if session_id is None:
+        session_id = token_hex(5)
+    else:
+        session_id = session_id
+
+    ######
+    envs = _prepare_env_arg(ctx.args)
+    resources = _prepare_resource_arg(ctx.args)
+    with Session() as session:
+        try:
+            kernel = session.Kernel.get_or_create(
+                lang,
+                client_token=session_id,
+                cluster_size=cluster_size,
+                mounts=mount,
+                envs=envs,
+                resources=resources,
+                tag=tag)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        else:
+            if kernel.created:
+                print_info('Session ID {0} is created and ready.'
+                           .format(session_id))
+            else:
+                print_info('Session ID {0} is already running and ready.'
+                           .format(session_id))
 
 
 # @click.command(aliases=['rm', 'kill'])
