@@ -24,7 +24,7 @@ class WSProxy:
                  reader: asyncio.StreamReader,
                  writer: asyncio.StreamWriter):
         self.api_session = api_session
-        self.path = f"/stream/kernel/{session_id}/{protocol}proxy"
+        self.path = "/stream/kernel/{0}/{1}proxy".format(session_id, protocol)
         self.reader = reader
         self.writer = writer
         self.down_task = None
@@ -129,9 +129,9 @@ def app(args):
     async def app_setup():
         nonlocal api_session, runner
         loop = current_loop()
-        protocol = 'http'
         api_session = AsyncSession()
         # TODO: generalize protocol using service ports metadata
+        protocol = 'http'
         runner = ProxyRunner(api_session, args.session_id, args.app,
                              protocol, args.bind, args.port,
                              loop=loop)
