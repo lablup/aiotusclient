@@ -672,8 +672,7 @@ def start(lang, session_id, env, mount, resources, cluster_size):
                            .format(session_id))
 
 
-# @click.command(aliases=['rm', 'kill'])
-@main.command()
+@main.command(aliases=['rm', 'kill'])
 @click.argument('sess_id_or_alias', metavar='SESSID', nargs=-1)
 @click.option('-s', '--stats', is_flag=True,
               help='Show resource usage statistics after termination')

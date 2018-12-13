@@ -6,13 +6,13 @@ import sys
 import click
 from tabulate import tabulate
 
-from . import main
+from . import AliasGroup, main
 from ..config import get_config
 from .pretty import print_wait, print_done, print_error, print_fail
 from ..session import Session
 
 
-@main.group()
+@main.group(cls=AliasGroup)
 def vfolder():
     '''Provides virtual folder operations.'''
 
@@ -169,8 +169,7 @@ def mkdir(name, path):
             sys.exit(1)
 
 
-# @vfolder.command(aliases=['delete-file'])
-@vfolder.command()
+@vfolder.command(aliases=['delete-file'])
 @click.argument('name', type=str)
 @click.argument('filenames', nargs=-1)
 @click.option('-r', '--recursive', is_flag=True,
