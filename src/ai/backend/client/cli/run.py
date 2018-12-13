@@ -447,6 +447,9 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 if stats:
                     _stats = ret.get('stats', None) if ret else None
                     if _stats:
+                        _stats.pop('precpu_used', None)
+                        _stats.pop('precpu_system_used', None)
+                        _stats.pop('cpu_system_used', None)
                         print('[{0}] Statistics:\n{1}'
                               .format(idx, _format_stats(_stats)))
                     else:
@@ -532,6 +535,9 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                     if stats:
                         _stats = ret.get('stats', None) if ret else None
                         if _stats:
+                            _stats.pop('precpu_used', None)
+                            _stats.pop('precpu_system_used', None)
+                            _stats.pop('cpu_system_used', None)
                             stats_str = _format_stats(_stats)
                             print(format_info('[{0}] Statistics:'.format(idx)) +
                                   '\n{0}'.format(stats_str))
