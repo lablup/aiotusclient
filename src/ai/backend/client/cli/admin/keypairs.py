@@ -81,7 +81,6 @@ def keypairs(user_id, is_active):
                        headers=(item[0] for item in fields)))
 
 
-
 @admin.command()
 @click.argument('user-id', type=str, default=None, metavar='USERID')
 @click.option('-a', '--admin', is_flag=True,

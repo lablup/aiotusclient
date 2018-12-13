@@ -2,8 +2,6 @@ from . import main
 from .. import __version__
 from ..config import get_config
 
-import click
-
 
 @main.command()
 def config():

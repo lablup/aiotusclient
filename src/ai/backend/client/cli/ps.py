@@ -1,5 +1,3 @@
-from argparse import Namespace
-
 import click
 
 from . import main

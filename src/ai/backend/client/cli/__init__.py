@@ -1,6 +1,7 @@
-import click
+from pathlib import Path
+import sys
 
-from .pretty import print_fail
+import click
 
 
 class AliasGroup(click.Group):
@@ -101,21 +102,37 @@ class AliasGroup(click.Group):
 #         print_fail('The command is not specified or unrecognized.')
 
 
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-
-
-@click.group(cls=AliasGroup, invoke_without_command=True, context_settings=CONTEXT_SETTINGS)
+@click.group(cls=AliasGroup,
+             context_settings=dict(help_option_names=['-h', '--help']))
 @click.version_option()
-@click.pass_context
-def main(ctx):
-    """Backend.AI command line interface.
+def main():
     """
-    if ctx.invoked_subcommand is None:
-        click.echo(main.get_help(ctx))
+    Backend.AI command line interface.
+    """
+
+
+@click.command(context_settings=dict(ignore_unknown_options=True,
+                                     allow_extra_args=True))
+@click.pass_context
+def run_alias(ctx):
+    """
+    Quick aliases for run command.
+    """
+    mode = Path(sys.argv[0]).stem
+    help = True if len(sys.argv) <= 1 else False
+    if mode == 'lcc':
+        sys.argv.insert(1, 'c')
+    elif mode == 'lpython':
+        sys.argv.insert(1, 'python')
+    sys.argv.insert(1, 'run')
+    if help:
+        sys.argv.append('--help')
+    main.main(prog_name='backend.ai')
 
 
 def _attach_command():
-    from . import admin, config, app, files, logs, manager, proxy, ps, run, vfolder
+    from . import admin, config, app, files, logs, manager, proxy, ps, run  # noqa
+    from . import vfolder       # noqa
 
 
 _attach_command()

@@ -1,4 +1,4 @@
-from argparse import ArgumentTypeError, Namespace
+from argparse import ArgumentTypeError
 import asyncio
 import collections
 from decimal import Decimal
@@ -253,7 +253,6 @@ def _prepare_mount_arg(mount):
 
 
 @main.command()
-@click.pass_context
 @click.argument('lang', type=str)
 @click.argument('files', nargs=-1, type=click.Path())
 @click.option('-t', '--session-id', '--client-token', metavar='SESSID',
@@ -303,9 +302,9 @@ def _prepare_mount_arg(mount):
 @click.option('--legacy', is_flag=True,
               help='Use the legacy synchronous polling mode to '
                    'fetch console outputs.')
-def run(ctx, lang, files, session_id, cluster_size, code, clean, build, exec,
-        terminal, basedir, rm, env, env_range, build_range, exec_range, max_parallel,
-        mount, stats, tag, resources, quiet, legacy):
+def run(lang, files, session_id, cluster_size, code, clean, build, exec, terminal,
+        basedir, rm, env, env_range, build_range, exec_range, max_parallel, mount,
+        stats, tag, resources, quiet, legacy):
     '''
     Run the given code snippet or files in a session.
     Depending on the session ID you give (default is random),
@@ -630,7 +629,7 @@ def run(ctx, lang, files, session_id, cluster_size, code, clean, build, exec,
                    'The unit of mem(ory) is MiB.')
 @click.option('--cluster-size', metavar='NUMBER', type=int, default=1,
               help='The size of cluster in number of containers.')
-def start(lang, session_id, env, mount, resources, cluster_size):
+def start(lang, session_id, env, mount, tag, resources, cluster_size):
     '''
     Prepare and start a single compute session without executing codes.
     You may use the created session to execute codes using the "run" command
