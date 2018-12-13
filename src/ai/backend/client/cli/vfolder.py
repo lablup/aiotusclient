@@ -3,22 +3,22 @@ import json
 from pathlib import Path
 import sys
 
+import click
 from tabulate import tabulate
 
-from . import register_command
 from ..config import get_config
 from .pretty import print_wait, print_done, print_error, print_fail
 from ..session import Session
 
 
-@register_command
-def vfolder(args):
+@click.group()
+def vfolder():
     '''Provides virtual folder operations.'''
     print('Run with -h/--help for usage.')
 
 
-@vfolder.register_command
-def list(args):
+@vfolder.command()
+def list():
     '''List virtual folders that belongs to the current user.'''
     fields = [
         ('Name', 'name'),
@@ -40,44 +40,49 @@ def list(args):
             sys.exit(1)
 
 
-@vfolder.register_command
-def create(args):
-    '''Create a new virtual folder.'''
+@vfolder.command()
+@click.argument('name', type=str)
+@click.argument('host', type=str, nargs=-1, default=None)
+def create(name, host):
+    '''Create a new virtual folder.
+
+    NAME: Name of a virtual folder.
+    HOST: Name of a virtual folder host in which the virtual folder will be created.
+    '''
     with Session() as session:
         try:
-            result = session.VFolder.create(args.name, args.host)
+            result = session.VFolder.create(name, host)
             print('Virtual folder "{0}" is created.'.format(result['name']))
         except Exception as e:
             print_error(e)
             sys.exit(1)
 
 
-create.add_argument('name', type=str, help='The name of a virtual folder.')
-create.add_argument('host', type=str, nargs='?', default=None,
-                    help='The name of a virtual folder host '
-                         'in which the virtual folder will be created.')
+@vfolder.command()
+@click.argument('name', type=str)
+def delete(name):
+    '''Delete the given virtual folder. This operation is irreversible!
 
-
-@vfolder.register_command
-def delete(args):
-    '''Delete the given virtual folder. This operation is irreversible!'''
+    NAME: Name of a virtual folder.
+    '''
     with Session() as session:
         try:
-            session.VFolder(args.name).delete()
+            session.VFolder(name).delete()
         except Exception as e:
             print_error(e)
             sys.exit(1)
 
 
-delete.add_argument('name', type=str, help='The name of a virtual folder.')
+@vfolder.command()
+@click.argument('name', type=str)
+def info(name):
+    '''Show the information of the given virtual folder.
 
-
-@vfolder.register_command
-def info(args):
-    '''Show the information of the given virtual folder.'''
+    NAME: Name of a virtual folder.
+    '''
     with Session() as session:
         try:
-            result = session.VFolder(args.name).info()
+            result = session.VFolder(name).info()
             print('Virtual folder "{0}" (ID: {1})'
                   .format(result['name'], result['id']))
             print('- Owner:', result['is_owner'])
@@ -88,118 +93,121 @@ def info(args):
             sys.exit(1)
 
 
-info.add_argument('name', type=str, help='The name of a virtual folder.')
-
-
-@vfolder.register_command
-def upload(args):
+@vfolder.command()
+@click.argument('name', type=str)
+@click.argument('filenames', type=Path, nargs=-1)
+def upload(name, filenames):
     '''
     Upload a file to the virtual folder from the current working directory.
     The files with the same names will be overwirtten.
+
+    NAME: Name of a virtual folder.
+    FILENAMES: Paths of the files to be uploaded.
     '''
     with Session() as session:
         try:
-            session.VFolder(args.name).upload(args.filenames, show_progress=True)
+            session.VFolder(name).upload(filenames, show_progress=True)
             print_done('Done.')
         except Exception as e:
             print_error(e)
             sys.exit(1)
 
 
-upload.add_argument('name', type=str, help='The name of a virtual folder.')
-upload.add_argument('filenames', type=Path, nargs='+',
-                    help='Paths of the files to be uploaded.')
-
-
-@vfolder.register_command
-def download(args):
+@vfolder.command()
+@click.argument('name', type=str)
+@click.argument('filenames', type=Path, nargs=-1)
+def download(name, filenames):
     '''
     Download a file from the virtual folder to the current working directory.
     The files with the same names will be overwirtten.
+
+    NAME: Name of a virtual folder.
+    FILENAMES: Paths of the files to be uploaded.
     '''
     with Session() as session:
         try:
-            session.VFolder(args.name).download(args.filenames, show_progress=True)
+            session.VFolder(name).download(filenames, show_progress=True)
             print_done('Done.')
         except Exception as e:
             print_error(e)
             sys.exit(1)
 
 
-download.add_argument('name', type=str, help='The name of a virtual folder.')
-download.add_argument('filenames', nargs='+',
-                      help='Paths of the files to download.')
+@vfolder.command()
+@click.argument('filenames', nargs=-1)
+def cp(filenames):
+    '''An scp-like shortcut for download/upload commands.
 
-
-@vfolder.register_command
-def cp(args):
-    '''An scp-like shortcut for download/upload commands.'''
+    FILENAMES: Paths of the files to operate on. The last one is the target while all
+               others are the sources.  Either source paths or the target path should
+               be prefixed with "<vfolder-name>:" like when using the Linux scp
+               command to indicate if it is a remote path.
+    '''
     raise NotImplementedError
 
 
-cp.add_argument('filenames', nargs='+',
-                help='Paths of the files to operate on. '
-                     'The last one is the target while all others are the '
-                     'sources.  Either source paths or the target path should '
-                     'be prefixed with "<vfolder-name>:" like when using the '
-                     'Linux scp command to indicate if it is a remote path.')
+@vfolder.command()
+@click.argument('name', type=str)
+@click.argument('path', type=str)
+def mkdir(name, path):
+    '''Create an empty directory in the virtual folder.
 
-
-@vfolder.register_command
-def mkdir(args):
-    '''Create an empty directory in the virtual folder.'''
+    NAME: Name of a virtual folder.
+    PATH: The name or path of directory.  Parent directories are created
+          automatically if they do not exist.
+    '''
     with Session() as session:
         try:
-            session.VFolder(args.name).mkdir(args.path)
+            session.VFolder(name).mkdir(path)
             print_done('Done.')
         except Exception as e:
             print_error(e)
             sys.exit(1)
 
 
-mkdir.add_argument('name', type=str, help='The name of a virtual folder.')
-mkdir.add_argument('path', type=str,
-                   help='The name or path of directory.  Parent directories are '
-                        'created automatically if they do not exist.')
-
-
-@vfolder.register_command(aliases=['delete-file'])
-def rm(args):
+# @vfolder.command(aliases=['delete-file'])
+@vfolder.command()
+@click.argument('name', type=str)
+@click.argument('filenames', nargs=-1)
+@click.option('-r', '--recursive', is_flag=True,
+              help='Enable recursive deletion of directories.')
+def rm(name, filenames, recursive):
     '''
     Delete files in a virtual folder.
     If one of the given paths is a directory and the recursive option is enabled,
     all its content and the directory itself are recursively deleted.
 
     This operation is irreversible!
+
+    NAME: Name of a virtual folder.
+    FILENAMES: Paths of the files to delete.
     '''
     with Session() as session:
         try:
             if input("> Are you sure? (y/n): ").lower().strip()[:1] == 'y':
-                session.VFolder(args.name).delete_files(
-                    args.filenames,
-                    recursive=args.recursive)
+                session.VFolder(name).delete_files(
+                    filenames,
+                    recursive=recursive)
                 print_done('Done.')
         except Exception as e:
             print_error(e)
             sys.exit(1)
 
 
-rm.add_argument('name', type=str, help='The name of a virtual folder.')
-rm.add_argument('filenames', nargs='+',
-                help='Paths of the files to delete.')
-rm.add_argument('-r', '--recursive', action='store_true', default=False,
-                help='Enable recursive deletion of directories.')
-
-
-@vfolder.register_command
-def ls(args):
+@vfolder.command()
+@click.argument('name', type=str)
+@click.argument('path', metavar='PATH', nargs=1, default='.')
+def ls(name, path):
     """
     List files in a path of a virtual folder.
+
+    NAME: Name of a virtual folder.
+    PATH: Path inside vfolder.
     """
     with Session() as session:
         try:
-            print_wait('Retrieving list of files in "{}"...'.format(args.path))
-            result = session.VFolder(args.name).list_files(args.path)
+            print_wait('Retrieving list of files in "{}"...'.format(path))
+            result = session.VFolder(name).list_files(path)
             if 'error_msg' in result and result['error_msg']:
                 print_fail(result['error_msg'])
                 return
@@ -217,20 +225,22 @@ def ls(args):
             print_error(e)
 
 
-ls.add_argument('name', type=str, help='The name of a virtual folder.')
-ls.add_argument('path', metavar='PATH', nargs='?', default='.',
-                help='Path inside vfolder')
-
-
-@vfolder.register_command
-def invite(args):
+@vfolder.command()
+@click.argument('name', type=str)
+@click.argument('emails', type=str, nargs=-1)
+@click.option('-p', '--perm', metavar='PERMISSION', type=str, default='rw',
+              help='Permission to give. "ro" (read-only) / "rw" (read-write).')
+def invite(name, emails, perm):
     """Invite other users to access the virtual folder.
+
+    NAME: Name of a virtual folder.
+    EMAIL: Emails to invite.
     """
     with Session() as session:
         try:
-            assert args.perm in ['rw', 'ro'], \
-                   'Invalid permission: {}'.format(args.perm)
-            result = session.VFolder(args.name).invite(args.perm, args.emails)
+            assert perm in ['rw', 'ro'], \
+                   'Invalid permission: {}'.format(perm)
+            result = session.VFolder(name).invite(perm, emails)
             invited_ids = result.get('invited_ids', [])
             if len(invited_ids) > 0:
                 print('Invitation sent to:')
@@ -243,13 +253,7 @@ def invite(args):
             sys.exit(1)
 
 
-invite.add_argument('name', type=str, help='The name of a virtual folder.')
-invite.add_argument('emails', type=str, nargs='+', help='Emails to invite.')
-invite.add_argument('-p', '--perm', metavar='PERMISSION', type=str, default='rw',
-                    help='Permission to give. "ro" (read-only) / "rw" (read-write).')
-
-
-@vfolder.register_command
+@vfolder.command()
 def invitations(args):
     """List and manage received invitations.
     """

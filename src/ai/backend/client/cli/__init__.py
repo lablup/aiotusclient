@@ -70,8 +70,8 @@ def _attach_command():
     main.add_command(logs)
     main.add_command(manager)
     main.add_command(proxy)
-    # main.add_command(ps)
-    # main.add_command(vfolder)
+    main.add_command(ps)
+    main.add_command(vfolder)
 
 
 _attach_command()
