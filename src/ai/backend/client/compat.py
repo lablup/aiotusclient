@@ -80,7 +80,7 @@ else:
 def asyncio_run_forever(setup_coro, shutdown_coro, *,
                         stop_signals={signal.SIGINT}, debug=False):
     '''
-    A prposed-but-not-implemented asyncio.run_forever() API based on
+    A proposed-but-not-implemented asyncio.run_forever() API based on
     @vxgmichel's idea.
     See discussions on https://github.com/python/asyncio/pull/465
     '''
