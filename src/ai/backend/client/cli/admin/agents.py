@@ -20,12 +20,14 @@ def agent(agent_id):
         ('Status', 'status'),
         ('Region', 'region'),
         ('First Contact', 'first_contact'),
-        ('Mem Slots', 'mem_slots'),
-        ('Used Mem Slots', 'used_mem_slots'),
-        ('CPU Slots', 'cpu_slots'),
-        ('Used CPU Slots', 'used_cpu_slots'),
-        ('GPU Slots', 'gpu_slots'),
-        ('Used GPU Slots', 'used_gpu_slots'),
+        ('Total CPU Cores', 'cpu_slots'),
+        ('Allocated CPU Cores', 'used_cpu_slots'),
+        ('CPU Usage (%)', 'cpu_cur_pct'),
+        ('Total Memory (MiB)', 'mem_slots'),
+        ('Allocated Memory (MiB)', 'used_mem_slots'),
+        ('Used Memory (MiB)', 'mem_cur_bytes'),
+        ('Total GPU Cores', 'gpu_slots'),
+        ('Used GPU Cores', 'used_gpu_slots'),
     ]
     with Session() as session:
         try:
@@ -36,6 +38,8 @@ def agent(agent_id):
             sys.exit(1)
         rows = []
         for name, key in fields:
+            if key == 'mem_cur_bytes' and info[key] is not None:
+                info[key] = round(info[key] / 2 ** 20, 1)
             rows.append((name, info[key]))
         print(tabulate(rows, headers=('Field', 'Value')))
 
@@ -53,12 +57,14 @@ def agents(status):
         ('Status', 'status'),
         ('Region', 'region'),
         ('First Contact', 'first_contact'),
-        ('Mem Slots', 'mem_slots'),
-        ('Used Mem Slots', 'used_mem_slots'),
-        ('CPU Slots', 'cpu_slots'),
-        ('Used CPU Slots', 'used_cpu_slots'),
-        ('GPU Slots', 'gpu_slots'),
-        ('Used GPU Slots', 'used_gpu_slots'),
+        ('Total CPU Cores', 'cpu_slots'),
+        ('Allocated CPU Cores', 'used_cpu_slots'),
+        ('CPU Usage (%)', 'cpu_cur_pct'),
+        ('Total Memory (MiB)', 'mem_slots'),
+        ('Allocated Memory (MiB)', 'used_mem_slots'),
+        ('Used Memory (MiB)', 'mem_cur_bytes'),
+        ('Total GPU Cores', 'gpu_slots'),
+        ('Used GPU Cores', 'used_gpu_slots'),
     ]
     with Session() as session:
         try:
@@ -69,5 +75,8 @@ def agents(status):
         if len(items) == 0:
             print('There are no matching agents.')
             return
+        for item in items:
+            if item['mem_cur_bytes'] is not None:
+                item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
         print(tabulate((item.values() for item in items),
                        headers=(item[0] for item in fields)))

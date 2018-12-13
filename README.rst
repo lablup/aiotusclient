@@ -113,14 +113,15 @@ You can see the list of currently running sessions using your API keypair.
 .. code-block:: console
 
    $ backend.ai ps
-   Session ID                        Lang/runtime    Created At                        Termianted At    Status      Memory Slot    CPU Slot    GPU Slot
-   --------------------------------  --------------  --------------------------------  ---------------  --------  -------------  ----------  ----------
-   5baafb2136029228ca9d873e1f2b4f6a  python:latest   2018-01-09T04:32:21.962223+00:00                   RUNNING            1024           1           0
+   Session ID    Lang/runtime              Tag    Created At                        Terminated At    Status      CPU Cores    CPU Used (ms)    Total Memory (MiB)    Used Memory (MiB)    GPU Cores
+   ------------  ------------------------  -----  --------------------------------  ---------------  --------  -----------  ---------------  --------------------  -------------------  -----------
+   88ee10a027    lablup/python:3.6-ubuntu         2018-12-11T03:53:14.802206+00:00                   RUNNING             1            16314                  1024                 39.2            0
+   fce7830826    lablup/python:3.6-ubuntu         2018-12-11T03:50:10.150740+00:00                   RUNNING             1            15391                  1024                 39.2            0
 
 If you set ``-t`` option in the ``run`` command, it will be used as the session ID—you may use it to assign a human-readable, easy-to-type alias for your sessions.
 These session IDs can be reused after the current session using the same ID terminates.
 
-To terminate a session,
+To terminate a session, you can use ``terminate`` or ``rm`` command.
 
 .. code-block:: console
 

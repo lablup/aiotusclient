@@ -58,6 +58,9 @@ def sessions(status, access_key, id_only):
         if len(resp['compute_sessions']) == 0:
             print('There are no compute sessions currently running.')
             return
+        for item in resp['compute_sessions']:
+            item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
+
         if id_only:
             for item in resp['compute_sessions']:
                 print(item['sess_id'])
@@ -84,13 +87,13 @@ def session(sess_id_or_alias):
         ('Agent', 'agent'),
         ('Status', 'status',),
         ('Status Info', 'status_info',),
-        ('Memory Slot', 'mem_slot'),
-        ('CPU Slot', 'cpu_slot'),
-        ('GPU Slot', 'gpu_slot'),
+        ('CPU Cores', 'cpu_slot'),
+        ('CPU Used (ms)', 'cpu_used'),
+        ('Total Memory (MiB)', 'mem_slot'),
+        ('Used Memory (MiB)', 'mem_cur_bytes'),
+        ('Max Used Memory (MiB)', 'mem_max_bytes'),
+        ('GPU Cores', 'gpu_slot'),
         ('Number of Queries', 'num_queries'),
-        ('CPU Used', 'cpu_used'),
-        ('Memory Max Bytes', 'mem_max_bytes'),
-        ('Memory Current Bytes', 'mem_cur_bytes'),
         ('Network RX Bytes', 'net_rx_bytes'),
         ('Network TX Bytes', 'net_tx_bytes'),
         ('IO Read Bytes', 'io_read_bytes'),
@@ -114,4 +117,6 @@ def session(sess_id_or_alias):
             return
         print('Session detail:\n---------------')
         for i, value in enumerate(resp['compute_session'].values()):
+            if fields[i][1] in ['mem_cur_bytes', 'mem_max_bytes']:
+                value = round(value / 2 ** 20, 1)
             print(fields[i][0] + ': ' + str(value))
