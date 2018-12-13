@@ -4,6 +4,7 @@ import signal
 import aiohttp
 import click
 
+from . import main
 from .pretty import print_info, print_error
 from ..request import Request
 from ..session import AsyncSession
@@ -115,7 +116,7 @@ class ProxyRunner:
         await self.local_server.wait_closed()
 
 
-@click.command()
+@main.command()
 @click.argument('session_id', type=str, metavar='SESSID')
 @click.argument('app', type=str)
 @click.option('--bind', type=str, default='127.0.0.1',

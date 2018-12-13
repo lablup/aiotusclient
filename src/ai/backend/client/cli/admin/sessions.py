@@ -3,11 +3,12 @@ import sys
 import click
 from tabulate import tabulate
 
+from . import admin
 from ...session import Session
 from ..pretty import print_error
 
 
-@click.command()
+@admin.command()
 @click.option('--status', default='RUNNING',
               type=click.Choice(['PREPARING', 'BUILDING', 'RUNNING', 'RESTARTING',
                                  'RESIZING', 'SUSPENDED', 'TERMINATING',
@@ -65,7 +66,7 @@ def sessions(status, access_key, id_only):
                            headers=(item[0] for item in fields)))
 
 
-@click.command()
+@admin.command()
 @click.argument('sess_id_or_alias', metavar='SESSID')
 def session(sess_id_or_alias):
     '''

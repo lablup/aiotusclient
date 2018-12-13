@@ -6,12 +6,13 @@ import sys
 import click
 from tabulate import tabulate
 
+from . import main
 from ..config import get_config
 from .pretty import print_wait, print_done, print_error, print_fail
 from ..session import Session
 
 
-@click.group()
+@main.group()
 def vfolder():
     '''Provides virtual folder operations.'''
 

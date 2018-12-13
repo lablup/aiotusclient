@@ -6,11 +6,12 @@ import sys
 import click
 from tabulate import tabulate
 
+from . import main
 from .pretty import print_wait, print_done, print_error, print_fail
 from ..session import Session
 
 
-@click.command()
+@main.command()
 @click.argument('sess_id_or_alias', metavar='SESSID')
 @click.argument('files', type=click.Path(exists=True), nargs=-1)
 def upload(sess_id_or_alias, files):
@@ -34,7 +35,7 @@ def upload(sess_id_or_alias, files):
             sys.exit(1)
 
 
-@click.command()
+@main.command()
 @click.argument('sess_id_or_alias', metavar='SESSID')
 @click.argument('files', nargs=-1)
 @click.option('--dest', type=Path, default='.',
@@ -61,7 +62,7 @@ def download(sess_id_or_alias, files, dest):
             sys.exit(1)
 
 
-@click.command()
+@main.command()
 @click.argument('sess_id_or_alias', metavar='SESSID')
 @click.argument('path', metavar='PATH', nargs=1, default='/home/work')
 def ls(sess_id_or_alias, path):

@@ -41,32 +41,7 @@ def main(ctx):
 
 
 def _attach_command():
-    from .admin import admin        # noqa
-    from .config import config      # noqa
-    from .app import app            # noqa
-    from .files import upload, download, ls     # noqa
-    from .logs import logs          # noqa
-    from .manager import manager    # noqa
-    from .proxy import proxy        # noqa
-    from .ps import ps              # noqa
-    from .run import run, start, terminate, info # noqa
-    from .vfolder import vfolder    # noqa
-
-    main.add_command(admin)
-    main.add_command(config)
-    main.add_command(app)
-    main.add_command(upload)
-    main.add_command(download)
-    main.add_command(ls)
-    main.add_command(logs)
-    main.add_command(manager)
-    main.add_command(proxy)
-    main.add_command(ps)
-    main.add_command(run)
-    main.add_command(start)
-    main.add_command(terminate)
-    main.add_command(info)
-    main.add_command(vfolder)
+    from . import admin, config, app, files, logs, manager, proxy, ps, run, vfolder
 
 
 _attach_command()

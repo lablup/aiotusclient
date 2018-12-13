@@ -2,10 +2,11 @@ from argparse import Namespace
 
 import click
 
+from . import main
 from .admin.sessions import sessions
 
 
-@click.command()
+@main.command()
 @click.option('--id-only', is_flag=True, help='Display session ids only.')
 @click.pass_context
 def ps(ctx, id_only):

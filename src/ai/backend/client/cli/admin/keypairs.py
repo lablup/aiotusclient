@@ -3,11 +3,12 @@ import sys
 import click
 from tabulate import tabulate
 
+from . import admin
 from ...session import Session
 from ..pretty import print_error, print_fail
 
 
-@click.command()
+@admin.command()
 def keypair():
     '''
     Show the server-side information of the currently configured access key.
@@ -37,7 +38,7 @@ def keypair():
         print(tabulate(rows, headers=('Field', 'Value')))
 
 
-@click.command()
+@admin.command()
 @click.option('-u', '--user-id', type=str, default=None,
               help='Show keypairs of this given user. [default: show all]')
 @click.option('--is-active', type=bool, default=None,
@@ -81,7 +82,7 @@ def keypairs(user_id, is_active):
 
 
 
-@click.command()
+@admin.command()
 @click.argument('user-id', type=str, default=None, metavar='USERID')
 @click.option('-a', '--admin', is_flag=True,
               help='Give the admin privilege to the new keypair.')

@@ -16,6 +16,7 @@ import click
 from humanize import naturalsize
 from tabulate import tabulate
 
+from . import main
 from .admin.sessions import session
 from ..compat import current_loop, token_hex
 from ..exceptions import BackendError
@@ -251,7 +252,7 @@ def _prepare_mount_arg(mount):
     return list(mount)
 
 
-@click.command()
+@main.command()
 @click.pass_context
 @click.argument('lang', type=str)
 @click.argument('files', nargs=-1, type=click.Path())
@@ -610,7 +611,7 @@ def run(ctx, lang, files, session_id, cluster_size, code, clean, build, exec,
             loop.close()
 
 
-@click.command()
+@main.command()
 @click.pass_context
 @click.argument('lang')
 @click.option('-t', '--session-id', '--client-token', metavar='SESSID',
@@ -672,7 +673,7 @@ def start(lang, session_id, env, mount, resources, cluster_size):
 
 
 # @click.command(aliases=['rm', 'kill'])
-@click.command()
+@main.command()
 @click.argument('sess_id_or_alias', metavar='SESSID', nargs=-1)
 @click.option('-s', '--stats', is_flag=True,
               help='Show resource usage statistics after termination')

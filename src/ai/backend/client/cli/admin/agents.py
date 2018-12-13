@@ -3,11 +3,12 @@ import sys
 import click
 from tabulate import tabulate
 
+from . import admin
 from ...session import Session
 from ..pretty import print_error
 
 
-@click.command()
+@admin.command()
 @click.option('-i', '--id', 'agent_id', required=True,
               help='The agent Id to inspect.')
 def agent(agent_id):
@@ -39,7 +40,7 @@ def agent(agent_id):
         print(tabulate(rows, headers=('Field', 'Value')))
 
 
-@click.command()
+@admin.command()
 @click.option('-s', '--status', type=str, default='ALIVE',
               help='Filter agents by the given status.')
 def agents(status):

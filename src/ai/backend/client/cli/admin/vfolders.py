@@ -3,11 +3,12 @@ import sys
 import click
 from tabulate import tabulate
 
+from . import admin
 from ...session import Session
 from ..pretty import print_error
 
 
-@click.command()
+@admin.command()
 @click.option('--access-key', type=str, default=None,
               help='Get vfolders for the given access key '
                    '(only works if you are a super-admin)')

@@ -2,11 +2,12 @@ import sys
 
 import click
 
+from . import main
 from .pretty import print_wait, print_done, print_error
 from ..session import Session
 
 
-@click.command()
+@main.command()
 @click.argument('sess_id_or_alias', metavar='SESSID')
 def logs(sess_id_or_alias):
     '''

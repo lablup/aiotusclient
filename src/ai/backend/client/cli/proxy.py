@@ -5,6 +5,7 @@ import aiohttp
 from aiohttp import web
 import click
 
+from . import main
 from .pretty import print_info, print_error, print_fail
 from ..exceptions import BackendAPIError, BackendClientError
 from ..request import Request
@@ -180,7 +181,7 @@ async def cleanup_proxy(app):
     await app['client_session'].close()
 
 
-@click.command(context_settings=dict(allow_extra_args=True))
+@main.command(context_settings=dict(allow_extra_args=True))
 @click.option('--bind', type=str, default='localhost',
               help='The IP/host address to bind this proxy.')
 @click.option('-p', '--port', type=int, default=8084,

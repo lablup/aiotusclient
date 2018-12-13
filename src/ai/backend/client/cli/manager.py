@@ -4,11 +4,12 @@ import time
 import click
 from tabulate import tabulate
 
+from . import main
 from .pretty import print_wait, print_done
 from ..session import Session
 
 
-@click.group()
+@main.group()
 def manager():
     '''Provides manager-related operations.'''
     print('Run with -h/--help for usage.')

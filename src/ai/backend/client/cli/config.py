@@ -1,10 +1,11 @@
+from . import main
 from .. import __version__
 from ..config import get_config
 
 import click
 
 
-@click.command()
+@main.command()
 def config():
     '''
     Shows the current configuration.
