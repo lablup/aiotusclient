@@ -9,6 +9,7 @@ import aiohttp.web
 from dateutil.tz import tzutc
 from multidict import CIMultiDict
 import json as modjson
+from yarl import URL
 
 from .auth import generate_signature
 from .exceptions import BackendClientError, BackendAPIError
@@ -53,7 +54,7 @@ class Request:
 
     __slots__ = (
         'config', 'session', 'method', 'path',
-        'date', 'headers', 'content_type',
+        'date', 'headers', 'params', 'content_type',
         '_content', '_attached_files',
         'reporthook',
     )
@@ -68,6 +69,7 @@ class Request:
                  path: str = None,
                  content: RequestContent = None, *,
                  content_type: str = None,
+                 params: Mapping[str, str] = None,
                  reporthook: Callable = None) -> None:
         '''
         Initialize an API request.
@@ -89,6 +91,7 @@ class Request:
         if path.startswith('/'):
             path = path[1:]
         self.path = path
+        self.params = params
         self.date = None
         self.headers = CIMultiDict([
             ('User-Agent', self.config.user_agent),
@@ -141,7 +144,7 @@ class Request:
         self.content_type = 'multipart/form-data'
         self._attached_files = files
 
-    def _sign(self, access_key=None, secret_key=None, hash_type=None):
+    def _sign(self, rel_url, access_key=None, secret_key=None, hash_type=None):
         '''
         Calculates the signature of the given request and adds the
         Authorization HTTP header.
@@ -156,7 +159,7 @@ class Request:
             hash_type = self.config.hash_type
         hdrs, _ = generate_signature(
             self.method, self.config.version, self.config.endpoint,
-            self.date, self.path, self.content_type, self._content,
+            self.date, str(rel_url), self.content_type, self._content,
             access_key, secret_key, hash_type)
         self.headers.update(hdrs)
 
@@ -180,8 +183,10 @@ class Request:
         base_url = self.config.endpoint.path.rstrip('/')
         query_path = self.path.lstrip('/') if len(self.path) > 0 else ''
         path = '{0}/{1}'.format(base_url, query_path)
-        canonical_url = self.config.endpoint.with_path(path)
-        return str(canonical_url)
+        url = self.config.endpoint.with_path(path)
+        if self.params:
+            url = url.with_query(self.params)
+        return url
 
     # TODO: attach rate-limit information
 
@@ -218,10 +223,11 @@ class Request:
         self.headers['Date'] = self.date.isoformat()
         if self.content_type is not None:
             self.headers['Content-Type'] = self.content_type
-        self._sign()
+        full_url = self._build_url()
+        self._sign(full_url.relative())
         rqst_ctx = self.session.aiohttp_session.request(
             self.method,
-            self._build_url(),
+            str(full_url),
             data=self._pack_content(),
             headers=self.headers)
         return FetchContextManager(self.session, rqst_ctx, **kwargs)
@@ -242,9 +248,10 @@ class Request:
         self.headers['Date'] = self.date.isoformat()
         # websocket is always a "binary" stream.
         self.content_type = 'application/octet-stream'
-        self._sign()
+        full_url = self._build_url()
+        self._sign(full_url.relative())
         ws_ctx = self.session.aiohttp_session.ws_connect(
-            self._build_url(),
+            str(full_url),
             headers=self.headers)
         return WebSocketContextManager(self.session, ws_ctx, **kwargs)
 
