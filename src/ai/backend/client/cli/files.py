@@ -15,9 +15,14 @@ from ..session import Session
 @click.argument('files', type=click.Path(exists=True), nargs=-1)
 def upload(sess_id_or_alias, files):
     """
-    Upload files to user's home folder. SESSID is the session ID or its alias given
-    when creating the session. FILES are the paths to upload.
+    Upload files to user's home folder.
+
+    \b
+    SESSID: Session ID or its alias given when creating the session.
+    FILES: Path to upload.
     """
+    if len(files) < 1:
+        return
     with Session() as session:
         try:
             print_wait('Uploading files...')
@@ -36,9 +41,14 @@ def upload(sess_id_or_alias, files):
               help='Destination path to store downloaded file(s)')
 def download(sess_id_or_alias, files, dest):
     """
-    Download files from a running container. SESSID is the session ID or its alias
-    given when creating the session. FILES are paths inside container.
+    Download files from a running container.
+
+    \b
+    SESSID: Session ID or its alias given when creating the session.
+    FILES: Paths inside container.
     """
+    if len(files) < 1:
+        return
     with Session() as session:
         try:
             print_wait('Downloading file(s) from {}...'
@@ -56,8 +66,11 @@ def download(sess_id_or_alias, files, dest):
 @click.argument('path', metavar='PATH', nargs=1, default='/home/work')
 def ls(sess_id_or_alias, path):
     """
-    List files in a path of a running container. SESSID is the session ID or its
-    alias given when creating the session. PATH is the path inside container.
+    List files in a path of a running container.
+
+    \b
+    SESSID: Session ID or its alias given when creating the session.
+    PATH: Path inside container.
     """
     with Session() as session:
         try:

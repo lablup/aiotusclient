@@ -222,9 +222,9 @@ def _get_mem_slots(memslot):
     return mod_size
 
 
-def _prepare_resource_arg(args):
-    if args.resources:
-        resources = {k: v for k, v in map(lambda s: s.split('=', 1), args.resources)}
+def _prepare_resource_arg(resources):
+    if resources:
+        resources = {k: v for k, v in map(lambda s: s.split('=', 1), resources)}
     else:
         resources = {}  # use the defaults configured in the server
     # Reverse humanized memory unit
@@ -239,17 +239,21 @@ def _prepare_resource_arg(args):
     return resources
 
 
-def _prepare_env_arg(args):
-    if args.env is not None:
-        envs = {k: v for k, v in map(lambda s: s.split('=', 1), args.env)}
+def _prepare_env_arg(env):
+    if env is not None:
+        envs = {k: v for k, v in map(lambda s: s.split('=', 1), env)}
     else:
         envs = {}
     return envs
 
 
+def _prepare_mount_arg(mount):
+    return list(mount)
+
+
 @click.command()
 @click.pass_context
-@click.argument('lang')
+@click.argument('lang', type=str)
 @click.argument('files', nargs=-1, type=click.Path())
 @click.option('-t', '--session-id', '--client-token', metavar='SESSID',
               help='Specify a human-readable session ID or name. '
@@ -272,40 +276,41 @@ def _prepare_env_arg(args):
 @click.option('--rm', is_flag=True,
               help='Terminate the session immediately after running '
                    'the given code or files')
-@click.option('-e', '--env', metavar='KEY=VAL', type=str, action='append',
+@click.option('-e', '--env', metavar='KEY=VAL', type=str, multiple=True,
               help='Environment variable (may appear multiple times)')
-@click.option('--env-range', metavar='RANGE_EXPR', action='append',
+@click.option('--env-range', metavar='RANGE_EXPR', multiple=True,
               type=range_expr, help='Range expression for environment variable.')
-@click.option('--build-range', metavar='RANGE_EXPR', action='append',
+@click.option('--build-range', metavar='RANGE_EXPR', multiple=True,
               type=range_expr, help='Range expression for execution arguments.')
-@click.option('--exec-range', metavar='RANGE_EXPR', action='append', type=range_expr,
+@click.option('--exec-range', metavar='RANGE_EXPR', multiple=True, type=range_expr,
               help='Range expression for execution arguments.')
 @click.option('--max-parallel', metavar='NUM', type=int, default=2,
               help='The maximum number of parallel sessions.')
-@click.option('-m', '--mount', type=str, action='append',
+@click.option('-m', '--mount', type=str, multiple=True,
               help='User-owned virtual folder names to mount')
 @click.option('-s', '--stats', is_flag=True,
               help='Show resource usage statistics after termination '
                    '(only works if "--rm" is given)')
 @click.option('--tag', type=str, default=None,
               help='User-defined tag string to annotate sessions.')
-@click.option('-r', '--resources', metavar='KEY=VAL', type=str, action='append',
+@click.option('-r', '--resources', metavar='KEY=VAL', type=str, multiple=True,
               help='Set computation resources (e.g: -r cpu=2 -r mem=256 -r gpu=1)'
                    '. 1 slot of cpu/gpu represents 1 core. The unit of mem(ory) '
                    'is MiB.')
-@click.option('-q', '--quiet', if_flag=True,
+@click.option('-q', '--quiet', is_flag=True,
               help='Hide execution details but show only the kernel outputs.')
 @click.option('--legacy', is_flag=True,
               help='Use the legacy synchronous polling mode to '
                    'fetch console outputs.')
-def run(lang, files, session_id, cluster_size, code, clean, build, exec, terminal,
-        basedir, rm, env, env_range, build_range, exec_range, max_parallel, mount,
-        stats, tag, resources, quiet, legacy):
+def run(ctx, lang, files, session_id, cluster_size, code, clean, build, exec,
+        terminal, basedir, rm, env, env_range, build_range, exec_range, max_parallel,
+        mount, stats, tag, resources, quiet, legacy):
     '''
     Run the given code snippet or files in a session.
     Depending on the session ID you give (default is random),
     it may reuse an existing session or create a new one.
 
+    \b
     LANG: The name (and version/platform tags appended after a colon) of session
           runtime or programming language.')
     FILES: The code file(s). Can be added multiple times.
@@ -325,8 +330,9 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
               '"-c" option if run without files.', file=sys.stderr)
         sys.exit(1)
 
-    envs = _prepare_env_arg(ctx.args)
-    resources = _prepare_resource_arg(ctx.args)
+    envs = _prepare_env_arg(env)
+    resources = _prepare_resource_arg(resources)
+    mount = _prepare_mount_arg(mount)
 
     if not (1 <= cluster_size < 4):
         print('Invalid cluster size.', file=sys.stderr)
@@ -381,9 +387,11 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 print('env = {!r}, build = {!r}, exec = {!r}'
                       .format(pretty_env, case[1], case[2]))
 
-    def _run_legacy(session, args, idx, session_id, envs,
+    def _run_legacy(session, idx, session_id, envs,
                     clean_cmd, build_cmd, exec_cmd):
         try:
+            print('######')
+            print(mount)
             kernel = session.Kernel.get_or_create(
                 lang,
                 client_token=session_id,
@@ -392,6 +400,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 envs=envs,
                 resources=resources,
                 tag=tag)
+            print('######')
         except Exception as e:
             print_error(e)
             sys.exit(1)
@@ -443,7 +452,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                     else:
                         print('[{0}] Statistics is not available.'.format(idx))
 
-    async def _run(session, args, idx, session_id, envs,
+    async def _run(session, idx, session_id, envs,
                    clean_cmd, build_cmd, exec_cmd,
                    is_multi=False):
         try:
@@ -548,14 +557,14 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
         with Session() as session:
             for idx, case in enumerate(case_set.keys()):
                 if is_multi:
-                    session_id = '{0}-{1}'.format(session_id_prefix, idx)
+                    _session_id = '{0}-{1}'.format(session_id_prefix, idx)
                 else:
-                    session_id = session_id_prefix
+                    _session_id = session_id_prefix
                 envs = dict(case[0])
                 clean_cmd = clean if clean else '*'
                 build_cmd = case[1]
                 exec_cmd = case[2]
-                _run_legacy(session, ctx.args, idx, session_id, envs,
+                _run_legacy(session, idx, _session_id, envs,
                             clean_cmd, build_cmd, exec_cmd)
 
     async def _run_cases():
@@ -573,15 +582,15 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
             # TODO: limit max-parallelism using aiojobs
             for idx, case in enumerate(case_set.keys()):
                 if is_multi:
-                    session_id = '{0}-{1}'.format(session_id_prefix, idx)
+                    _session_id = '{0}-{1}'.format(session_id_prefix, idx)
                 else:
-                    session_id = session_id_prefix
+                    _session_id = session_id_prefix
                 envs = dict(case[0])
                 clean_cmd = clean if clean else '*'
                 build_cmd = case[1]
                 exec_cmd = case[2]
                 t = loop.create_task(
-                    _run(session, ctx.args, idx, session_id, envs,
+                    _run(session, idx, _session_id, envs,
                          clean_cmd, build_cmd, exec_cmd,
                          is_multi=is_multi))
                 tasks.append(t)
@@ -607,13 +616,13 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
 @click.option('-t', '--session-id', '--client-token', metavar='SESSID',
               help='Specify a human-readable session ID or name. '
                    'If not set, a random hex string is used.')
-@click.option('-e', '--env', metavar='KEY=VAL', type=str, action='append',
+@click.option('-e', '--env', metavar='KEY=VAL', type=str, multiple=True,
               help='Environment variable (may appear multiple times)')
-@click.option('-m', '--mount', type=str, action='append',
+@click.option('-m', '--mount', type=str, multiple=True,
               help='User-owned virtual folder names to mount')
 @click.option('--tag', type=str, default=None,
               help='User-defined tag string to annotate sessions.')
-@click.option('-r', '--resources', metavar='KEY=VAL', type=str, action='append',
+@click.option('-r', '--resources', metavar='KEY=VAL', type=str, multiple=True,
               help='Set computation resources used by the session '
                    '(e.g: -r cpu=2 -r mem=256 -r gpu=1).'
                    '1 slot of cpu/gpu represents 1 core. '
@@ -637,8 +646,9 @@ def start(lang, session_id, env, mount, resources, cluster_size):
         session_id = session_id
 
     ######
-    envs = _prepare_env_arg(ctx.args)
-    resources = _prepare_resource_arg(ctx.args)
+    envs = _prepare_env_arg(env)
+    resources = _prepare_resource_arg(resources)
+    mount = _prepare_mount_arg(mount)
     with Session() as session:
         try:
             kernel = session.Kernel.get_or_create(
@@ -668,8 +678,7 @@ def start(lang, session_id, env, mount, resources, cluster_size):
               help='Show resource usage statistics after termination')
 def terminate(sess_id_or_alias, stats):
     '''
-    Terminate the given session. SESSID is sessino ID or its alias given when
-    creating the session.
+    Terminate the given session.
 
     SESSID: session ID or its alias given when creating the session.
     '''

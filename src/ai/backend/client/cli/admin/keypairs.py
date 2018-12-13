@@ -82,8 +82,7 @@ def keypairs(user_id, is_active):
 
 
 @click.command()
-@click.option('-u', '--user-id', type=str, default=None,
-              help='Create a keypair for this user.')
+@click.argument('user-id', type=str, default=None, metavar='USERID')
 @click.option('-a', '--admin', is_flag=True,
               help='Give the admin privilege to the new keypair.')
 @click.option('-i', '--inactive', is_flag=True,
@@ -97,10 +96,9 @@ def keypairs(user_id, is_active):
 def add(user_id, admin, inactive, concurrency_limit, rate_limit, resource_policy):
     '''
     Add a new keypair.
+
+    USER_ID: User ID of a new key pair.
     '''
-    if user_id is None:
-        print('You must set the user ID (-u/--user-id).')
-        return
     try:
         user_id = int(user_id)
     except ValueError:

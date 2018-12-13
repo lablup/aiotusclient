@@ -14,7 +14,6 @@ from ..session import Session
 @click.group()
 def vfolder():
     '''Provides virtual folder operations.'''
-    print('Run with -h/--help for usage.')
 
 
 @vfolder.command()
@@ -46,6 +45,7 @@ def list():
 def create(name, host):
     '''Create a new virtual folder.
 
+    \b
     NAME: Name of a virtual folder.
     HOST: Name of a virtual folder host in which the virtual folder will be created.
     '''
@@ -101,6 +101,7 @@ def upload(name, filenames):
     Upload a file to the virtual folder from the current working directory.
     The files with the same names will be overwirtten.
 
+    \b
     NAME: Name of a virtual folder.
     FILENAMES: Paths of the files to be uploaded.
     '''
@@ -121,6 +122,7 @@ def download(name, filenames):
     Download a file from the virtual folder to the current working directory.
     The files with the same names will be overwirtten.
 
+    \b
     NAME: Name of a virtual folder.
     FILENAMES: Paths of the files to be uploaded.
     '''
@@ -152,9 +154,10 @@ def cp(filenames):
 def mkdir(name, path):
     '''Create an empty directory in the virtual folder.
 
+    \b
     NAME: Name of a virtual folder.
-    PATH: The name or path of directory.  Parent directories are created
-          automatically if they do not exist.
+    PATH: The name or path of directory. Parent directories are created automatically
+          if they do not exist.
     '''
     with Session() as session:
         try:
@@ -179,6 +182,7 @@ def rm(name, filenames, recursive):
 
     This operation is irreversible!
 
+    \b
     NAME: Name of a virtual folder.
     FILENAMES: Paths of the files to delete.
     '''
@@ -201,6 +205,7 @@ def ls(name, path):
     """
     List files in a path of a virtual folder.
 
+    \b
     NAME: Name of a virtual folder.
     PATH: Path inside vfolder.
     """
@@ -233,6 +238,7 @@ def ls(name, path):
 def invite(name, emails, perm):
     """Invite other users to access the virtual folder.
 
+    \b
     NAME: Name of a virtual folder.
     EMAIL: Emails to invite.
     """
@@ -254,7 +260,7 @@ def invite(name, emails, perm):
 
 
 @vfolder.command()
-def invitations(args):
+def invitations():
     """List and manage received invitations.
     """
     with Session() as session:

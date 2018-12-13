@@ -8,10 +8,12 @@ from ..session import Session
 
 @click.command()
 @click.argument('sess_id_or_alias', metavar='SESSID')
-def logs():
+def logs(sess_id_or_alias):
     '''
-    Shows the output logs of a running container. The session ID or its alias given
-    when creating the session.
+    Shows the output logs of a running container.
+
+    \b
+    SESSID: Session ID or its alias given when creating the session.
     '''
     with Session() as session:
         try:

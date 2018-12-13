@@ -66,11 +66,12 @@ def sessions(status, access_key, id_only):
 
 
 @click.command()
-@click.argument('sess_id_or_alias', metavar='NAME')
+@click.argument('sess_id_or_alias', metavar='SESSID')
 def session(sess_id_or_alias):
     '''
-    Show detailed information for a running compute session. NAME is session id or
-    its alias.
+    Show detailed information for a running compute session.
+
+    SESSID: Session id or its alias.
     '''
     fields = [
         ('Session ID', 'sess_id'),

@@ -116,8 +116,7 @@ class ProxyRunner:
 
 
 @click.command()
-@click.argument('session_id', type=str, metavar='SESSID',
-                help='The compute session ID.')
+@click.argument('session_id', type=str, metavar='SESSID')
 @click.argument('app', type=str)
 @click.option('--bind', type=str, default='127.0.0.1',
               help='The IP/host address to bind this proxy.')
@@ -129,6 +128,7 @@ def app(session_id, app, bind, port):
 
     The type of proxy depends on the app definition: plain TCP or HTTP.
 
+    \b
     SESSID: The compute session ID.
     APP: The name of service provided by the given session.
     """

@@ -5,21 +5,6 @@ from .pretty import print_fail
 
 # def main():
 
-#     import ai.backend.client.cli.config # noqa
-#     import ai.backend.client.cli.run    # noqa
-#     import ai.backend.client.cli.proxy  # noqa
-#     import ai.backend.client.cli.admin  # noqa
-#     import ai.backend.client.cli.admin.keypairs  # noqa
-#     import ai.backend.client.cli.admin.sessions  # noqa
-#     import ai.backend.client.cli.admin.agents    # noqa
-#     import ai.backend.client.cli.admin.vfolders  # noqa
-#     import ai.backend.client.cli.manager  # noqa
-#     import ai.backend.client.cli.vfolder # noqa
-#     import ai.backend.client.cli.ps     # noqa
-#     import ai.backend.client.cli.logs   # noqa
-#     import ai.backend.client.cli.files           # noqa
-#     import ai.backend.client.cli.app  # noqa
-
 #     if len(sys.argv) <= 1:
 #         global_argparser.print_help()
 #         return
@@ -42,10 +27,15 @@ from .pretty import print_fail
 #         print_fail('The command is not specified or unrecognized.')
 
 
-@click.group(invoke_without_command=True)
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+
+@click.group(invoke_without_command=True, context_settings=CONTEXT_SETTINGS)
 @click.version_option()
 @click.pass_context
 def main(ctx):
+    """Backend.AI command line interface.
+    """
     if ctx.invoked_subcommand is None:
         click.echo(main.get_help(ctx))
 
@@ -59,6 +49,7 @@ def _attach_command():
     from .manager import manager    # noqa
     from .proxy import proxy        # noqa
     from .ps import ps              # noqa
+    from .run import run, start, terminate, info # noqa
     from .vfolder import vfolder    # noqa
 
     main.add_command(admin)
@@ -71,6 +62,10 @@ def _attach_command():
     main.add_command(manager)
     main.add_command(proxy)
     main.add_command(ps)
+    main.add_command(run)
+    main.add_command(start)
+    main.add_command(terminate)
+    main.add_command(info)
     main.add_command(vfolder)
 
 
