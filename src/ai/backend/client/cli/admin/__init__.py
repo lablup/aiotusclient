@@ -1,9 +1,15 @@
-from .. import register_command
+from .. import main
 
 
-@register_command
-def admin(args):
+@main.group()
+def admin():
     '''
     Provides the admin API access.
     '''
-    print('Run with -h/--help for usage.')
+
+
+def _attach_command():
+    from . import agents, keypairs, sessions, vfolders  # noqa
+
+
+_attach_command()

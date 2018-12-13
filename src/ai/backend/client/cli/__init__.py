@@ -1,108 +1,114 @@
-import argparse
-import functools
 from pathlib import Path
 import sys
-from typing import Callable, Sequence, Union
 
-import configargparse
-
-from .pretty import print_fail
-
-ArgParserType = Union[argparse.ArgumentParser, configargparse.ArgumentParser]
-
-global_argparser = configargparse.ArgumentParser(
-    prog='backend.ai',
-    description='Backend.AI command line interface',
-    formatter_class=configargparse.ArgumentDefaultsHelpFormatter,
-)
-_subparsers = dict()
+import click
 
 
-def register_command(*args, **kwargs):
+class AliasGroup(click.Group):
+    """
+    Enable command aliases.
 
-    def _register_command(
-        handler: Callable[[argparse.Namespace], None], *,
-        main_parser: ArgParserType = None,
-        aliases: Sequence[str] = None
-    ) -> Callable[[argparse.Namespace], None]:
+    ref) https://github.com/click-contrib/click-aliases
+    """
+    def __init__(self, *args, **kwargs):
+        super(AliasGroup, self).__init__(*args, **kwargs)
+        self._commands = {}
+        self._aliases = {}
 
-        if main_parser is None:
-            main_parser = global_argparser
-        if id(main_parser) not in _subparsers:
-            subparsers = main_parser.add_subparsers(title='commands',
-                                                    dest='command')
-            _subparsers[id(main_parser)] = subparsers
-        else:
-            subparsers = _subparsers[id(main_parser)]
+    def command(self, *args, **kwargs):
+        aliases = kwargs.pop('aliases', [])
+        decorator = super(AliasGroup, self).command(*args, **kwargs)
+        if not aliases:
+            return decorator
 
-        @functools.wraps(handler)
-        def wrapped(args):
-            return handler(args)
+        def _decorator(f):
+            cmd = decorator(f)
+            if aliases:
+                self._commands[cmd.name] = aliases
+                for alias in aliases:
+                    self._aliases[alias] = cmd.name
+            return cmd
+        return _decorator
 
-        doc_summary = handler.__doc__.split('\n\n')[0]
-        inner_parser = subparsers.add_parser(
-            handler.__name__.replace('_', '-'),
-            aliases=[] if aliases is None else aliases,
-            description=handler.__doc__,
-            formatter_class=configargparse.ArgumentDefaultsHelpFormatter,
-            help=doc_summary)
-        inner_parser.set_defaults(function=wrapped)
-        wrapped.register_command = functools.partial(
-            register_command,
-            main_parser=inner_parser)
-        wrapped._parser = inner_parser
-        wrapped.add_argument = inner_parser.add_argument
-        return wrapped
+    def group(self, *args, **kwargs):
+        aliases = kwargs.pop('aliases', [])
+        decorator = super(AliasGroup, self).group(*args, **kwargs)
+        if not aliases:
+            return decorator
 
-    if (len(args) == 1 and (
-            len(kwargs) == 0 or (len(kwargs) == 1 and 'main_parser' in kwargs)) and
-            callable(args[0])):
-        return _register_command(*args, **kwargs)
-    return lambda handler: _register_command(handler, *args, **kwargs)
+        def _decorator(f):
+            cmd = decorator(f)
+            if aliases:
+                self._commands[cmd.name] = aliases
+                for alias in aliases:
+                    self._aliases[alias] = cmd.name
+            return cmd
+        return _decorator
+
+    def get_command(self, ctx, cmd_name):
+        if cmd_name in self._aliases:
+            cmd_name = self._aliases[cmd_name]
+        command = super(AliasGroup, self).get_command(ctx, cmd_name)
+        if command:
+            return command
+
+    def format_commands(self, ctx, formatter):
+        commands = []
+        for subcommand in self.list_commands(ctx):
+            cmd = self.get_command(ctx, subcommand)
+            # What is this, the tool lied about a command. Ignore it
+            if cmd is None:
+                continue
+            if cmd.hidden:
+                continue
+            if subcommand in self._commands:
+                aliases = ','.join(sorted(self._commands[subcommand]))
+                subcommand = '{0} ({1})'.format(subcommand, aliases)
+            commands.append((subcommand, cmd))
+
+        # allow for 3 times the default spacing
+        if len(commands):
+            limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
+            rows = []
+            for subcommand, cmd in commands:
+                help = cmd.get_short_help_str(limit)
+                rows.append((subcommand, help))
+            if rows:
+                with formatter.section('Commands'):
+                    formatter.write_dl(rows)
 
 
-@register_command
-def help(args):
-    '''
-    Shows the help.
-    '''
-    global_argparser.print_help()
-
-
+@click.group(cls=AliasGroup,
+             context_settings=dict(help_option_names=['-h', '--help']))
+@click.version_option()
 def main():
+    """
+    Backend.AI command line interface.
+    """
 
-    import ai.backend.client.cli.config # noqa
-    import ai.backend.client.cli.run    # noqa
-    import ai.backend.client.cli.proxy  # noqa
-    import ai.backend.client.cli.admin  # noqa
-    import ai.backend.client.cli.admin.keypairs  # noqa
-    import ai.backend.client.cli.admin.sessions  # noqa
-    import ai.backend.client.cli.admin.agents    # noqa
-    import ai.backend.client.cli.admin.vfolders  # noqa
-    import ai.backend.client.cli.manager  # noqa
-    import ai.backend.client.cli.vfolder # noqa
-    import ai.backend.client.cli.ps     # noqa
-    import ai.backend.client.cli.logs   # noqa
-    import ai.backend.client.cli.files           # noqa
-    import ai.backend.client.cli.app  # noqa
 
-    if len(sys.argv) <= 1:
-        global_argparser.print_help()
-        return
-
+@click.command(context_settings=dict(ignore_unknown_options=True,
+                                     allow_extra_args=True))
+@click.pass_context
+def run_alias(ctx):
+    """
+    Quick aliases for run command.
+    """
     mode = Path(sys.argv[0]).stem
-
-    if mode == '__main__':
-        pass
-    elif mode == 'lcc':
+    help = True if len(sys.argv) <= 1 else False
+    if mode == 'lcc':
         sys.argv.insert(1, 'c')
-        sys.argv.insert(1, 'run')
     elif mode == 'lpython':
         sys.argv.insert(1, 'python')
-        sys.argv.insert(1, 'run')
+    sys.argv.insert(1, 'run')
+    if help:
+        sys.argv.append('--help')
+    main.main(prog_name='backend.ai')
 
-    args = global_argparser.parse_args()
-    if hasattr(args, 'function'):
-        args.function(args)
-    else:
-        print_fail('The command is not specified or unrecognized.')
+
+def _attach_command():
+    from . import admin, config, app, files, logs, manager, proxy, ps, run  # noqa
+    from . import vfolder       # noqa
+
+
+_attach_command()

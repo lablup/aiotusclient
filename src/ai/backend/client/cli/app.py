@@ -2,8 +2,9 @@ import asyncio
 import signal
 
 import aiohttp
+import click
 
-from . import register_command
+from . import main
 from .pretty import print_info, print_error
 from ..request import Request
 from ..session import AsyncSession
@@ -122,13 +123,22 @@ class ProxyRunner:
         await self.local_server.wait_closed()
 
 
-@register_command
-def app(args):
+@main.command()
+@click.argument('session_id', type=str, metavar='SESSID')
+@click.argument('app', type=str)
+@click.option('--bind', type=str, default='127.0.0.1',
+              help='The IP/host address to bind this proxy.')
+@click.option('-p', '--port', type=int, default=8080,
+              help='The port number to listen user connections.')
+def app(session_id, app, bind, port):
     """
-    Run a local proxy to a service provided by Backend.AI
-    compute sessions.
+    Run a local proxy to a service provided by Backend.AI compute sessions.
 
     The type of proxy depends on the app definition: plain TCP or HTTP.
+
+    \b
+    SESSID: The compute session ID.
+    APP: The name of service provided by the given session.
     """
     api_session = None
     runner = None
@@ -139,15 +149,15 @@ def app(args):
         api_session = AsyncSession()
         # TODO: generalize protocol using service ports metadata
         protocol = 'http'
-        runner = ProxyRunner(api_session, args.session_id, args.app,
-                             protocol, args.bind, args.port,
+        runner = ProxyRunner(api_session, session_id, app,
+                             protocol, bind, port,
                              loop=loop)
         await runner.ready()
         print_info(
-            "A local proxy to the application \"{0}\" ".format(args.app) +
-            "provided by the session \"{0}\" ".format(args.session_id) +
+            "A local proxy to the application \"{0}\" ".format(app) +
+            "provided by the session \"{0}\" ".format(session_id) +
             "is available at: {0}://{1}:{2}"
-            .format(protocol, args.bind, args.port)
+            .format(protocol, bind, port)
         )
 
     async def app_shutdown():
@@ -156,17 +166,7 @@ def app(args):
         await runner.close()
         await api_session.close()
         print_info("The local proxy to \"{}\" has terminated."
-                   .format(args.app))
+                   .format(app))
 
     asyncio_run_forever(app_setup(), app_shutdown(),
                         stop_signals={signal.SIGINT, signal.SIGTERM})
-
-
-app.add_argument('session_id', type=str, metavar='SESSID',
-                 help='The compute session ID.')
-app.add_argument('app', type=str,
-                 help='The name of service provided by the given session.')
-app.add_argument('--bind', type=str, default='127.0.0.1',
-                   help='The IP/host address to bind this proxy.')
-app.add_argument('-p', '--port', type=int, default=8080,
-                   help='The port number to listen user connections.')

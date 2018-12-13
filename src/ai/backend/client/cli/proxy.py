@@ -3,8 +3,9 @@ import re
 
 import aiohttp
 from aiohttp import web
+import click
 
-from . import register_command
+from . import main
 from .pretty import print_info, print_error, print_fail
 from ..exceptions import BackendAPIError, BackendClientError
 from ..request import Request
@@ -180,8 +181,14 @@ async def cleanup_proxy(app):
     await app['client_session'].close()
 
 
-@register_command
-def proxy(args):
+@main.command(context_settings=dict(allow_extra_args=True))
+@click.option('--bind', type=str, default='localhost',
+              help='The IP/host address to bind this proxy.')
+@click.option('-p', '--port', type=int, default=8084,
+              help='The TCP port to accept non-encrypted non-authorized '
+                   'API requests.')
+@click.pass_context
+def proxy(ctx, bind, port):
     """
     Run a non-encrypted non-authorized API proxy server.
     Use this only for development and testing!
@@ -193,13 +200,6 @@ def proxy(args):
     app.router.add_route("GET", r'/stream/{path:.*$}', websocket_handler)
     app.router.add_route("GET", r'/wsproxy/{path:.*$}', websocket_handler)
     app.router.add_route('*', r'/{path:.*$}', web_handler)
-    if getattr(args, 'testing', False):
+    if getattr(ctx.args, 'testing', False):
         return app
-    web.run_app(app, host=args.bind, port=args.port)
-
-
-proxy.add_argument('--bind', type=str, default='localhost',
-                   help='The IP/host address to bind this proxy.')
-proxy.add_argument('-p', '--port', type=int, default=8084,
-                   help='The TCP port to accept non-encrypted non-authorized '
-                        'API requests.')
+    web.run_app(app, host=bind, port=port)

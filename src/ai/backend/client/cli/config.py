@@ -1,10 +1,10 @@
-from . import register_command
+from . import main
 from .. import __version__
 from ..config import get_config
 
 
-@register_command
-def config(args):
+@main.command()
+def config():
     '''
     Shows the current configuration.
     '''

@@ -9,7 +9,6 @@ import aiohttp.web
 from dateutil.tz import tzutc
 from multidict import CIMultiDict
 import json as modjson
-from yarl import URL
 
 from .auth import generate_signature
 from .exceptions import BackendClientError, BackendAPIError
