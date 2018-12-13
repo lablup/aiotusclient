@@ -1,11 +1,13 @@
 import asyncio
+import signal
+
 import aiohttp
 
 from . import register_command
 from .pretty import print_info, print_error
 from ..request import Request
 from ..session import AsyncSession
-from ..compat import current_loop
+from ..compat import asyncio_run_forever, current_loop
 
 
 class WSProxy:
@@ -82,13 +84,14 @@ class ProxyRunner:
         'api_session', 'local_server', 'loop',
     )
 
-    def __init__(self, session_id, name, protocol, host, port, *, loop=None):
+    def __init__(self, api_session, session_id, app_name,
+                 protocol, host, port, *, loop=None):
+        self.api_session = api_session
         self.session_id = session_id
-        self.app_name = name
+        self.app_name = app_name
         self.protocol = protocol
         self.host = host
         self.port = port
-        self.api_session = None
         self.local_server = None
         self.loop = loop if loop else current_loop()
 
@@ -103,25 +106,13 @@ class ProxyRunner:
             print_error(e)
 
     async def ready(self):
-        self.api_session = AsyncSession()
-
         self.local_server = await asyncio.start_server(
             self.handle_connection, self.host, self.port,
             loop=self.loop)
 
-        print_info(
-            "A local proxy to the application \"{0}\" ".format(self.app_name) +
-            "provided by the session \"{0}\" ".format(self.session_id) +
-            "is available at: {0}://{1}:{2}"
-            .format(self.protocol, self.host, self.port)
-        )
-
     async def close(self):
         self.local_server.close()
         await self.local_server.wait_closed()
-        await self.api_session.close()
-        # Let asyncio-internal socket cleanups finish.
-        await asyncio.sleep(0.1)
 
 
 @register_command
@@ -132,25 +123,36 @@ def app(args):
 
     The type of proxy depends on the app definition: plain TCP or HTTP.
     """
+    api_session = None
+    runner = None
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    # TODO: generalize protocol using service ports metadata
-    runner = ProxyRunner(args.session_id, args.app,
-                         'http', args.bind, args.port,
-                         loop=loop)
-    loop.run_until_complete(runner.ready())
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:  # pragma: no cover
-        pass
-    finally:
+    async def app_setup():
+        nonlocal api_session, runner
+        loop = current_loop()
+        protocol = 'http'
+        api_session = AsyncSession()
+        # TODO: generalize protocol using service ports metadata
+        runner = ProxyRunner(api_session, args.session_id, args.app,
+                             protocol, args.bind, args.port,
+                             loop=loop)
+        await runner.ready()
+        print_info(
+            "A local proxy to the application \"{0}\" ".format(args.app) +
+            "provided by the session \"{0}\" ".format(args.session_id) +
+            "is available at: {0}://{1}:{2}"
+            .format(protocol, args.bind, args.port)
+        )
+
+    async def app_shutdown():
+        nonlocal api_session, runner
         print_info("Shutting down....")
-        try:
-            loop.run_until_complete(runner.close())
-        finally:
-            print_info("Done")
-            loop.close()
+        await runner.close()
+        await api_session.close()
+        print_info("The local proxy to \"{}\" has terminated."
+                   .format(args.app))
+
+    asyncio_run_forever(app_setup(), app_shutdown(),
+                        stop_signals={signal.SIGINT, signal.SIGTERM})
 
 
 app.add_argument('session_id', type=str, metavar='SESSID',
