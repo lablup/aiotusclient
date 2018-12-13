@@ -23,6 +23,7 @@ def mock_request_params(session):
         'session': session,
         'method': 'GET',
         'path': '/function/item/',
+        'params': {'app': '999'},
         'content': b'{"test1": 1}',
         'content_type': 'application/json',
     }
@@ -33,6 +34,7 @@ def test_request_initialization(mock_request_params):
 
     assert rqst.session == mock_request_params['session']
     assert rqst.method == mock_request_params['method']
+    assert rqst.params == mock_request_params['params']
     assert rqst.path == mock_request_params['path'].lstrip('/')
     assert rqst.content == mock_request_params['content']
     assert 'X-BackendAI-Version' in rqst.headers
@@ -89,15 +91,15 @@ def test_request_attach_files(mock_request_params):
 
 
 def test_build_correct_url(mock_request_params):
-    canonical_url = 'http://127.0.0.1:8081/function'
+    canonical_url = 'http://127.0.0.1:8081/function?app=999'
 
     mock_request_params['path'] = '/function'
     rqst = Request(**mock_request_params)
-    assert rqst._build_url() == canonical_url
+    assert str(rqst._build_url()) == canonical_url
 
     mock_request_params['path'] = 'function'
     rqst = Request(**mock_request_params)
-    assert rqst._build_url() == canonical_url
+    assert str(rqst._build_url()) == canonical_url
 
 
 def test_fetch_invalid_method(mock_request_params):

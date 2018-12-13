@@ -408,6 +408,9 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
             vprint_done('[{0}] Session {0} is ready.'.format(idx, kernel.kernel_id))
         else:
             vprint_done('[{0}] Reusing session {0}...'.format(idx, kernel.kernel_id))
+        if kernel.service_ports:
+            print_info('This session provides the following app services: '
+                       ', '.join(sport['name'] for sport in kernel.service_ports))
 
         try:
             if files:
@@ -669,6 +672,10 @@ def start(lang, session_id, env, mount, tag, resources, cluster_size):
             else:
                 print_info('Session ID {0} is already running and ready.'
                            .format(session_id))
+            if kernel.service_ports:
+                print_info('This session provides the following app services: ' +
+                           ', '.join(sport['name']
+                                     for sport in kernel.service_ports))
 
 
 @main.command(aliases=['rm', 'kill'])

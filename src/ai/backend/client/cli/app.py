@@ -13,26 +13,32 @@ from ..compat import asyncio_run_forever, current_loop
 
 class WSProxy:
     __slots__ = (
-        'api_session', 'path',
-        'down_task',
+        'api_session', 'session_id',
+        'app_name', 'protocol',
         'reader', 'writer',
+        'down_task',
     )
     BUFFER_SIZE = 8192
 
     def __init__(self, api_session: AsyncSession,
                  session_id: str,
+                 app_name: str,
                  protocol: str,
                  reader: asyncio.StreamReader,
                  writer: asyncio.StreamWriter):
         self.api_session = api_session
-        self.path = "/stream/kernel/{0}/{1}proxy".format(session_id, protocol)
+        self.session_id = session_id
+        self.app_name = app_name
+        self.protocol = protocol
         self.reader = reader
         self.writer = writer
         self.down_task = None
 
     async def run(self):
+        path = "/stream/kernel/{0}/{1}proxy".format(self.session_id, self.protocol)
         api_rqst = Request(
-            self.api_session, "GET", self.path, b'',
+            self.api_session, "GET", path, b'',
+            params={'app': self.app_name},
             content_type="application/json")
         async with api_rqst.connect_websocket() as ws:
 
@@ -98,7 +104,8 @@ class ProxyRunner:
 
     async def handle_connection(self, reader, writer):
         p = WSProxy(self.api_session, self.session_id,
-                    self.protocol, reader, writer)
+                    self.app_name, self.protocol,
+                    reader, writer)
         try:
             await p.run()
         except asyncio.CancelledError:

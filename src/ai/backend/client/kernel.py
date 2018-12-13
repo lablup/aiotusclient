@@ -101,6 +101,7 @@ class Kernel:
             data = await resp.json()
             o = cls(data['kernelId'])  # type: ignore
             o.created = data.get('created', True)     # True is for legacy
+            o.service_ports = data.get('servicePorts', [])
             return o
 
     def __init__(self, kernel_id: str):
