@@ -343,6 +343,9 @@ def run(args):
             vprint_done('[{0}] Session {0} is ready.'.format(idx, kernel.kernel_id))
         else:
             vprint_done('[{0}] Reusing session {0}...'.format(idx, kernel.kernel_id))
+        if kernel.service_ports:
+            print_info('This session provides the following app services: '
+                       ', '.join(sport['name'] for sport in kernel.service_ports))
 
         try:
             if args.files:
@@ -637,6 +640,10 @@ def start(args):
             else:
                 print_info('Session ID {0} is already running and ready.'
                            .format(session_id))
+            if kernel.service_ports:
+                print_info('This session provides the following app services: ' +
+                           ', '.join(sport['name']
+                                     for sport in kernel.service_ports))
 
 
 start.add_argument('lang',
