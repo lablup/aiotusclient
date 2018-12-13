@@ -78,30 +78,6 @@ class AliasGroup(click.Group):
                     formatter.write_dl(rows)
 
 
-# def main():
-
-#     if len(sys.argv) <= 1:
-#         global_argparser.print_help()
-#         return
-
-#     mode = Path(sys.argv[0]).stem
-
-#     if mode == '__main__':
-#         pass
-#     elif mode == 'lcc':
-#         sys.argv.insert(1, 'c')
-#         sys.argv.insert(1, 'run')
-#     elif mode == 'lpython':
-#         sys.argv.insert(1, 'python')
-#         sys.argv.insert(1, 'run')
-
-#     args = global_argparser.parse_args()
-#     if hasattr(args, 'function'):
-#         args.function(args)
-#     else:
-#         print_fail('The command is not specified or unrecognized.')
-
-
 @click.group(cls=AliasGroup,
              context_settings=dict(help_option_names=['-h', '--help']))
 @click.version_option()

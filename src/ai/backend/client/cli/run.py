@@ -390,8 +390,6 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
     def _run_legacy(session, idx, session_id, envs,
                     clean_cmd, build_cmd, exec_cmd):
         try:
-            print('######')
-            print(mount)
             kernel = session.Kernel.get_or_create(
                 lang,
                 client_token=session_id,
@@ -400,7 +398,6 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 envs=envs,
                 resources=resources,
                 tag=tag)
-            print('######')
         except Exception as e:
             print_error(e)
             sys.exit(1)
@@ -448,10 +445,10 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 ret = kernel.destroy()
                 vprint_done('[{0}] Cleaned up the session.'.format(idx))
                 if stats:
-                    stats = ret.get('stats', None) if ret else None
-                    if stats:
+                    _stats = ret.get('stats', None) if ret else None
+                    if _stats:
                         print('[{0}] Statistics:\n{1}'
-                              .format(idx, _format_stats(stats)))
+                              .format(idx, _format_stats(_stats)))
                     else:
                         print('[{0}] Statistics is not available.'.format(idx))
 
@@ -533,9 +530,9 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                     ret = await kernel.destroy()
                     vprint_done('[{0}] Cleaned up the session.'.format(idx))
                     if stats:
-                        stats = ret.get('stats', None) if ret else None
-                        if stats:
-                            stats_str = _format_stats(stats)
+                        _stats = ret.get('stats', None) if ret else None
+                        if _stats:
+                            stats_str = _format_stats(_stats)
                             print(format_info('[{0}] Statistics:'.format(idx)) +
                                   '\n{0}'.format(stats_str))
                             if is_multi:
