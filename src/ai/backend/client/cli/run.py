@@ -1,4 +1,4 @@
-from argparse import ArgumentTypeError, Namespace
+from argparse import ArgumentTypeError
 import asyncio
 import collections
 from decimal import Decimal
@@ -9,12 +9,14 @@ from pathlib import Path
 import re
 import string
 import sys
+import traceback
 
 import aiohttp
+import click
 from humanize import naturalsize
 from tabulate import tabulate
 
-from . import register_command
+from . import main
 from .admin.sessions import session
 from ..compat import current_loop, token_hex
 from ..exceptions import BackendError
@@ -221,36 +223,11 @@ def _get_mem_slots(memslot):
     return mod_size
 
 
-@register_command
-def run(args):
-    '''
-    Run the given code snippet or files in a session.
-    Depending on the session ID you give (default is random),
-    it may reuse an existing session or create a new one.
-    '''
-    if args.quiet:
-        vprint_info = vprint_wait = vprint_done = _noop
-    else:
-        vprint_info = print_info
-        vprint_wait = print_wait
-        vprint_done = print_done
-    if args.env is not None:
-        envs = {k: v for k, v in map(lambda s: s.split('=', 1), args.env)}
-    else:
-        envs = {}
-    if args.files and args.code:
-        print('You can run only either source files or command-line '
-              'code snippet.', file=sys.stderr)
-        sys.exit(1)
-    if not args.files and not args.code:
-        print('You should provide the command-line code snippet using '
-              '"-c" option if run without files.', file=sys.stderr)
-        sys.exit(1)
-    if args.resources:
-        resources = {k: v for k, v in map(lambda s: s.split('=', 1), args.resources)}
+def _prepare_resource_arg(resources):
+    if resources:
+        resources = {k: v for k, v in map(lambda s: s.split('=', 1), resources)}
     else:
         resources = {}  # use the defaults configured in the server
-
     # Reverse humanized memory unit
     mem = resources.pop('mem', None)
     mem = resources.pop('ram', None) if mem is None else mem
@@ -260,18 +237,114 @@ def run(args):
             memslot = _get_mem_slots(memlist)
             if memslot:
                 resources['mem'] = memslot
+    return resources
 
-    if not (1 <= args.cluster_size < 4):
+
+def _prepare_env_arg(env):
+    if env is not None:
+        envs = {k: v for k, v in map(lambda s: s.split('=', 1), env)}
+    else:
+        envs = {}
+    return envs
+
+
+def _prepare_mount_arg(mount):
+    return list(mount)
+
+
+@main.command()
+@click.argument('lang', type=str)
+@click.argument('files', nargs=-1, type=click.Path())
+@click.option('-t', '--session-id', '--client-token', metavar='SESSID',
+              help='Specify a human-readable session ID or name. '
+                   'If not set, a random hex string is used.')
+@click.option('--cluster-size', metavar='NUMBER', type=int, default=1,
+              help='The size of cluster in number of containers.')
+@click.option('-c', '--code', metavar='CODE',
+              help='The code snippet as a single string')
+@click.option('--clean', metavar='CMD',
+              help='Custom shell command for cleaning up the base directory')
+@click.option('--build', metavar='CMD',
+              help='Custom shell command for building the given files')
+@click.option('--exec', metavar='CMD',
+              help='Custom shell command for executing the given files')
+@click.option('--terminal', is_flag=True,
+              help='Connect to the terminal-type kernel.')
+@click.option('--basedir', metavar='PATH', type=click.Path(), default=None,
+              help='Base directory path of uploaded files. '
+                   'All uploaded files must reside inside this directory.')
+@click.option('--rm', is_flag=True,
+              help='Terminate the session immediately after running '
+                   'the given code or files')
+@click.option('-e', '--env', metavar='KEY=VAL', type=str, multiple=True,
+              help='Environment variable (may appear multiple times)')
+@click.option('--env-range', metavar='RANGE_EXPR', multiple=True,
+              type=range_expr, help='Range expression for environment variable.')
+@click.option('--build-range', metavar='RANGE_EXPR', multiple=True,
+              type=range_expr, help='Range expression for execution arguments.')
+@click.option('--exec-range', metavar='RANGE_EXPR', multiple=True, type=range_expr,
+              help='Range expression for execution arguments.')
+@click.option('--max-parallel', metavar='NUM', type=int, default=2,
+              help='The maximum number of parallel sessions.')
+@click.option('-m', '--mount', type=str, multiple=True,
+              help='User-owned virtual folder names to mount')
+@click.option('-s', '--stats', is_flag=True,
+              help='Show resource usage statistics after termination '
+                   '(only works if "--rm" is given)')
+@click.option('--tag', type=str, default=None,
+              help='User-defined tag string to annotate sessions.')
+@click.option('-r', '--resources', metavar='KEY=VAL', type=str, multiple=True,
+              help='Set computation resources (e.g: -r cpu=2 -r mem=256 -r gpu=1)'
+                   '. 1 slot of cpu/gpu represents 1 core. The unit of mem(ory) '
+                   'is MiB.')
+@click.option('-q', '--quiet', is_flag=True,
+              help='Hide execution details but show only the kernel outputs.')
+@click.option('--legacy', is_flag=True,
+              help='Use the legacy synchronous polling mode to '
+                   'fetch console outputs.')
+def run(lang, files, session_id, cluster_size, code, clean, build, exec, terminal,
+        basedir, rm, env, env_range, build_range, exec_range, max_parallel, mount,
+        stats, tag, resources, quiet, legacy):
+    '''
+    Run the given code snippet or files in a session.
+    Depending on the session ID you give (default is random),
+    it may reuse an existing session or create a new one.
+
+    \b
+    LANG: The name (and version/platform tags appended after a colon) of session
+          runtime or programming language.')
+    FILES: The code file(s). Can be added multiple times.
+    '''
+    if quiet:
+        vprint_info = vprint_wait = vprint_done = _noop
+    else:
+        vprint_info = print_info
+        vprint_wait = print_wait
+        vprint_done = print_done
+    if files and code:
+        print('You can run only either source files or command-line '
+              'code snippet.', file=sys.stderr)
+        sys.exit(1)
+    if not files and not code:
+        print('You should provide the command-line code snippet using '
+              '"-c" option if run without files.', file=sys.stderr)
+        sys.exit(1)
+
+    envs = _prepare_env_arg(env)
+    resources = _prepare_resource_arg(resources)
+    mount = _prepare_mount_arg(mount)
+
+    if not (1 <= cluster_size < 4):
         print('Invalid cluster size.', file=sys.stderr)
         sys.exit(1)
 
-    if args.env_range is None: args.env_range = []      # noqa
-    if args.build_range is None: args.build_range = []  # noqa
-    if args.exec_range is None: args.exec_range = []    # noqa
+    if env_range is None: env_range = []      # noqa
+    if build_range is None: build_range = []  # noqa
+    if exec_range is None: exec_range = []    # noqa
 
-    env_ranges = {v: r for v, r in args.env_range}
-    build_ranges = {v: r for v, r in args.build_range}
-    exec_ranges = {v: r for v, r in args.exec_range}
+    env_ranges = {v: r for v, r in env_range}
+    build_ranges = {v: r for v, r in build_range}
+    exec_ranges = {v: r for v, r in exec_range}
 
     env_var_maps = [dict(zip(env_ranges.keys(), values))
                     for values in itertools.product(*env_ranges.values())]
@@ -281,17 +354,17 @@ def run(args):
                      for values in itertools.product(*exec_ranges.values())]
     case_set = collections.OrderedDict()
     vmaps_product = itertools.product(env_var_maps, build_var_maps, exec_var_maps)
-    build_template = string.Template(args.build)
-    exec_template = string.Template(args.exec)
+    build_template = string.Template(build)
+    exec_template = string.Template(exec)
     env_templates = {k: string.Template(v) for k, v in envs.items()}
     for env_vmap, build_vmap, exec_vmap in vmaps_product:
         interpolated_envs = tuple((k, vt.substitute(env_vmap))
                                   for k, vt in env_templates.items())
-        if args.build:
+        if build:
             interpolated_build = build_template.substitute(build_vmap)
         else:
             interpolated_build = '*'
-        if args.exec:
+        if exec:
             interpolated_exec = exec_template.substitute(exec_vmap)
         else:
             interpolated_exec = '*'
@@ -299,14 +372,14 @@ def run(args):
 
     is_multi = (len(case_set) > 1)
     if is_multi:
-        if args.max_parallel <= 0:
+        if max_parallel <= 0:
             print('The number maximum parallel sessions must be '
                   'a positive integer.', file=sys.stderr)
             sys.exit(1)
-        if args.terminal:
+        if terminal:
             print('You cannot run multiple cases with terminal.', file=sys.stderr)
             sys.exit(1)
-        if not args.quiet:
+        if not quiet:
             vprint_info('Running multiple sessions for the following combinations:')
             for case in case_set.keys():
                 pretty_env = ' '.join('{}={}'.format(item[0], item[1])
@@ -314,17 +387,17 @@ def run(args):
                 print('env = {!r}, build = {!r}, exec = {!r}'
                       .format(pretty_env, case[1], case[2]))
 
-    def _run_legacy(session, args, idx, session_id, envs,
+    def _run_legacy(session, idx, session_id, envs,
                     clean_cmd, build_cmd, exec_cmd):
         try:
             kernel = session.Kernel.get_or_create(
-                args.lang,
+                lang,
                 client_token=session_id,
-                cluster_size=args.cluster_size,
-                mounts=args.mount,
+                cluster_size=cluster_size,
+                mounts=mount,
                 envs=envs,
                 resources=resources,
-                tag=args.tag)
+                tag=tag)
         except Exception as e:
             print_error(e)
             sys.exit(1)
@@ -332,11 +405,14 @@ def run(args):
             vprint_done('[{0}] Session {0} is ready.'.format(idx, kernel.kernel_id))
         else:
             vprint_done('[{0}] Reusing session {0}...'.format(idx, kernel.kernel_id))
+        if kernel.service_ports:
+            print_info('This session provides the following app services: '
+                       ', '.join(sport['name'] for sport in kernel.service_ports))
 
         try:
-            if args.files:
+            if files:
                 vprint_wait('[{0}] Uploading source files...'.format(idx))
-                ret = kernel.upload(args.files, basedir=args.basedir,
+                ret = kernel.upload(files, basedir=basedir,
                                     show_progress=True)
                 if ret.status // 100 != 2:
                     print_fail('[{0}] Uploading source files failed!'.format(idx))
@@ -349,45 +425,45 @@ def run(args):
                     'build': build_cmd,
                     'exec': exec_cmd,
                 }
-                if not args.terminal:
+                if not terminal:
                     exec_loop_sync(sys.stdout, sys.stderr, kernel, 'batch', '',
                                    opts=opts,
                                    vprint_done=vprint_done)
-            if args.terminal:
+            if terminal:
                 raise NotImplementedError('Terminal access is not supported in '
                                           'the legacy synchronous mode.')
-            if args.code:
-                exec_loop_sync(sys.stdout, sys.stderr, kernel, 'query', args.code,
+            if code:
+                exec_loop_sync(sys.stdout, sys.stderr, kernel, 'query', code,
                                vprint_done=vprint_done)
             vprint_done('[{0}] Execution finished.'.format(idx))
         except Exception as e:
             print_error(e)
             sys.exit(1)
         finally:
-            if args.rm:
+            if rm:
                 vprint_wait('[{0}] Cleaning up the session...'.format(idx))
                 ret = kernel.destroy()
                 vprint_done('[{0}] Cleaned up the session.'.format(idx))
-                if args.stats:
-                    stats = ret.get('stats', None) if ret else None
-                    if stats:
+                if stats:
+                    _stats = ret.get('stats', None) if ret else None
+                    if _stats:
                         print('[{0}] Statistics:\n{1}'
-                              .format(idx, _format_stats(stats)))
+                              .format(idx, _format_stats(_stats)))
                     else:
                         print('[{0}] Statistics is not available.'.format(idx))
 
-    async def _run(session, args, idx, session_id, envs,
+    async def _run(session, idx, session_id, envs,
                    clean_cmd, build_cmd, exec_cmd,
                    is_multi=False):
         try:
             kernel = await session.Kernel.get_or_create(
-                args.lang,
+                lang,
                 client_token=session_id,
-                cluster_size=args.cluster_size,
-                mounts=args.mount,
+                cluster_size=cluster_size,
+                mounts=mount,
                 envs=envs,
                 resources=resources,
-                tag=args.tag)
+                tag=tag)
         except BackendError as e:
             print_fail('[{0}] {1}'.format(idx, e))
             return
@@ -410,10 +486,10 @@ def run(args):
         try:
             def indexed_vprint_done(msg):
                 vprint_done('[{0}] '.format(idx) + msg)
-            if args.files:
+            if files:
                 if not is_multi:
                     vprint_wait('[{0}] Uploading source files...'.format(idx))
-                ret = await kernel.upload(args.files, basedir=args.basedir,
+                ret = await kernel.upload(files, basedir=basedir,
                                           show_progress=not is_multi)
                 if ret.status // 100 != 2:
                     print_fail('[{0}] Uploading source files failed!'.format(idx))
@@ -427,16 +503,16 @@ def run(args):
                     'build': build_cmd,
                     'exec': exec_cmd,
                 }
-                if not args.terminal:
+                if not terminal:
                     await exec_loop(stdout, stderr, kernel, 'batch', '',
                                     opts=opts,
                                     vprint_done=indexed_vprint_done,
                                     is_multi=is_multi)
-            if args.terminal:
+            if terminal:
                 await exec_terminal(kernel)
                 return
-            if args.code:
-                await exec_loop(stdout, stderr, kernel, 'query', args.code,
+            if code:
+                await exec_loop(stdout, stderr, kernel, 'query', code,
                                 vprint_done=indexed_vprint_done,
                                 is_multi=is_multi)
         except BackendError as e:
@@ -448,15 +524,15 @@ def run(args):
             raise RuntimeError(e)
         finally:
             try:
-                if args.rm:
+                if rm:
                     if not is_multi:
                         vprint_wait('[{0}] Cleaning up the session...'.format(idx))
                     ret = await kernel.destroy()
                     vprint_done('[{0}] Cleaned up the session.'.format(idx))
-                    if args.stats:
-                        stats = ret.get('stats', None) if ret else None
-                        if stats:
-                            stats_str = _format_stats(stats)
+                    if stats:
+                        _stats = ret.get('stats', None) if ret else None
+                        if _stats:
+                            stats_str = _format_stats(_stats)
                             print(format_info('[{0}] Statistics:'.format(idx)) +
                                   '\n{0}'.format(stats_str))
                             if is_multi:
@@ -472,31 +548,31 @@ def run(args):
                     stderr.close()
 
     def _run_cases_legacy():
-        if args.session_id is None:
+        if session_id is None:
             session_id_prefix = token_hex(5)
         else:
-            session_id_prefix = args.session_id
+            session_id_prefix = session_id
         vprint_info('Session token prefix: {0}'.format(session_id_prefix))
         vprint_info('In the legacy mode, all cases will run serially!')
         with Session() as session:
             for idx, case in enumerate(case_set.keys()):
                 if is_multi:
-                    session_id = '{0}-{1}'.format(session_id_prefix, idx)
+                    _session_id = '{0}-{1}'.format(session_id_prefix, idx)
                 else:
-                    session_id = session_id_prefix
+                    _session_id = session_id_prefix
                 envs = dict(case[0])
-                clean_cmd = args.clean if args.clean else '*'
+                clean_cmd = clean if clean else '*'
                 build_cmd = case[1]
                 exec_cmd = case[2]
-                _run_legacy(session, args, idx, session_id, envs,
+                _run_legacy(session, idx, _session_id, envs,
                             clean_cmd, build_cmd, exec_cmd)
 
     async def _run_cases():
         loop = current_loop()
-        if args.session_id is None:
+        if session_id is None:
             session_id_prefix = token_hex(5)
         else:
-            session_id_prefix = args.session_id
+            session_id_prefix = session_id
         vprint_info('Session token prefix: {0}'.format(session_id_prefix))
         if is_multi:
             print_info('Check out the stdout/stderr logs stored in '
@@ -506,15 +582,15 @@ def run(args):
             # TODO: limit max-parallelism using aiojobs
             for idx, case in enumerate(case_set.keys()):
                 if is_multi:
-                    session_id = '{0}-{1}'.format(session_id_prefix, idx)
+                    _session_id = '{0}-{1}'.format(session_id_prefix, idx)
                 else:
-                    session_id = session_id_prefix
+                    _session_id = session_id_prefix
                 envs = dict(case[0])
-                clean_cmd = args.clean if args.clean else '*'
+                clean_cmd = clean if clean else '*'
                 build_cmd = case[1]
                 exec_cmd = case[2]
                 t = loop.create_task(
-                    _run(session, args, idx, session_id, envs,
+                    _run(session, idx, _session_id, envs,
                          clean_cmd, build_cmd, exec_cmd,
                          is_multi=is_multi))
                 tasks.append(t)
@@ -524,7 +600,7 @@ def run(args):
                     print_fail('There were failed cases!')
                 sys.exit(1)
 
-    if args.legacy:
+    if legacy:
         _run_cases_legacy()
     else:
         loop = asyncio.get_event_loop()
@@ -534,72 +610,85 @@ def run(args):
             loop.close()
 
 
-run.add_argument('lang',
-                 help='The runtime or programming language name')
-run.add_argument('files', nargs='*', type=Path,
-                 help='The code file(s). Can be added multiple times')
-run.add_argument('-t', '--session-id', '--client-token', metavar='SESSID',
-                 help='Specify a human-readable session ID or name. '
-                      'If not set, a random hex string is used.')
-run.add_argument('--cluster-size', metavar='NUMBER', type=int, default=1,
-                 help='The size of cluster in number of containers.')
-run.add_argument('-c', '--code', metavar='CODE',
-                 help='The code snippet as a single string')
-run.add_argument('--clean', metavar='CMD',
-                 help='Custom shell command for cleaning up the base directory')
-run.add_argument('--build', metavar='CMD',
-                 help='Custom shell command for building the given files')
-run.add_argument('--exec', metavar='CMD',
-                 help='Custom shell command for executing the given files')
-run.add_argument('--terminal', action='store_true', default=False,
-                 help='Connect to the terminal-type kernel.')
-run.add_argument('--basedir', metavar='PATH', type=Path, default=None,
-                 help='Base directory path of uploaded files.  '
-                      'All uploaded files must reside inside this directory.')
-run.add_argument('--rm', action='store_true', default=False,
-                 help='Terminate the session immediately after running '
-                      'the given code or files')
-run.add_argument('-e', '--env', metavar='KEY=VAL', type=str, action='append',
-                 help='Environment variable '
-                      '(may appear multiple times)')
-run.add_argument('--env-range', metavar='RANGE_EXPR', action='append',
-                 type=range_expr,
-                 help='Range expression for environment variable.')
-run.add_argument('--build-range', metavar='RANGE_EXPR', action='append',
-                 type=range_expr,
-                 help='Range expression for execution arguments.')
-run.add_argument('--exec-range', metavar='RANGE_EXPR', action='append',
-                 type=range_expr,
-                 help='Range expression for execution arguments.')
-run.add_argument('--max-parallel', metavar='NUM', type=int, default=2,
-                 help='The maximum number of parallel sessions.')
-run.add_argument('-m', '--mount', type=str, action='append',
-                 help='User-owned virtual folder names to mount')
-run.add_argument('-s', '--stats', action='store_true', default=False,
-                 help='Show resource usage statistics after termination '
-                      '(only works if "--rm" is given)')
-run.add_argument('--tag', type=str, default=None,
-                 help='User-defined tag string to annotate sessions.')
-run.add_argument('-r', '--resources', metavar='KEY=VAL', type=str, action='append',
-                 help='Set computation resources (e.g: -r cpu=2 -r mem=256 -r gpu=1)'
-                 '. 1 slot of cpu/gpu represents 1 core. The unit of mem(ory) '
-                 'is MiB.')
-run.add_argument('-q', '--quiet', action='store_true', default=False,
-                 help='Hide execution details but show only the kernel outputs.')
-run.add_argument('--legacy', action='store_true', default=False,
-                 help='Use the legacy synchronous polling mode to '
-                      'fetch console outputs.')
+@main.command()
+@click.pass_context
+@click.argument('lang')
+@click.option('-t', '--session-id', '--client-token', metavar='SESSID',
+              help='Specify a human-readable session ID or name. '
+                   'If not set, a random hex string is used.')
+@click.option('-e', '--env', metavar='KEY=VAL', type=str, multiple=True,
+              help='Environment variable (may appear multiple times)')
+@click.option('-m', '--mount', type=str, multiple=True,
+              help='User-owned virtual folder names to mount')
+@click.option('--tag', type=str, default=None,
+              help='User-defined tag string to annotate sessions.')
+@click.option('-r', '--resources', metavar='KEY=VAL', type=str, multiple=True,
+              help='Set computation resources used by the session '
+                   '(e.g: -r cpu=2 -r mem=256 -r gpu=1).'
+                   '1 slot of cpu/gpu represents 1 core. '
+                   'The unit of mem(ory) is MiB.')
+@click.option('--cluster-size', metavar='NUMBER', type=int, default=1,
+              help='The size of cluster in number of containers.')
+def start(lang, session_id, env, mount, tag, resources, cluster_size):
+    '''
+    Prepare and start a single compute session without executing codes.
+    You may use the created session to execute codes using the "run" command
+    or connect to an application service provided by the session using the "app"
+    command.
 
 
-@register_command(aliases=['rm', 'kill'])
-def terminate(args):
+    LANG: The name (and version/platform tags appended after a colon) of session
+          runtime or programming language.
+    '''
+    if session_id is None:
+        session_id = token_hex(5)
+    else:
+        session_id = session_id
+
+    ######
+    envs = _prepare_env_arg(env)
+    resources = _prepare_resource_arg(resources)
+    mount = _prepare_mount_arg(mount)
+    with Session() as session:
+        try:
+            kernel = session.Kernel.get_or_create(
+                lang,
+                client_token=session_id,
+                cluster_size=cluster_size,
+                mounts=mount,
+                envs=envs,
+                resources=resources,
+                tag=tag)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        else:
+            if kernel.created:
+                print_info('Session ID {0} is created and ready.'
+                           .format(session_id))
+            else:
+                print_info('Session ID {0} is already running and ready.'
+                           .format(session_id))
+            if kernel.service_ports:
+                print_info('This session provides the following app services: ' +
+                           ', '.join(sport['name']
+                                     for sport in kernel.service_ports))
+
+
+@main.command(aliases=['rm', 'kill'])
+@click.argument('sess_id_or_alias', metavar='SESSID', nargs=-1)
+@click.option('-s', '--stats', is_flag=True,
+              help='Show resource usage statistics after termination')
+def terminate(sess_id_or_alias, stats):
     '''
     Terminate the given session.
+
+    SESSID: session ID or its alias given when creating the session.
     '''
     print_wait('Terminating the session(s)...')
     with Session() as session:
         has_failure = False
-        for sess in args.sess_id_or_alias:
+        for sess in sess_id_or_alias:
             try:
                 kernel = session.Kernel(sess)
                 ret = kernel.destroy()
@@ -610,7 +699,7 @@ def terminate(args):
                 sys.exit(1)
         else:
             print_done('Done.')
-            if args.stats:
+            if stats:
                 stats = ret.get('stats', None) if ret else None
                 if stats:
                     print(_format_stats(stats))
@@ -618,24 +707,14 @@ def terminate(args):
                     print('Statistics is not available.')
 
 
-terminate.add_argument('sess_id_or_alias', metavar='NAME', nargs='+',
-                       help='The session ID or its alias '
-                            'given when creating the session.')
-terminate.add_argument('-s', '--stats', action='store_true', default=False,
-                       help='Show resource usage statistics after termination')
-
-
-@register_command
-def info(args):
+@click.command()
+@click.argument('sess_id_or_alias', metavar='NAME')
+@click.pass_context
+def info(ctx, sess_id_or_alias):
     '''
     Show detailed information for a running compute session.
     This is an alias of the "admin session <sess_id>" command.
+
+    SESSID: session ID or its alias given when creating the session.
     '''
-    inner_args = Namespace()
-    inner_args.sess_id_or_alias = args.sess_id_or_alias
-    session(inner_args)
-
-
-info.add_argument('sess_id_or_alias', metavar='NAME',
-                  help='The session ID or its alias '
-                       'given when creating the session.')
+    ctx.forward(session)

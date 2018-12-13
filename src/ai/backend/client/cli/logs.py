@@ -1,19 +1,25 @@
 import sys
 
-from . import register_command
+import click
+
+from . import main
 from .pretty import print_wait, print_done, print_error
 from ..session import Session
 
 
-@register_command
-def logs(args):
+@main.command()
+@click.argument('sess_id_or_alias', metavar='SESSID')
+def logs(sess_id_or_alias):
     '''
     Shows the output logs of a running container.
+
+    \b
+    SESSID: Session ID or its alias given when creating the session.
     '''
     with Session() as session:
         try:
             print_wait('Retrieving container logs...')
-            kernel = session.Kernel(args.sess_id_or_alias)
+            kernel = session.Kernel(sess_id_or_alias)
             result = kernel.get_logs().get('result')
             logs = result.get('logs') if 'logs' in result else ''
             print(logs)
@@ -21,8 +27,3 @@ def logs(args):
         except Exception as e:
             print_error(e)
             sys.exit(1)
-
-
-logs.add_argument('sess_id_or_alias', metavar='NAME',
-                  help='The session ID or its alias '
-                       'given when creating the session.')

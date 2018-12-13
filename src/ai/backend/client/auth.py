@@ -3,7 +3,7 @@ import hmac
 
 
 def generate_signature(method, version, endpoint,
-                       date, request_path, content_type, content,
+                       date, rel_url, content_type, content,
                        access_key, secret_key, hash_type):
     '''
     Generates the API request signature from the given parameters.
@@ -17,9 +17,9 @@ def generate_signature(method, version, endpoint,
             content = b''
     body_hash = hashlib.new(hash_type, content).hexdigest()
 
-    sign_str = '{}\n/{}\n{}\nhost:{}\ncontent-type:{}\nx-backendai-version:{}\n{}'.format(  # noqa
+    sign_str = '{}\n{}\n{}\nhost:{}\ncontent-type:{}\nx-backendai-version:{}\n{}'.format(  # noqa
         method.upper(),
-        request_path,
+        rel_url,
         date.isoformat(),
         hostname,
         content_type.lower(),

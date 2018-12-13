@@ -3,71 +3,81 @@ import json
 from pathlib import Path
 import sys
 
+import click
 from tabulate import tabulate
 
-from . import register_command
+from . import main
 from .pretty import print_wait, print_done, print_error, print_fail
 from ..session import Session
 
 
-@register_command
-def upload(args):
+@main.command()
+@click.argument('sess_id_or_alias', metavar='SESSID')
+@click.argument('files', type=click.Path(exists=True), nargs=-1)
+def upload(sess_id_or_alias, files):
     """
     Upload files to user's home folder.
+
+    \b
+    SESSID: Session ID or its alias given when creating the session.
+    FILES: Path to upload.
     """
+    if len(files) < 1:
+        return
     with Session() as session:
         try:
             print_wait('Uploading files...')
-            kernel = session.Kernel(args.sess_id_or_alias)
-            kernel.upload(args.files, show_progress=True)
+            kernel = session.Kernel(sess_id_or_alias)
+            kernel.upload(files, show_progress=True)
             print_done('Uploaded.')
         except Exception as e:
             print_error(e)
             sys.exit(1)
 
 
-upload.add_argument('sess_id_or_alias', metavar='NAME',
-                    help=('The session ID or its alias given when creating the'
-                          'session.'))
-upload.add_argument('files', type=Path, nargs='+', help='File paths to upload.')
-
-
-@register_command
-def download(args):
+@main.command()
+@click.argument('sess_id_or_alias', metavar='SESSID')
+@click.argument('files', nargs=-1)
+@click.option('--dest', type=Path, default='.',
+              help='Destination path to store downloaded file(s)')
+def download(sess_id_or_alias, files, dest):
     """
     Download files from a running container.
+
+    \b
+    SESSID: Session ID or its alias given when creating the session.
+    FILES: Paths inside container.
     """
+    if len(files) < 1:
+        return
     with Session() as session:
         try:
             print_wait('Downloading file(s) from {}...'
-                       .format(args.sess_id_or_alias))
-            kernel = session.Kernel(args.sess_id_or_alias)
-            kernel.download(args.files, args.dest, show_progress=True)
-            print_done('Downloaded to {}.'.format(args.dest.resolve()))
+                       .format(sess_id_or_alias))
+            kernel = session.Kernel(sess_id_or_alias)
+            kernel.download(files, dest, show_progress=True)
+            print_done('Downloaded to {}.'.format(dest.resolve()))
         except Exception as e:
             print_error(e)
             sys.exit(1)
 
 
-download.add_argument('sess_id_or_alias', metavar='NAME',
-                      help=('The session ID or its alias given when creating the'
-                            'session.'))
-download.add_argument('files', nargs='+',
-                      help='File paths inside container')
-download.add_argument('--dest', type=Path, default='.',
-                      help='Destination path to store downloaded file(s)')
-
-
-@register_command
-def ls(args):
+@main.command()
+@click.argument('sess_id_or_alias', metavar='SESSID')
+@click.argument('path', metavar='PATH', nargs=1, default='/home/work')
+def ls(sess_id_or_alias, path):
     """
     List files in a path of a running container.
+
+    \b
+    SESSID: Session ID or its alias given when creating the session.
+    PATH: Path inside container.
     """
     with Session() as session:
         try:
-            print_wait('Retrieving list of files in "{}"...'.format(args.path))
-            kernel = session.Kernel(args.sess_id_or_alias)
-            result = kernel.list_files(args.path)
+            print_wait('Retrieving list of files in "{}"...'.format(path))
+            kernel = session.Kernel(sess_id_or_alias)
+            result = kernel.list_files(path)
 
             if 'errors' in result and result['errors']:
                 print_fail(result['errors'])
@@ -87,9 +97,3 @@ def ls(args):
         except Exception as e:
             print_error(e)
             sys.exit(1)
-
-
-ls.add_argument('sess_id_or_alias', metavar='SESSID',
-                help='The session ID or its alias given when creating the session.')
-ls.add_argument('path', metavar='PATH', nargs='?', default='/home/work',
-                help='Path inside container')

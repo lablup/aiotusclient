@@ -12,11 +12,11 @@ install_requires = [
     'attrs>=18.0',       # to avoid pip10 resolver issue
     'namedlist>=1.6',
     'python-dateutil>=2.5',
-    'ConfigArgParse==0.12.0',
     'tabulate>=0.7.7',
     'tqdm~=4.21',
     'humanize>=0.5.1',
     'yarl>=1.1.1',
+    'Click>=7.0',
 ]
 build_requires = [
     'wheel>=0.31.0',
@@ -97,8 +97,8 @@ setup(
     entry_points={
         'console_scripts': [
             'backend.ai = ai.backend.client.cli:main',
-            'lcc = ai.backend.client.cli:main',
-            'lpython = ai.backend.client.cli:main',
+            'lcc = ai.backend.client.cli:run_alias',
+            'lpython = ai.backend.client.cli:run_alias',
         ],
     },
 )
