@@ -4,6 +4,22 @@ Changes
 18.12.0 (to be released)
 ------------------------
 
+18.12.0a1 (2018-12-14)
+----------------------
+
+ - NEW: "app" command for app service ports! You can now connect to Jupyter Notebook
+   and other services running in the compute sessions directly!
+
+ - NEW: "start" command which starts a compute sessino but does not anything.
+
+ - Adopt Click (CLI toolkit) for better Windows support and future shell
+   autocompletion support.
+
+ - "ps" and "admin sessions" commands show more detailed resource statistics,
+   includign real-time memory usage.
+
+ - Revamp the SDK documentation: https://docs.client-py.backend.ai
+
 1.5.1 (2018-12-03)
 ------------------
 
