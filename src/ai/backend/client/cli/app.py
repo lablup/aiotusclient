@@ -55,8 +55,10 @@ class WSProxy:
                         elif msg.type == aiohttp.WSMsgType.BINARY:
                             self.writer.write(msg.data)
                             await self.writer.drain()
+                except ConnectionResetError:
+                    pass  # shutting down
                 except asyncio.CancelledError:
-                    pass
+                    raise
                 finally:
                     self.writer.close()
                     if hasattr(self.writer, 'wait_closed'):  # Python 3.7+
@@ -69,8 +71,10 @@ class WSProxy:
                     if not chunk:
                         break
                     await ws.send_bytes(chunk)
+            except ConnectionResetError:
+                pass  # shutting down
             except asyncio.CancelledError:
-                pass
+                raise
             finally:
                 if not self.down_task.done():
                     await self.down_task
