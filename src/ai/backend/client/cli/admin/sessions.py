@@ -64,6 +64,8 @@ def sessions(status, access_key, id_only):
         for item in resp['compute_sessions']:
             if 'mem_cur_bytes' in item:
                 item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
+            if 'mem_max_bytes' in item:
+                item['mem_max_bytes'] = round(item['mem_max_bytes'] / 2 ** 20, 1)
 
         if id_only:
             for item in resp['compute_sessions']:
