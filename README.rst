@@ -27,6 +27,7 @@ Backend.AI Client
 
 The official API client library for `Backend.AI <https://backend.ai>`_
 
+
 Usage
 -----
 
@@ -34,13 +35,28 @@ You should set the access key and secret key as environment variables to use the
 Grab your keypair from `cloud.backend.ai <https://cloud.backend.ai>`_ or your cluster
 admin.
 
+On Linux/macOS, create a shell script as ``my-backend-ai.sh`` and run it before using
+the ``backend.ai`` command:
+
 .. code-block:: sh
 
    export BACKEND_ACCESS_KEY=...
    export BACKEND_SECRET_KEY=...
+   export BACKEND_ENDPOINT=https://my-precious-cluster/
 
-   # optional (for local clusters)
-   export BACKEND_ENDPOINT="https://my-precious-cluster/"
+On Windows, create a batch file as ``my-backend-ai.bat`` and run it before using
+the ``backend.ai`` command:
+
+.. code-block:: bat
+
+   chcp 65001
+   set BACKEND_ACCESS_KEY=...
+   set BACKEND_SECRET_KEY=...
+   set BACKEND_ENDPOINT=https://my-precious-cluster
+   set PYTHONIOENCODING=UTF-8
+
+Note that it switches to the UTF-8 codepage for correct display of
+special characters used in the console logs.
 
 
 Command-line Interface
