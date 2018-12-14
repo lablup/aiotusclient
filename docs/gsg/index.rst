@@ -5,6 +5,7 @@ Getting Started
    :maxdepth: 1
    :caption: Table of contents
 
+   installation
    examples
    session
    config

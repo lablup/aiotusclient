@@ -42,7 +42,7 @@ the ``backend.ai`` command:
 
    export BACKEND_ACCESS_KEY=...
    export BACKEND_SECRET_KEY=...
-   export BACKEND_ENDPOINT=https://my-precious-cluster/
+   export BACKEND_ENDPOINT=https://my-precious-cluster
 
 On Windows, create a batch file as ``my-backend-ai.bat`` and run it before using
 the ``backend.ai`` command:
@@ -50,10 +50,10 @@ the ``backend.ai`` command:
 .. code-block:: bat
 
    chcp 65001
+   set PYTHONIOENCODING=UTF-8
    set BACKEND_ACCESS_KEY=...
    set BACKEND_SECRET_KEY=...
    set BACKEND_ENDPOINT=https://my-precious-cluster
-   set PYTHONIOENCODING=UTF-8
 
 Note that it switches to the UTF-8 codepage for correct display of
 special characters used in the console logs.
