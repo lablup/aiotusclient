@@ -49,7 +49,7 @@ docs_requires = [
 def read_src_version():
     path = (Path(__file__).parent / 'src' /
             'ai' / 'backend' / 'client' / '__init__.py')
-    src = path.read_text()
+    src = path.read_text(encoding='utf-8')
     m = re.search(r"^__version__ = '([^']+)'$", src, re.MULTILINE)
     assert m is not None, 'Could not read the version information!'
     return m.group(1)
@@ -63,7 +63,7 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version=read_src_version(),
     description='Backend.AI Client for Python',
-    long_description=Path('README.rst').read_text(),
+    long_description=Path('README.rst').read_text(encoding='utf-8'),
     url='https://github.com/lablup/backend.ai-client-py',
     author='Lablup Inc.',
     author_email='joongi@lablup.com',
