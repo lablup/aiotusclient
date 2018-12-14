@@ -617,7 +617,6 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
 
 
 @main.command()
-@click.pass_context
 @click.argument('lang')
 @click.option('-t', '--session-id', '--client-token', metavar='SESSID',
               help='Specify a human-readable session ID or name. '
@@ -643,6 +642,7 @@ def start(lang, session_id, env, mount, tag, resources, cluster_size):
     command.
 
 
+    \b
     LANG: The name (and version/platform tags appended after a colon) of session
           runtime or programming language.
     '''
