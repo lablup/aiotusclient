@@ -32,9 +32,12 @@ def sessions(status, access_key, id_only):
             ('Created At', 'created_at',),
             ('Terminated At', 'terminated_at'),
             ('Status', 'status'),
-            ('Memory Slot', 'mem_slot'),
-            ('CPU Slot', 'cpu_slot'),
-            ('GPU Slot', 'gpu_slot'),
+            ('CPU Cores', 'cpu_slot'),
+            ('CPU Used (ms)', 'cpu_used'),
+            ('Total Memory (MiB)', 'mem_slot'),
+            ('Used Memory (MiB)', 'mem_cur_bytes'),
+            ('Max Used Memory (MiB)', 'mem_max_bytes'),
+            ('GPU Cores', 'gpu_slot'),
         ])
     if access_key is None:
         q = 'query($status:String) {' \
@@ -59,7 +62,8 @@ def sessions(status, access_key, id_only):
             print('There are no compute sessions currently running.')
             return
         for item in resp['compute_sessions']:
-            item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
+            if 'mem_cur_bytes' in item:
+                item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
 
         if id_only:
             for item in resp['compute_sessions']:
