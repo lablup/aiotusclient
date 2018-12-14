@@ -7,6 +7,7 @@ import textwrap
 import traceback
 
 from tqdm import tqdm
+from click import echo, style
 
 from ..exceptions import BackendAPIError
 
@@ -24,21 +25,42 @@ class PrintStatus(enum.Enum):
     WARNING = 4
 
 
+def bold(text: str) -> str:
+    '''
+    Wraps the given text with bold enable/disable ANSI sequences.
+    '''
+    return (style(text, bold=True, reset=False) +
+            style('', bold=False, reset=False))
+
+
+def underline(text: str) -> str:
+    return (style(text, underline=True, reset=False) +
+            style('', underline=False, reset=False))
+
+
+def inverse(text: str) -> str:
+    return (style(text, reverse=True, reset=False) +
+            style('', reverse=False, reset=False))
+
+
+def italic(text: str) -> str:
+    return '\x1b[3m' + text + '\x1b[23m'
+
+
 def format_pretty(msg, status=PrintStatus.NONE, colored=True):
     if status == PrintStatus.NONE:
-        indicator = '\x1b[96m\u2219' if colored else '\u2219'
+        indicator = style('\u2219', fg='bright_blue', reset=False)
     elif status == PrintStatus.WAITING:
-        indicator = '\x1b[93m\u22EF' if colored else '\u22EF'
+        indicator = style('\u22EF', fg='bright_yellow', reset=False)
     elif status == PrintStatus.DONE:
-        indicator = '\x1b[92m\u2714' if colored else '\u2714'
+        indicator = style('\u2714', fg='bright_green', reset=False)
     elif status == PrintStatus.FAILED:
-        indicator = '\x1b[91m\u2718' if colored else '\u2718'
+        indicator = style('\u2718', fg='bright_red', reset=False)
     elif status == PrintStatus.WARNING:
-        indicator = '\x1b[33m\u2219' if colored else '\u2219'
+        indicator = style('\u2219', fg='yellow', reset=False)
     else:
         raise ValueError
-    clear = '\x1b[0m' if colored else ''
-    return indicator + textwrap.indent(msg, '  ')[1:] + clear
+    return style(indicator + textwrap.indent(msg, '  ')[1:], reset=True)
 
 
 format_info = functools.partial(format_pretty, status=PrintStatus.NONE)
@@ -52,28 +74,25 @@ def print_pretty(msg, *, status=PrintStatus.NONE, file=None):
     if file is None:
         file = sys.stderr
     if status == PrintStatus.NONE:
-        indicator = '\x1b[96m\u2219' if file.isatty() else '\u2219'
+        indicator = style('\u2219', fg='bright_blue', reset=False)
     elif status == PrintStatus.WAITING:
         assert '\n' not in msg, 'Waiting message must be a single line.'
-        indicator = '\x1b[93m\u22EF' if file.isatty() else '\u22EF'
+        indicator = style('\u22EF', fg='bright_yellow', reset=False)
     elif status == PrintStatus.DONE:
-        indicator = '\x1b[92m\u2714' if file.isatty() else '\u2714'
+        indicator = style('\u2714', fg='bright_green', reset=False)
     elif status == PrintStatus.FAILED:
-        indicator = '\x1b[91m\u2718' if file.isatty() else '\u2718'
+        indicator = style('\u2718', fg='bright_red', reset=False)
     elif status == PrintStatus.WARNING:
-        indicator = '\x1b[33m\u2219' if file.isatty() else '\u2219'
+        indicator = style('\u2219', fg='yellow', reset=False)
     else:
         raise ValueError
-    if file.isatty():
-        print('\x1b[2K', end='', file=file)
+    echo('\x1b[2K', nl=False, file=file)
     text = textwrap.indent(msg, '  ')
-    text = indicator + text[1:]
-    if file.isatty():
-        text += '\x1b[0m'
-    print('{0}\r'.format(text), end='', file=file)
+    text = style(indicator + text[1:], reset=True)
+    echo('{0}\r'.format(text), nl=False, file=file)
     file.flush()
     if status != PrintStatus.WAITING:
-        print('', file=file)
+        echo('', file=file)
 
 
 print_info = functools.partial(print_pretty, status=PrintStatus.NONE)
@@ -86,9 +105,9 @@ print_warn = functools.partial(print_pretty, status=PrintStatus.WARNING)
 def print_error(exc: Exception, *, file=None):
     if file is None:
         file = sys.stderr
-    indicator = '\x1b[91m\u2718' if file.isatty() else '\u2718'
+    indicator = style('\u2718', fg='bright_red', reset=False)
     if file.isatty():
-        print('\x1b[2K', end='', file=file)
+        echo('\x1b[2K', nl=False, file=file)
     if isinstance(exc, BackendAPIError):
         msg = ('{}: '.format(exc.__class__.__name__) +
                '{0} {1}\n'.format(exc.status, exc.reason) +
@@ -104,11 +123,9 @@ def print_error(exc: Exception, *, file=None):
         msg += ('*** Traceback ***\n' +
                 ''.join(traceback.format_tb(exc.__traceback__)).strip())
     text = textwrap.indent(msg, '  ')
-    text = indicator + text[1:]
-    if file.isatty():
-        text += '\x1b[0m'
-    print('{0}\r'.format(text), end='', file=file)
-    print('', file=file)
+    text = style(indicator + text[1:], reset=True)
+    echo('{0}\r'.format(text), nl=False, file=file)
+    echo('', file=file)
     file.flush()
 
 

@@ -1,5 +1,8 @@
-from ai.backend.client.cli.pretty import print_pretty, PrintStatus
-
+from ai.backend.client.cli.pretty import (
+    bold, italic, underline, inverse,
+    print_pretty, PrintStatus
+)
+from click import unstyle
 import time
 
 
@@ -10,20 +13,26 @@ def test_pretty_output():
     pprint = print_pretty
 
     print('normal print')
-    pprint('wow wow wow!')
-    print('just print')
-    pprint('wow!')
+    pprint('wow ' + bold('wow') + ' wow!')
+    print('just ' + underline('print') + ' ' + italic('grrrrrgh') + '... wooah!')
+    pprint(inverse('wow') + '!!', status=PrintStatus.WARNING)
     pprint('some long loading.... zzzzzzzzzzzzz', status=PrintStatus.WAITING)
     time.sleep(0.3)
     pprint('doing something...', status=PrintStatus.WAITING)
     time.sleep(0.3)
     pprint('done!', status=PrintStatus.DONE)
-    pprint('doing something...', status=PrintStatus.WAITING)
-    time.sleep(0.3)
+    pprint('doing ' + bold('something') + '...',
+           status=PrintStatus.WAITING)
+    time.sleep(0.5)
     pprint('doing more...', status=PrintStatus.WAITING)
     time.sleep(0.3)
     pprint('failed!', status=PrintStatus.FAILED)
     print('normal print')
+
+
+def test_unstyle():
+    print(unstyle(underline('non-underline')))
+    print(unstyle(italic('non-italic')))
 
 
 if __name__ == '__main__':
