@@ -28,13 +28,13 @@ $ sphinx-intl update -p _build/gettext -l xx
 Edit and rebuild the compiled po messages (`.mo` files):
 ```console
 $ edit locales/xx/LC_MESSAGES/...
-$ sphinx-intl build
 ```
 
 `git push` here to let readthedocs update the online docs.
 
 Preview the local build:
 ```console
+$ sphinx-intl build
 $ make -e SPHINXOPTS="-D language='xx'" html
 $ open _build/html/index.html
 ```
@@ -46,13 +46,13 @@ Updateing existing translation to add/improve translations
 Edit and rebuild the compiled po messages (`.mo` files):
 ```console
 $ edit locales/xx/LC_MESSAGES/...
-$ sphinx-intl build
 ```
 
 `git push` here to let readthedocs update the online docs.
 
 Preview the local build:
 ```console
+$ sphinx-intl build
 $ make -e SPHINXOPTS="-D language='xx'" html
 $ open _build/html/index.html
 ```
