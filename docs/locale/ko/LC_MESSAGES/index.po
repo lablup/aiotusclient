@@ -29,7 +29,7 @@ msgid ""
 "This is the documentation for the Python Client SDK which implements "
 ":doc:`the Backend.AI API <backendai:index>`."
 msgstr ""
-"이 문서는 :doc:`Backend.AI <backendai:index>`\ 를 구현하는 "
+"이 문서는 :doc:`Backend.AI API <backendai:index>`\ 를 구현하는 "
 "Python용 클라이언트 소프트웨어 개발킷(SDK)에 관한 매뉴얼입니다."
 
 # 935e26d49fbd4253b87603b475e189e4
