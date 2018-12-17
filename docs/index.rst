@@ -12,7 +12,7 @@ This is the documentation for the Python Client SDK which implements
 Requirements
 ------------
 
-Python 3.5 or higher is required.
+Python 3.5.3 or higher is required.
 
 You can download `its official installer from python.org
 <https://www.python.org/downloads/>`_, or use a 3rd-party package/version manager
