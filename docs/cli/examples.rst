@@ -9,11 +9,11 @@ Examples
 Running simple sessions
 -----------------------
 
-.. code:: shell
+.. code-block:: shell
 
   backend.ai run --rm -c 'print("hello world")' python
 
-.. code:: shell
+.. code-block:: shell
 
   backend.ai run --rm --exec 'python myscript.py arg1 arg2' \
              python ./myscript.py
@@ -22,16 +22,28 @@ Running simple sessions
 Running sessions with accelerators
 ----------------------------------
 
-.. code:: shell
+.. code-block:: shell
 
   backend.ai run --rm -r gpu=0.5 \
              python-tensorflow ./mygpucode.py
 
 
+Starting a session and connecting to its Jupyter Notebook
+---------------------------------------------------------
+
+.. code-block:: shell
+
+  backend.ai start -t mysession python
+  backend.ai app -p 9900 mysession jupyter
+
+Then open ``http://localhost:9900`` to access the Jupyter Notebook running
+on the ``mysession`` compute session.
+
+
 Running sessions with vfolders
 ------------------------------
 
-.. code:: shell
+.. code-block:: shell
 
   backend.ai vfolder create mydata1
   backend.ai vfolder upload mydata1 ./bigdata.csv
