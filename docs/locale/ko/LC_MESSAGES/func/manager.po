@@ -21,17 +21,17 @@ msgstr ""
 # 9aecfba673e846429b1cb8a2c86f138d
 #: ../../func/manager.rst:2
 msgid "Manager Functions"
-msgstr ""
+msgstr "매니저 함수"
 
 # 46d58d5b9fc7403c9f08a006a4a872e0
 #: ai.backend.client.manager.Manager:1 of
 msgid "Provides controlling of the gateway/manager servers."
-msgstr ""
+msgstr "게이트웨이 및 매니저 서버의 상태를 관리합니다."
 
 # 7ea87ec23ff64de999258eb2d11f30fd
 #: ai.backend.client.manager.Manager.session:1 of
 msgid "The client session instance that this function class is bound to."
-msgstr ""
+msgstr "이 함수 클래스가 사용할 클라이언트 세션 인스턴스"
 
 # 082e424418af43daab2795f689eb10ff
 #: ai.backend.client.manager.Manager.freeze:1 of

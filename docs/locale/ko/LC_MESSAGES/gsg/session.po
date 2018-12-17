@@ -21,7 +21,7 @@ msgstr ""
 # 9e5edaf7ddcd4ea5bfec00bb32d2f986
 #: ../../gsg/session.rst:2
 msgid "Client Session"
-msgstr ""
+msgstr "클라이언트 세션"
 
 # 9ee2e82d338245cb95667feed28705f0
 #: ../../gsg/session.rst:7

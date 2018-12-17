@@ -21,10 +21,10 @@ msgstr ""
 # 363feabba8b64ab9b5bb0a354bafcd91
 #: ../../cli/index.rst:2
 msgid "Command-line Interface"
-msgstr ""
+msgstr "명령줄 인터페이스"
 
 # efaae717d58648aaba1f5a064a083adc
 #: ../../cli/index.rst:4
 msgid "Table of contents"
-msgstr ""
+msgstr "목차"
 

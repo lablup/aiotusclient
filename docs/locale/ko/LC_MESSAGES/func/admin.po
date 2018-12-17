@@ -21,12 +21,12 @@ msgstr ""
 # 8ec5acb8a5894dc4a4b2f89cdd1b1b39
 #: ../../func/admin.rst:2
 msgid "Admin Functions"
-msgstr ""
+msgstr "관리자용 함수"
 
 # a1dcc49b0ed142d49ca971734031a61a
 #: ai.backend.client.admin.Admin:1 of
 msgid "Provides the function interface for making admin GrapQL queries."
-msgstr ""
+msgstr "관리자 GraphQL 쿼리를 날리고 받아오는 함수형 인터페이스를 제공합니다."
 
 # 13a50fe212e046069fbddba698558897
 #: ai.backend.client.admin.Admin:5 of
@@ -38,7 +38,7 @@ msgstr ""
 # c7c50283815448e280181213a2bdafa6
 #: ai.backend.client.admin.Admin.session:1 of
 msgid "The client session instance that this function class is bound to."
-msgstr ""
+msgstr "이 함수 클래스가 사용할 클라이언트 세션 인스턴스"
 
 # 082a32b157d447f4880f244f72938709
 #: ai.backend.client.admin.Admin.query:1 of

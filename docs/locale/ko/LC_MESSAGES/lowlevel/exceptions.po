@@ -21,7 +21,7 @@ msgstr ""
 # a6e6df2f9a3a475888eb594517eba401
 #: ../../lowlevel/exceptions.rst:2
 msgid "Exceptions"
-msgstr ""
+msgstr "예외 클래스들"
 
 # 28ed6a551ed3437d8ddd7affd55eda48
 #: ai.backend.client.exceptions.BackendError:1 of

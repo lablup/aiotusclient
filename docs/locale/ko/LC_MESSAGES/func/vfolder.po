@@ -21,10 +21,10 @@ msgstr ""
 # 247c4ce2da714b1ca39c9d9de95b1158
 #: ../../func/vfolder.rst:2
 msgid "Virtual Folder Functions"
-msgstr ""
+msgstr "가상폴더 함수"
 
 # 8c01710979784f518f13f38dc23e3eaf
 #: ai.backend.client.vfolder.VFolder.session:1 of
 msgid "The client session instance that this function class is bound to."
-msgstr ""
+msgstr "이 함수 클래스가 사용할 클라이언트 세션 인스턴스"
 

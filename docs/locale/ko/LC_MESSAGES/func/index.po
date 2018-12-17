@@ -21,10 +21,10 @@ msgstr ""
 # 2510007bee58440294efac3e9a853c68
 #: ../../func/index.rst:2
 msgid "High-level Function Reference"
-msgstr ""
+msgstr "고수준 함수 인터페이스"
 
 # 0aae3e92d7e74e368dbb0e53f4a45f32
 #: ../../func/index.rst:4
 msgid "Table of contents"
-msgstr ""
+msgstr "목차"
 

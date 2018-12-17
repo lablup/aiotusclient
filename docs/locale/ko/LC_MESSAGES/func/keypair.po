@@ -21,17 +21,17 @@ msgstr ""
 # 8d5399b091514659b3b2ad71650a4b65
 #: ../../func/keypair.rst:2
 msgid "KeyPair Functions"
-msgstr ""
+msgstr "KeyPair 함수"
 
 # 43c138fb98b6400994d349c1798dfb5f
 #: ai.backend.client.keypair.KeyPair:1 of
 msgid "Provides interactions with keypairs."
-msgstr ""
+msgstr "Keypair들을 다룹니다."
 
 # da07514c69194c23af79f29d5512a7df
 #: ai.backend.client.keypair.KeyPair.session:1 of
 msgid "The client session instance that this function class is bound to."
-msgstr ""
+msgstr "이 함수 클래스가 사용할 클라이언트 세션 인스턴스"
 
 # 730a84549d4242ff9b81be724334633a
 #: ai.backend.client.keypair.KeyPair.activate:1 of

@@ -21,10 +21,10 @@ msgstr ""
 # 1779afd1197a4a33be0b9411c794eda2
 #: ../../lowlevel/index.rst:2
 msgid "Low-level SDK Reference"
-msgstr ""
+msgstr "저수준 레퍼런스"
 
 # a43a06c6eebf4615b04945df3e2f5708
 #: ../../lowlevel/index.rst:4
 msgid "Table of contents"
-msgstr ""
+msgstr "목차"
 

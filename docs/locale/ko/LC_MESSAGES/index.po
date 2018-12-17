@@ -54,7 +54,7 @@ msgid ""
 msgstr ""
 "`python.org에서 공식 설치 패키지 <https://www.python.org/downloads/>`_\ 를 다운로드하거나, "
 "사용 중인 운영환경에 적합한 별도의 패키지 관리자(예: `homebrew <http://brew.sh/index_ko.html>`_, "
-"`miniconda <http://conda.pydata.org/miniconda.html>`_, `pyenv <https://github.com/pyenv/pyenv>`_ 등)를 이용할 수 있습니다."
+"`miniconda <http://conda.pydata.org/miniconda.html>`_, `pyenv <https://github.com/pyenv/pyenv>`_ 등)를 이용할 수 있습니다. "
 "이 클라이언트 SDK는 Linux, macOS, Windows 환경에서 테스트되었습니다."
 
 # 0444ab12b7d24d3ca532aa63b8edbe92

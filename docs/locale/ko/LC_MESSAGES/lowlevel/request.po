@@ -21,7 +21,7 @@ msgstr ""
 # 60d8afcc0bef4626aaec7035cfd0c5be
 #: ../../lowlevel/request.rst:2
 msgid "Request API"
-msgstr ""
+msgstr "요청 API"
 
 # 60706e4e70a14753a804bcbe9a4ef6d0
 #: ../../lowlevel/request.rst:7

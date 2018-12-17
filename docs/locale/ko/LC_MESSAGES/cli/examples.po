@@ -21,7 +21,7 @@ msgstr ""
 # 8ae7343bb488430db5539006a2ae1d1e
 #: ../../cli/examples.rst:2
 msgid "Examples"
-msgstr ""
+msgstr "예제"
 
 # 48198a35eca04fe7a81e758ac9e36ba3
 #: ../../cli/examples.rst:6
@@ -29,21 +29,23 @@ msgid ""
 "Please consult the detailed usage in the help of each command (use ``-h``"
 " or ``--help`` argument to display the manual)."
 msgstr ""
+"자세한 명령어 사용법들은 ``-h``, ``--help`` 인자를 사용하여 각 명령어의 "
+"세부 도움말을 참고하십시오."
 
 # 0e18ae0ffeb244969c1e624a270de2d7
 #: ../../cli/examples.rst:10
 msgid "Running simple sessions"
-msgstr ""
+msgstr "간단한 코드 실행하기"
 
 # 7e5ec6e4357c4dc8aa8a5bc17170167f
 #: ../../cli/examples.rst:23
 msgid "Running sessions with accelerators"
-msgstr ""
+msgstr "가속기를 활용한 세션 사용하기"
 
 # 274310a2b10c4d059d545badf649bd28
 #: ../../cli/examples.rst:32
 msgid "Starting a session and connecting to its Jupyter Notebook"
-msgstr ""
+msgstr "Jupyter Notebook용 세션을 만들고 접속하기"
 
 # e9d46a10213f4305a7b613500e594eee
 #: ../../cli/examples.rst:39
@@ -51,19 +53,21 @@ msgid ""
 "Then open ``http://localhost:9900`` to access the Jupyter Notebook "
 "running on the ``mysession`` compute session."
 msgstr ""
+"이런 다음 웹브라우저를 통해 ``http://localhost:9900`` 주소로 접속하면 "
+"``mysession`` 연산 세션 내에서 실행 중인 Jupyter Notebook 서버를 사용할 수 있습니다."
 
 # 4ceec9cb5b6c46dbb992c71f2859f5ec
 #: ../../cli/examples.rst:44
 msgid "Running sessions with vfolders"
-msgstr ""
+msgstr "가상폴더를 사용한 연산 세션 실행하기"
 
 # 5dd3b21a0d9a4dd8beaee6b1afd29e0d
 #: ../../cli/examples.rst:55
 msgid "Running parallel experiment sessions"
-msgstr ""
+msgstr "병렬 실험을 위한 연산 세션 실행하기"
 
 # 7a5597b8369948abacee0586d5aa96cd
 #: ../../cli/examples.rst:57
 msgid "(TODO)"
-msgstr ""
+msgstr "(준비 중입니다)"
 

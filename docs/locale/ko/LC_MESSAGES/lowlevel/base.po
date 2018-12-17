@@ -21,7 +21,7 @@ msgstr ""
 # 0b788e50d59148028f5eaf3c79026397
 #: ../../lowlevel/base.rst:2
 msgid "Base Function"
-msgstr ""
+msgstr "기반 함수"
 
 # a57a0432907645d792bbed4f799c2c79
 #: ../../lowlevel/base.rst:6

@@ -21,7 +21,7 @@ msgstr ""
 # 0f5bd6d355184c2482bfc19991248ac5
 #: ../../gsg/installation.rst:2
 msgid "Installation"
-msgstr ""
+msgstr "설치하기"
 
 # 4f1319d791a04b1ea43d6574b87c76bc
 #: ../../gsg/installation.rst:5

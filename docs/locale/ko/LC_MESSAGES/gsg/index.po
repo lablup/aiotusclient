@@ -21,10 +21,10 @@ msgstr ""
 # d3d11491eb564ca884445eba3d17ecae
 #: ../../gsg/index.rst:2
 msgid "Getting Started"
-msgstr ""
+msgstr "시작하기"
 
 # 3b687d6a9fa74129a21db81c2db28833
 #: ../../gsg/index.rst:4
 msgid "Table of contents"
-msgstr ""
+msgstr "목차"
 

@@ -21,17 +21,17 @@ msgstr ""
 # bcda3be0d0474c9fbc993bed347b9fc7
 #: ../../gsg/examples.rst:2
 msgid "Examples"
-msgstr ""
+msgstr "코드 예제"
 
 # 192c92eb0697413caef1c65514032295
 #: ../../gsg/examples.rst:5
 msgid "Synchronous-mode execution"
-msgstr ""
+msgstr "동기 모드 실행"
 
 # cf3af47143bb406b869e2ab4b1408296
 #: ../../gsg/examples.rst:8
 msgid "Query mode"
-msgstr ""
+msgstr "쿼리 모드"
 
 # 07eefc8bd2ae434088dce719c3b3789d
 #: ../../gsg/examples.rst:10
@@ -51,7 +51,7 @@ msgstr ""
 # cc5675daa33a410eb7fe940564e7d07e
 #: ../../gsg/examples.rst:48
 msgid "Batch mode"
-msgstr ""
+msgstr "배치 모드"
 
 # 2ceb3c879cee4a2bb9a16bdb2a56f7ee
 #: ../../gsg/examples.rst:50
@@ -63,7 +63,7 @@ msgstr ""
 # c7df13a3e7874dcbb096eeda676f2f3a
 #: ../../gsg/examples.rst:89
 msgid "Handling user inputs"
-msgstr ""
+msgstr "사용자 입력 다루기"
 
 # 78bc3e35569d4cbc92ec258685dc5858
 #: ../../gsg/examples.rst:91
@@ -80,7 +80,7 @@ msgstr ""
 # ddd8c92a0c614833bb2c4cb9ee2ab7ee
 #: ../../gsg/examples.rst:114
 msgid "Handling multi-media outputs"
-msgstr ""
+msgstr "멀티미디어 출력 다루기"
 
 # a04a1af08e9043529535f18a21910f37
 #: ../../gsg/examples.rst:116

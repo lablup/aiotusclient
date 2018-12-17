@@ -21,7 +21,7 @@ msgstr ""
 # cfebb0640f504b48ad07cc6a8bf4e3e5
 #: ../../func/agent.rst:2
 msgid "Agent Functions"
-msgstr ""
+msgstr "에이전트 함수"
 
 # aee3c1ef25054aec88d6ec84917eff23
 #: ai.backend.client.agent.Agent:1 of
@@ -30,6 +30,8 @@ msgid ""
 "<ai.backend.client.admin.Admin.query>` that fetches various agent "
 "information."
 msgstr ""
+"서버측 에이전트들에 관한 정보를 조회하기 위한 :func:`Admin.query() "
+"<ai.backend.client.admin.Admin.query>` 함수의 단축 버전입니다."
 
 # 8a10292301aa49c8b583ae050a9f61f6
 #: ai.backend.client.agent.Agent:7 of
@@ -37,11 +39,13 @@ msgid ""
 "All methods in this function class require your API access key to have "
 "the *admin* privilege."
 msgstr ""
+"이 함수 클래스의 모든 메소드들은 사용 중인 API access key가 관리자 권한을 "
+"가지고 있어야 작동합니다."
 
 # 04f2c7e119914819906d8bc5b84b5a04
 #: ai.backend.client.agent.Agent.session:1 of
 msgid "The client session instance that this function class is bound to."
-msgstr ""
+msgstr "이 함수 클래스가 사용할 클라이언트 세션 인스턴스"
 
 # 1b8fb0c3b8b046b6a444165c08bedfcf
 #: ai.backend.client.agent.Agent.info:1 of
