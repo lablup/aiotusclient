@@ -19,20 +19,20 @@ Please ask the docs maintainer for help.
 Updating existing translation when the English version is updated
 -----------------------------------------------------------------
 
-Update the po message templates (`.po` files):
+Update the po message templates (generating/updating `.po` files):
 ```console
 $ make gettext
 $ sphinx-intl update -p _build/gettext -l xx
 ```
 
-Edit and rebuild the compiled po messages (`.mo` files):
+Edit the po messages (editing `.po` files):
 ```console
 $ edit locales/xx/LC_MESSAGES/...
 ```
 
 `git push` here to let readthedocs update the online docs.
 
-Preview the local build:
+Rebuild the compiled po message (compilling `.po` into `.mo` files) and preview the local build:
 ```console
 $ sphinx-intl build
 $ make -e SPHINXOPTS="-D language='xx'" html
@@ -43,14 +43,14 @@ $ open _build/html/index.html
 Updateing existing translation to add/improve translations
 ----------------------------------------------------------
 
-Edit and rebuild the compiled po messages (`.mo` files):
+Edit the po messages (editing `.po` files):
 ```console
 $ edit locales/xx/LC_MESSAGES/...
 ```
 
 `git push` here to let readthedocs update the online docs.
 
-Preview the local build:
+Rebuild the compiled po message (compiling `.po` into `.mo` files) and preview the local build:
 ```console
 $ sphinx-intl build
 $ make -e SPHINXOPTS="-D language='xx'" html
