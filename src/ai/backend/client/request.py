@@ -374,7 +374,7 @@ class FetchContextManager:
         except aiohttp.ClientError as e:
             msg = 'Request to the API endpoint has failed.\n' \
                   'Check your network connection and/or the server status.\n' \
-                  'Error detail: {!r}'.format(e)
+                  '\u279c {!r}'.format(e)
             raise BackendClientError(msg) from e
 
     def __exit__(self, *args):

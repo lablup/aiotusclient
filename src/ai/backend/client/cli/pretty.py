@@ -102,30 +102,40 @@ print_fail = functools.partial(print_pretty, status=PrintStatus.FAILED)
 print_warn = functools.partial(print_pretty, status=PrintStatus.WARNING)
 
 
+def format_error(exc: Exception):
+    if isinstance(exc, BackendAPIError):
+        yield '{0}: {1} {2}\n'.format(exc.__class__.__name__,
+                                      exc.status, exc.reason)
+        yield '{0[title]}'.format(exc.data)
+        agent_details = exc.data.get('agent-details', None)
+        if agent_details is not None:
+            yield '\n\u279c This is an agent-side error. '
+            yield 'Check the agent status or ask the administrator for help.'
+            agent_exc = agent_details.get('exception', None)
+            if agent_exc is not None:
+                yield '\n\u279c ' + agent_exc
+            else:
+                yield '\n\u279c ' + agent_details['title']
+        content = exc.data.get('content', None)
+        if content:
+            yield '\n' + content
+    else:
+        args = exc.args if exc.args else ['']
+        yield '{0}: {1}\n'.format(exc.__class__.__name__,
+                                  str(args[0]))
+        yield '{}'.format('\n'.join(map(str, args[1:])))
+        yield ('*** Traceback ***\n' +
+               ''.join(traceback.format_tb(exc.__traceback__)).strip())
+
+
 def print_error(exc: Exception, *, file=None):
     if file is None:
         file = sys.stderr
     indicator = style('\u2718', fg='bright_red', reset=False)
     if file.isatty():
         echo('\x1b[2K', nl=False, file=file)
-    if isinstance(exc, BackendAPIError):
-        msg = ('{}: '.format(exc.__class__.__name__) +
-               '{0} {1}\n'.format(exc.status, exc.reason) +
-               '{0[title]}'.format(exc.data))
-        if 'agent-details' in exc.data:
-            msg += '\n\u279c This is an agent-side error.'
-            msg += '\n\u279c ' + exc.data['agent-details']['exception']
-        content = exc.data.get('content', None)
-        if content:
-            msg += '\n' + content
-    else:
-        args = exc.args if exc.args else ['']
-        msg = ('{}: {}\n'.format(exc.__class__.__name__,
-                                 str(args[0])) +
-               '{}'.format('\n'.join(map(str, args[1:]))))
-        msg += ('*** Traceback ***\n' +
-                ''.join(traceback.format_tb(exc.__traceback__)).strip())
-    text = textwrap.indent(msg, '  ')
+    text = ''.join(format_error(exc))
+    text = textwrap.indent(text, '  ')
     text = style(indicator + text[1:], reset=True)
     echo('{0}\r'.format(text), nl=False, file=file)
     echo('', file=file)
