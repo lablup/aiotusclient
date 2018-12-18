@@ -112,6 +112,9 @@ def print_error(exc: Exception, *, file=None):
         msg = ('{}: '.format(exc.__class__.__name__) +
                '{0} {1}\n'.format(exc.status, exc.reason) +
                '{0[title]}'.format(exc.data))
+        if 'agent-details' in exc.data:
+            msg += '\n\u279c This is an agent-side error.'
+            msg += '\n\u279c ' + exc.data['agent-details']['exception']
         content = exc.data.get('content', None)
         if content:
             msg += '\n' + content
