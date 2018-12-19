@@ -51,11 +51,6 @@ _default_request_timeout = aiohttp.ClientTimeout(
     sock_connect=30.0, sock_read=None,
 )
 
-_default_websocket_timeout = aiohttp.ClientTimeout(
-    total=None, connect=None,
-    sock_connect=30.0, sock_read=None,
-)
-
 
 class Request:
     '''
@@ -263,7 +258,6 @@ class Request:
         self._sign(full_url.relative())
         ws_ctx = self.session.aiohttp_session.ws_connect(
             str(full_url),
-            timeout=_default_websocket_timeout,
             headers=self.headers)
         return WebSocketContextManager(self.session, ws_ctx, **kwargs)
 
