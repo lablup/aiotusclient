@@ -60,7 +60,7 @@ class BaseSession(metaclass=abc.ABCMeta):
 
     __slots__ = (
         '_config', '_closed', 'aiohttp_session',
-        'Admin', 'Agent', 'Kernel', 'KeyPair', 'Manager', 'VFolder',
+        'Admin', 'Agent', 'Image', 'Kernel', 'KeyPair', 'Manager', 'VFolder',
     )
 
     def __init__(self, *, config: APIConfig = None):
@@ -114,6 +114,7 @@ class Session(BaseSession):
         from .base import BaseFunction
         from .admin import Admin
         from .agent import Agent
+        from .image import Image
         from .kernel import Kernel
         from .keypair import KeyPair
         from .manager import Manager
@@ -132,6 +133,14 @@ class Session(BaseSession):
         })
         '''
         The :class:`~ai.backend.client.agent.Agent` function proxy
+        bound to this session.
+        '''
+        self.Image = type('Image', (BaseFunction, ), {
+            **Image.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.image.Image` function proxy
         bound to this session.
         '''
         self.Kernel = type('Kernel', (BaseFunction, ), {
@@ -216,6 +225,7 @@ class AsyncSession(BaseSession):
         from .base import BaseFunction
         from .admin import Admin
         from .agent import Agent
+        from .image import Image
         from .kernel import Kernel
         from .keypair import KeyPair
         from .manager import Manager
@@ -234,6 +244,14 @@ class AsyncSession(BaseSession):
         })
         '''
         The :class:`~ai.backend.client.agent.Agent` function proxy
+        bound to this session.
+        '''
+        self.Image = type('Image', (BaseFunction, ), {
+            **Image.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.image.Image` function proxy
         bound to this session.
         '''
         self.Kernel = type('Kernel', (BaseFunction, ), {

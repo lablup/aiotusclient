@@ -9,7 +9,7 @@ def admin():
 
 
 def _attach_command():
-    from . import agents, keypairs, sessions, vfolders  # noqa
+    from . import agents, images, keypairs, sessions, vfolders  # noqa
 
 
 _attach_command()

@@ -38,18 +38,21 @@ def keypair():
         print(tabulate(rows, headers=('Field', 'Value')))
 
 
-@admin.command()
+@admin.group(invoke_without_command=True)
+@click.pass_context
 @click.option('-u', '--user-id', type=str, default=None,
               help='Show keypairs of this given user. [default: show all]')
 @click.option('--is-active', type=bool, default=None,
               help='Filter keypairs by activation.')
-def keypairs(user_id, is_active):
+def keypairs(ctx, user_id, is_active):
     '''
     List and manage keypairs.
     To show all keypairs or other user's, your access key must have the admin
     privilege.
     (admin privilege required)
     '''
+    if ctx.invoked_subcommand is not None:
+        return
     fields = [
         ('User ID', 'user_id'),
         ('Access Key', 'access_key'),
@@ -81,7 +84,7 @@ def keypairs(user_id, is_active):
                        headers=(item[0] for item in fields)))
 
 
-@admin.command()
+@keypairs.command()
 @click.argument('user-id', type=str, default=None, metavar='USERID')
 @click.option('-a', '--admin', is_flag=True,
               help='Give the admin privilege to the new keypair.')
