@@ -4,6 +4,17 @@ Changes
 18.12.0 (to be released)
 ------------------------
 
+18.12.0a2 (2018-12-21)
+----------------------
+
+ - NEW: "admin images" command to show the kernel images registered to the server.
+
+ - Improve error displays.
+
+ - Explicitly set connection timeout only for potentially long-running requests such
+   as file uploads/downloads and kernel creation.
+
+
 18.12.0a1 (2018-12-14)
 ----------------------
 
