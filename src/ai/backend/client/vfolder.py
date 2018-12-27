@@ -125,7 +125,7 @@ class VFolder:
         rqst = Request(self.session, 'GET',
                        '/folders/{}/download'.format(self.name))
         rqst.set_json({
-            'files': files,
+            'files': [*map(str, files)],
         })
         try:
             async with rqst.fetch() as resp:

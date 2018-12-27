@@ -334,7 +334,7 @@ class Kernel:
         rqst = Request(self.session,
                        'GET', '/kernel/{}/download'.format(self.kernel_id))
         rqst.set_json({
-            'files': files,
+            'files': [*map(str, files)],
         })
         async with rqst.fetch() as resp:
             chunk_size = 1 * 1024

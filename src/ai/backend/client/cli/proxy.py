@@ -1,4 +1,5 @@
 import asyncio
+import json
 import re
 
 import aiohttp
@@ -121,7 +122,8 @@ async def web_handler(request):
                 await down_resp.write(chunk)
             return down_resp
     except BackendAPIError as e:
-        return web.Response(body=e.data, status=e.status, reason=e.reason)
+        return web.Response(body=json.dumps(e.data),
+                            status=e.status, reason=e.reason)
     except BackendClientError:
         return web.Response(
             body="The proxy target server is inaccessible.",
@@ -154,7 +156,8 @@ async def websocket_handler(request):
             await web_socket_proxy.proxy()
             return down_conn
     except BackendAPIError as e:
-        return web.Response(body=e.data, status=e.status, reason=e.reason)
+        return web.Response(body=json.dumps(e.data),
+                            status=e.status, reason=e.reason)
     except BackendClientError:
         return web.Response(
             body="The proxy target server is inaccessible.",
