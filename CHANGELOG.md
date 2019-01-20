@@ -4,8 +4,8 @@ Changes
 18.12.1 (2018-01-21)
 --------------------
 
-- Automatically detect legacy mode (API version <= v4.20181215). "--legacy" option
-  for "run" command is removed.
+ - Automatically detect the legacy mode (API version &lt;= v4.20181215).
+   Removed "--legacy" option for the "run" command.
 
 18.12.0 (2018-01-06)
 --------------------
