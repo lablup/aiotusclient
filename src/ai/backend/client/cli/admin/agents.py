@@ -4,7 +4,7 @@ import click
 from tabulate import tabulate
 
 from . import admin
-from ...session import Session
+from ...session import Session, is_legacy_server
 from ..pretty import print_error
 
 
@@ -29,6 +29,10 @@ def agent(agent_id):
         ('Total GPU Cores', 'gpu_slots'),
         ('Used GPU Cores', 'used_gpu_slots'),
     ]
+    if is_legacy_server():
+        del fields[9]
+        del fields[6]
+
     with Session() as session:
         try:
             agent = session.Agent(agent_id)
@@ -67,6 +71,10 @@ def agents(status):
         ('Total GPU Cores', 'gpu_slots'),
         ('Used GPU Cores', 'used_gpu_slots'),
     ]
+    if is_legacy_server():
+        del fields[9]
+        del fields[6]
+
     with Session() as session:
         try:
             items = session.Agent.list(status, fields=(item[1] for item in fields))
