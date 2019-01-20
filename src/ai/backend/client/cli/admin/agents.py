@@ -40,7 +40,8 @@ def agent(agent_id):
         for name, key in fields:
             if key == 'mem_cur_bytes' and info[key] is not None:
                 info[key] = round(info[key] / 2 ** 20, 1)
-            rows.append((name, info[key]))
+            if key in info:
+                rows.append((name, info[key]))
         print(tabulate(rows, headers=('Field', 'Value')))
 
 
@@ -76,7 +77,8 @@ def agents(status):
             print('There are no matching agents.')
             return
         for item in items:
-            if item['mem_cur_bytes'] is not None:
+            if 'mem_cur_bytes' in item and item['mem_cur_bytes'] is not None:
                 item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
+        fields = [field for field in fields if field[1] in items[0]]
         print(tabulate((item.values() for item in items),
                        headers=(item[0] for item in fields)))
