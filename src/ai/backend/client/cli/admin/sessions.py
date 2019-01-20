@@ -4,7 +4,7 @@ import click
 from tabulate import tabulate
 
 from . import admin
-from ...session import Session
+from ...session import Session, is_legacy_server
 from ..pretty import print_error
 
 
@@ -39,6 +39,9 @@ def sessions(status, access_key, id_only):
             ('Max Used Memory (MiB)', 'mem_max_bytes'),
             ('GPU Cores', 'gpu_slot'),
         ])
+        if is_legacy_server():
+            del fields[2]
+
     if access_key is None:
         q = 'query($status:String) {' \
             '  compute_sessions(status:$status) { $fields }' \
@@ -109,6 +112,8 @@ def session(sess_id_or_alias):
         ('IO Max Scratch Size', 'io_max_scratch_size'),
         ('IO Current Scratch Size', 'io_cur_scratch_size'),
     ]
+    if is_legacy_server():
+        del fields[3]
     q = 'query($sess_id:String) {' \
         '  compute_session(sess_id:$sess_id) { $fields }' \
         '}'

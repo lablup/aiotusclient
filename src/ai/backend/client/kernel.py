@@ -41,6 +41,13 @@ class Kernel:
 
     @api_function
     @classmethod
+    async def hello(cls) -> str:
+        rqst = Request(cls.session, 'GET', '/')
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
+    @classmethod
     async def get_or_create(cls, lang: str, *,
                             client_token: str = None,
                             mounts: Iterable[str] = None,

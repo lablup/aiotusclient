@@ -20,7 +20,7 @@ from . import main
 from .admin.sessions import session
 from ..compat import current_loop, token_hex
 from ..exceptions import BackendError
-from ..session import Session, AsyncSession
+from ..session import Session, AsyncSession, is_legacy_server
 from .pretty import (
     print_info, print_wait, print_done, print_error, print_fail, print_warn,
     format_info,
@@ -299,12 +299,12 @@ def _prepare_mount_arg(mount):
                    'is MiB.')
 @click.option('-q', '--quiet', is_flag=True,
               help='Hide execution details but show only the kernel outputs.')
-@click.option('--legacy', is_flag=True,
-              help='Use the legacy synchronous polling mode to '
-                   'fetch console outputs.')
+# @click.option('--legacy', is_flag=True,
+#               help='Use the legacy synchronous polling mode to '
+#                    'fetch console outputs.')
 def run(lang, files, session_id, cluster_size, code, clean, build, exec, terminal,
         basedir, rm, env, env_range, build_range, exec_range, max_parallel, mount,
-        stats, tag, resources, quiet, legacy):
+        stats, tag, resources, quiet):
     '''
     Run the given code snippet or files in a session.
     Depending on the session ID you give (default is random),
@@ -606,7 +606,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                     print_fail('There were failed cases!')
                 sys.exit(1)
 
-    if legacy:
+    if is_legacy_server():
         _run_cases_legacy()
     else:
         loop = asyncio.get_event_loop()
