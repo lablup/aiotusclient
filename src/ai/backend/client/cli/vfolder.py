@@ -42,7 +42,7 @@ def list():
 
 @vfolder.command()
 @click.argument('name', type=str)
-@click.argument('host', type=str, nargs=-1, default=None)
+@click.argument('host', type=str, default=None)
 def create(name, host):
     '''Create a new virtual folder.
 
