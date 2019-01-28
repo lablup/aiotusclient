@@ -232,7 +232,7 @@ def ls(name, path):
 
 @vfolder.command()
 @click.argument('name', type=str)
-@click.argument('emails', type=str, nargs=-1)
+@click.argument('emails', type=str, nargs=-1, required=True)
 @click.option('-p', '--perm', metavar='PERMISSION', type=str, default='rw',
               help='Permission to give. "ro" (read-only) / "rw" (read-write).')
 def invite(name, emails, perm):
