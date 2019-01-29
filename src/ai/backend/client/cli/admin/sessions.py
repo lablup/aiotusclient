@@ -27,17 +27,14 @@ def sessions(status, access_key, id_only):
     ]
     if not id_only:
         fields.extend([
-            ('Lang/runtime', 'lang'),
+            ('Image', 'image'),
             ('Tag', 'tag'),
             ('Created At', 'created_at',),
             ('Terminated At', 'terminated_at'),
             ('Status', 'status'),
-            ('CPU Cores', 'cpu_slot'),
-            ('CPU Used (ms)', 'cpu_used'),
-            ('Total Memory (MiB)', 'mem_slot'),
+            ('Occupied Resource', 'occupied_slots'),
             ('Used Memory (MiB)', 'mem_cur_bytes'),
             ('Max Used Memory (MiB)', 'mem_max_bytes'),
-            ('GPU Cores', 'gpu_slot'),
         ])
         if is_legacy_server():
             del fields[2]
@@ -91,19 +88,17 @@ def session(sess_id_or_alias):
     fields = [
         ('Session ID', 'sess_id'),
         ('Role', 'role'),
-        ('Lang/runtime', 'lang'),
+        ('Image', 'image'),
         ('Tag', 'tag'),
-        ('Created At', 'created_at',),
+        ('Created At', 'created_at'),
         ('Terminated At', 'terminated_at'),
         ('Agent', 'agent'),
-        ('Status', 'status',),
-        ('Status Info', 'status_info',),
-        ('CPU Cores', 'cpu_slot'),
+        ('Status', 'status'),
+        ('Status Info', 'status_info'),
+        ('Occupied Resources', 'occupied_slots'),
         ('CPU Used (ms)', 'cpu_used'),
-        ('Total Memory (MiB)', 'mem_slot'),
         ('Used Memory (MiB)', 'mem_cur_bytes'),
         ('Max Used Memory (MiB)', 'mem_max_bytes'),
-        ('GPU Cores', 'gpu_slot'),
         ('Number of Queries', 'num_queries'),
         ('Network RX Bytes', 'net_rx_bytes'),
         ('Network TX Bytes', 'net_tx_bytes'),
