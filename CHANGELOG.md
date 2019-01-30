@@ -1,6 +1,12 @@
 Changes
 =======
 
+18.12.2 (2018-01-30)
+--------------------
+
+ - Minor fix for the CLI to show extra error details only when they are present.
+   (backported from master)
+
 18.12.1 (2018-01-21)
 --------------------
 
