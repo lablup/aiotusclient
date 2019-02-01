@@ -38,11 +38,14 @@ def rescan_images(registry):
     '''Update the kernel image metadata from all configured docker registries.'''
     with Session() as session:
         try:
-            session.Image.rescanImages(registry)
+            result = session.Image.rescanImages(registry)
         except Exception as e:
             print_error(e)
             sys.exit(1)
-        print("kernel image metadata updated")
+        if result['ok']:
+            print("kernel image metadata updated")
+        else:
+            print("rescanning failed: {0}".format(result['msg']))
 
 @admin.command()
 @click.argument('alias', type=str)
@@ -58,7 +61,7 @@ def alias_image(alias, target):
         if result['ok']:
             print("alias {0} created for target {1}".format(alias, target))
         else:
-            print("aliasing failed: {0}".format(result['msg']))
+            print(result['msg'])
 
 
 @admin.command()
@@ -67,8 +70,11 @@ def dealias_image(alias):
     '''Remove an image alias.'''
     with Session() as session:
         try:
-            session.Image.dealiasImage(alias)
+            result = session.Image.dealiasImage(alias)
         except Exception as e:
             print_error(e)
             sys.exit(1)
-        print("alias {0} removed".format(alias))
+        if result['ok']:
+            print("alias {0} removed.".format(alias))
+        else:
+            print(result['msg'])

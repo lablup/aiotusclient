@@ -62,7 +62,8 @@ class Image:
             'query':q,
         })
         async with rqst.fetch() as resp:
-            await resp.json()
+            data = await resp.json()
+            return data['rescan_images']
 
     @api_function
     @classmethod
@@ -102,4 +103,5 @@ class Image:
             'variables': variables,
         })
         async with rqst.fetch() as resp:
-            await resp.json()
+            data = await resp.json()
+            return data['dealias_image']
