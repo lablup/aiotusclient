@@ -96,7 +96,7 @@ def sessions(status, access_key, id_only, num_of_sessions):
         total_count = resp['count_compute_sessions']['count']
 
         required_count = min(total_count, num_of_sessions) if num_of_sessions else total_count
-        paginating_limit = 4
+        paginating_limit = 10
 
         loop = asyncio.get_event_loop()
         results = loop.run_until_complete(collect_queries(session, fields, required_count, paginating_limit))
