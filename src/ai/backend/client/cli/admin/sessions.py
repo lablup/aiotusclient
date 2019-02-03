@@ -20,13 +20,12 @@ from ...compat import current_loop
               help='Get sessions for a specific access key '
                    '(only works if you are a super-admin)')
 @click.option('--id-only', is_flag=True, help='Display session ids only.')
-@click.option('--num-of-sessions', type=int, default=None,
-              help='number of sessions wanted.')
-def sessions(status, access_key, id_only, num_of_sessions):
+@click.option('--all', is_flag=True, help='Display all sessions.')
+def sessions(status, access_key, id_only, all):
     '''
     List and manage compute sessions.
     '''
-    async def execute_paginated_query(session, fields, limit, offset):
+    def execute_paginated_query(session, fields, limit, offset):
         q = 'query($limit:Int!, $offset:Int!, $ak:String, $status:String) {' \
             '  compute_sessions(limit:$limit, offset:$offset, access_key:$ak, status:$status) { $fields }' \
             '}'
@@ -43,23 +42,34 @@ def sessions(status, access_key, id_only, num_of_sessions):
             print_error(e)
             sys.exit(1)
         return resp['compute_sessions']
-        
-    async def collect_queries(session, fields, required_count, paginating_limit):
-        tasks = []
+
+    def round_mem(results):
+        for item in results:
+            if 'mem_cur_bytes' in item:
+                item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
+            if 'mem_max_bytes' in item:
+                item['mem_max_bytes'] = round(item['mem_max_bytes'] / 2 ** 20, 1)
+        return results
+
+    def _generate_paginated_results(session, fields, required_count, paginating_limit, id_only):
         offset = 0
+        is_first = True
         while offset < required_count:
             limit = min(paginating_limit, required_count - offset)
-            tasks.append(asyncio.ensure_future(execute_paginated_query(session, fields, limit, offset)))
+            results = execute_paginated_query(session, fields, limit, offset)
             offset += paginating_limit
-        try:
-            responses = await asyncio.gather(*tasks, return_exceptions=True)
-        except Exception as e:
-            print_error(e)
-            sys.exit(1)
-        results = []
-        for res in responses:
-            results += res
-        return results
+            results = round_mem(results)
+
+            if id_only:
+                yield '\n'.join([item['sess_id'] for item in results]) + '\n'
+            else:
+                table = tabulate([item.values() for item in results], headers=(item[0] for item in fields))
+                if is_first:
+                    is_first = False
+                else:
+                    table_rows = table.split('\n')
+                    table = '\n'.join(table_rows[2:])
+                yield table + '\n'
 
     fields = [
         ('Session ID', 'sess_id'),
@@ -95,31 +105,25 @@ def sessions(status, access_key, id_only, num_of_sessions):
             sys.exit(1)
         total_count = resp['count_compute_sessions']['count']
 
-        required_count = min(total_count, num_of_sessions) if num_of_sessions else total_count
-        paginating_limit = 10
-
-        loop = asyncio.get_event_loop()
-        results = loop.run_until_complete(collect_queries(session, fields, required_count, paginating_limit))
-        loop.close()
-
-        if len(results) == 0:
-            print('There are no compute sessions currently running.')
+        if total_count == 0:
+            print('There are no compute sessions currently {0}.'.format(status.lower()))
             return
-        for item in results:
-            if 'mem_cur_bytes' in item:
-                item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
-            if 'mem_max_bytes' in item:
-                item['mem_max_bytes'] = round(item['mem_max_bytes'] / 2 ** 20, 1)
-        fields = [field for field in fields if field[1]
-                  in results[0]]
-
-        if id_only:
-            for item in results:
-                print(item['sess_id'])
+        
+        paginating_limit = 10
+        if all:
+            click.echo_via_pager(_generate_paginated_results(
+                session, fields, total_count, paginating_limit, id_only))
         else:
-            print(tabulate((item.values() for item in results),
-                           headers=(item[0] for item in fields)))
-
+            results = execute_paginated_query(session, fields, paginating_limit, 0)
+            results = round_mem(results)
+            if id_only:
+                for item in results:
+                    print(item['sess_id'])
+            else:
+                print(tabulate([item.values() for item in results], 
+                                headers=(item[0] for item in fields)))
+            if total_count > paginating_limit:
+                print("\nMore sessions can be displayed by using --all option")
 
 @admin.command()
 @click.argument('sess_id_or_alias', metavar='SESSID')
