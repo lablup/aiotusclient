@@ -48,7 +48,8 @@ def agent(agent_id):
 @admin.command()
 @click.option('-s', '--status', type=str, default='ALIVE',
               help='Filter agents by the given status.')
-def agents(status):
+@click.option('--all', is_flag=True, help='Display all agents.')
+def agents(status, all):
     '''
     List and manage agents.
     (admin privilege required)
@@ -68,17 +69,67 @@ def agents(status):
         del fields[6]
 
     with Session() as session:
+        # get count of agents
+        q = 'query($status:String) {' \
+            ' count_agents(status: $status) {' \
+            '   count' \
+            '  }' \
+            '}'
+        v = {
+            'status': status,
+        }
+
         try:
-            items = session.Agent.list(status, fields=(item[1] for item in fields))
+            resp = session.Admin.query(q, v)
         except Exception as e:
             print_error(e)
             sys.exit(1)
-        if len(items) == 0:
+        total_count = resp['count_agents']['count']
+        if total_count == 0:
             print('There are no matching agents.')
             return
-        for item in items:
-            if 'mem_cur_bytes' in item and item['mem_cur_bytes'] is not None:
-                item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
-        fields = [field for field in fields if field[1] in items[0]]
-        print(tabulate((item.values() for item in items),
-                       headers=(item[0] for item in fields)))
+
+        def execute_paginated_query(limit, offset):
+            try:
+                resp_agents = session.Agent.list_with_limit(limit, offset, status,
+                                                            fields=(item[1] for item in fields))
+            except Exception as e:
+                print_error(e)
+                sys.exit(1)
+            return resp_agents
+
+        def round_mem(results):
+            for item in results:
+                if 'mem_cur_bytes' in item and item['mem_cur_bytes'] is not None:
+                    item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
+            return results
+
+        def _generate_paginated_results(required_count, interval):
+            offset = 0
+            is_first = True
+            while offset < required_count:
+                limit = min(interval, required_count - offset)
+                results = execute_paginated_query(limit, offset)
+                offset += interval
+                results = round_mem(results)
+
+                table = tabulate([item.values() for item in results],
+                                  headers=(item[0] for item in fields))
+                if is_first:
+                    is_first = False
+                else:
+                    table_rows = table.split('\n')
+                    table = '\n'.join(table_rows[2:])
+                yield table + '\n'
+
+        paginating_interval = 10
+        if all:
+            click.echo_via_pager(_generate_paginated_results(total_count, paginating_interval))
+        else:
+            items = execute_paginated_query(limit=paginating_interval, offset=0)
+            items = round_mem(items)
+            fields = [field for field in fields if field[1] in items[0]]
+            print(tabulate((item.values() for item in items),
+                            headers=(item[0] for item in fields))) 
+        if total_count > paginating_interval:
+                print("More agents can be displayed by using --all option.")

@@ -59,7 +59,8 @@ class Image:
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')
         rqst.set_json({
-            'query':q,
+            'query': q,
+            'variables': variables,
         })
         async with rqst.fetch() as resp:
             data = await resp.json()
@@ -79,7 +80,7 @@ class Image:
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')
         rqst.set_json({
-            'query':q,
+            'query': q,
             'variables': variables,
         })
         async with rqst.fetch() as resp:
@@ -99,7 +100,7 @@ class Image:
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')
         rqst.set_json({
-            'query':q,
+            'query': q,
             'variables': variables,
         })
         async with rqst.fetch() as resp:
