@@ -117,7 +117,7 @@ class APIConfig:
         # prefer the argument flag and fallback to env if the flag is not set.
         self._skip_sslcert_validation = (skip_sslcert_validation
              if skip_sslcert_validation else
-             get_env('SKIP_SSLCERT_VALIDATION', clean=bool_env))
+             get_env('SKIP_SSLCERT_VALIDATION', default='no', clean=bool_env))
 
     @property
     def endpoint(self) -> URL:
