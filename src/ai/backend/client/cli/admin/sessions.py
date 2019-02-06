@@ -35,6 +35,7 @@ def sessions(status, access_key, id_only):
             ('Occupied Resource', 'occupied_slots'),
             ('Used Memory (MiB)', 'mem_cur_bytes'),
             ('Max Used Memory (MiB)', 'mem_max_bytes'),
+            ('CPU Using (%)', 'cpu_using'),
         ])
         if is_legacy_server():
             del fields[2]
@@ -106,6 +107,7 @@ def session(sess_id_or_alias):
         ('IO Write Bytes', 'io_write_bytes'),
         ('IO Max Scratch Size', 'io_max_scratch_size'),
         ('IO Current Scratch Size', 'io_cur_scratch_size'),
+        ('CPU Using (%)', 'cpu_using'),
     ]
     if is_legacy_server():
         del fields[3]
