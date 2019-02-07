@@ -68,8 +68,6 @@ def agents(status, all):
         del fields[9]
         del fields[6]
 
-    record = ""
-
     def execute_paginated_query(limit, offset):
             try:
                 resp_agents = session.Agent.list_with_limit(limit, offset, status,
@@ -90,7 +88,7 @@ def agents(status, all):
         is_first = True
         total_count = -1
         while True:
-            limit = (interval if is_first else 
+            limit = (interval if is_first else
                     min(interval, total_count - offset))
             try:
                 result = execute_paginated_query(limit, offset)
@@ -112,7 +110,6 @@ def agents(status, all):
 
             if not offset < total_count:
                 break
-            
 
     with Session() as session:
         paginating_interval = 10
