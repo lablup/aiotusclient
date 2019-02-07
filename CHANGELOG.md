@@ -1,6 +1,14 @@
 Changes
 =======
 
+19.03.0b3 (2018-02-08)
+----------------------
+
+ - NEW: `--skip-sslcert-validation` CLI option.
+
+ - Minor CLI updates: Add `cpu_using` field to "admin agents" statistics
+   and `size_bytes` field to the "admin image" result.
+
 19.03.0b2 (2018-01-30)
 ----------------------
 
