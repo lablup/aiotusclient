@@ -40,88 +40,84 @@ def sessions(status, access_key, id_only, all):
         if is_legacy_server():
             del fields[2]
 
-    with Session() as session:
-        # get count of sessions
-        q = 'query($ak:String, $status:String) {' \
-            '  count_compute_sessions(access_key:$ak, status:$status) {' \
-            '    count' \
-            '  }' \
+    def execute_paginated_query(limit, offset):
+        q = 'query($limit:Int!, $offset:Int!, $ak:String, $status:String) {' \
+            '  compute_session_list(limit:$limit, offset:$offset, access_key:$ak, status:$status) {' \
+            '   items { $fields }' \
+            '   total_count' \
+            ' }' \
             '}'
+        q = q.replace('$fields', ' '.join(item[1] for item in fields))
         v = {
+            'limit': limit,
+            'offset': offset,
             'status': status if status != 'ALL' else None,
             'ak': access_key,
         }
-
         try:
             resp = session.Admin.query(q, v)
         except Exception as e:
             print_error(e)
             sys.exit(1)
-        total_count = resp['count_compute_sessions']['count']
-        if total_count == 0:
-            print('There are no compute sessions currently {0}.'.format(status.lower()))
-            return
+        return resp['compute_session_list']
 
-        def execute_paginated_query(limit, offset):
-            q = 'query($limit:Int!, $offset:Int!, $ak:String, $status:String) {' \
-                '  compute_sessions(limit:$limit, offset:$offset, access_key:$ak, status:$status) {' \
-                '   $fields' \
-                ' }' \
-                '}'
-            q = q.replace('$fields', ' '.join(item[1] for item in fields))
-            v = {
-                'limit': limit,
-                'offset': offset,
-                'status': status if status != 'ALL' else None,
-                'ak': access_key,
-            }
+    def round_mem(items):
+        for item in items:
+            if 'mem_cur_bytes' in item:
+                item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
+            if 'mem_max_bytes' in item:
+                item['mem_max_bytes'] = round(item['mem_max_bytes'] / 2 ** 20, 1)
+        return items
+
+    def _generate_paginated_results(interval):
+        offset = 0
+        is_first = True
+        total_count = -1
+        while True:
+            limit = (interval if is_first else
+                    min(interval, total_count - offset))
             try:
-                resp = session.Admin.query(q, v)
+                result = execute_paginated_query(limit, offset)
             except Exception as e:
                 print_error(e)
                 sys.exit(1)
-            return resp['compute_sessions']
+            offset += interval
+            total_count = result['total_count']
+            items = result['items']
+            items = round_mem(items)
 
-        def round_mem(results):
-            for item in results:
-                if 'mem_cur_bytes' in item:
-                    item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
-                if 'mem_max_bytes' in item:
-                    item['mem_max_bytes'] = round(item['mem_max_bytes'] / 2 ** 20, 1)
-            return results
+            if id_only:
+                yield '\n'.join([item['sess_id'] for item in items]) + '\n'
+            else:
+                table = tabulate([item.values() for item in items],
+                                    headers=(item[0] for item in fields))
+                if not is_first:
+                    table_rows = table.split('\n')
+                    table = '\n'.join(table_rows[2:])
+                yield table + '\n'
 
-        def _generate_paginated_results(required_count, interval):
-            offset = 0
-            is_first = True
-            while offset < required_count:
-                limit = min(interval, required_count - offset)
-                results = execute_paginated_query(limit, offset)
-                offset += interval
-                results = round_mem(results)
+            if is_first:
+                    is_first = False
+            if not offset < total_count:
+                break
 
-                if id_only:
-                    yield '\n'.join([item['sess_id'] for item in results]) + '\n'
-                else:
-                    table = tabulate([item.values() for item in results],
-                                      headers=(item[0] for item in fields))
-                    if is_first:
-                        is_first = False
-                    else:
-                        table_rows = table.split('\n')
-                        table = '\n'.join(table_rows[2:])
-                    yield table + '\n'
-
+    with Session() as session:
         paginating_interval = 10
         if all:
-            click.echo_via_pager(_generate_paginated_results(total_count, paginating_interval))
+            click.echo_via_pager(_generate_paginated_results(paginating_interval))
         else:
-            results = execute_paginated_query(paginating_interval, 0)
-            results = round_mem(results)
+            result = execute_paginated_query(paginating_interval, offset=0)
+            total_count = result['total_count']
+            if total_count == 0:
+                print('There are no compute sessions currently {0}.'.format(status.lower()))
+                return
+            items = result['items']
+            items = round_mem(items)
             if id_only:
-                for item in results:
+                for item in items:
                     print(item['sess_id'])
             else:
-                print(tabulate([item.values() for item in results],
+                print(tabulate([item.values() for item in items],
                                 headers=(item[0] for item in fields)))
             if total_count > paginating_interval:
                 print("More sessions can be displayed by using --all option.")

@@ -68,28 +68,9 @@ def agents(status, all):
         del fields[9]
         del fields[6]
 
-    with Session() as session:
-        # get count of agents
-        q = 'query($status:String) {' \
-            ' count_agents(status: $status) {' \
-            '   count' \
-            '  }' \
-            '}'
-        v = {
-            'status': status,
-        }
+    record = ""
 
-        try:
-            resp = session.Admin.query(q, v)
-        except Exception as e:
-            print_error(e)
-            sys.exit(1)
-        total_count = resp['count_agents']['count']
-        if total_count == 0:
-            print('There are no matching agents.')
-            return
-
-        def execute_paginated_query(limit, offset):
+    def execute_paginated_query(limit, offset):
             try:
                 resp_agents = session.Agent.list_with_limit(limit, offset, status,
                                                             fields=(item[1] for item in fields))
@@ -98,38 +79,55 @@ def agents(status, all):
                 sys.exit(1)
             return resp_agents
 
-        def round_mem(results):
-            for item in results:
-                if 'mem_cur_bytes' in item and item['mem_cur_bytes'] is not None:
-                    item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
-            return results
+    def round_mem(results):
+        for item in results:
+            if 'mem_cur_bytes' in item and item['mem_cur_bytes'] is not None:
+                item['mem_cur_bytes'] = round(item['mem_cur_bytes'] / 2 ** 20, 1)
+        return results
 
-        def _generate_paginated_results(required_count, interval):
-            offset = 0
-            is_first = True
-            while offset < required_count:
-                limit = min(interval, required_count - offset)
-                results = execute_paginated_query(limit, offset)
-                offset += interval
-                results = round_mem(results)
+    def _generate_paginated_results(interval):
+        offset = 0
+        is_first = True
+        total_count = -1
+        while True:
+            limit = (interval if is_first else 
+                    min(interval, total_count - offset))
+            try:
+                result = execute_paginated_query(limit, offset)
+            except Exception as e:
+                print_error(e)
+                sys.exit(1)
+            offset += interval
+            total_count = result['total_count']
+            items = result['items']
+            items = round_mem(items)
+            table = tabulate((item.values() for item in items),
+                                headers=(item[0] for item in fields))
+            if is_first:
+                is_first = False
+            else:
+                table_rows = table.split('\n')
+                table = '\n'.join(table_rows[2:])
+            yield table + '\n'
 
-                table = tabulate([item.values() for item in results],
-                                  headers=(item[0] for item in fields))
-                if is_first:
-                    is_first = False
-                else:
-                    table_rows = table.split('\n')
-                    table = '\n'.join(table_rows[2:])
-                yield table + '\n'
+            if not offset < total_count:
+                break
+            
 
+    with Session() as session:
         paginating_interval = 10
         if all:
-            click.echo_via_pager(_generate_paginated_results(total_count, paginating_interval))
+            click.echo_via_pager(_generate_paginated_results(paginating_interval))
         else:
-            items = execute_paginated_query(limit=paginating_interval, offset=0)
+            result = execute_paginated_query(paginating_interval, offset=0)
+            total_count = result['total_count']
+            if total_count == 0:
+                print('There are no matching agents.')
+                return
+            items = result['items']
             items = round_mem(items)
             fields = [field for field in fields if field[1] in items[0]]
             print(tabulate((item.values() for item in items),
-                            headers=(item[0] for item in fields))) 
-        if total_count > paginating_interval:
+                            headers=(item[0] for item in fields)))
+            if total_count > paginating_interval:
                 print("More agents can be displayed by using --all option.")

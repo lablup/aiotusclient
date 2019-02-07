@@ -51,8 +51,9 @@ class Agent:
                 'gpu_slots',
             )
         q = 'query($limit: Int!, $offset: Int!, $status: String) {' \
-            '  agents(limit: $limit, offset: $offset, status: $status) {' \
-            '    $fields' \
+            '  agent_list(limit: $limit, offset: $offset, status: $status) {' \
+            '   items { $fields }' \
+            '   total_count' \
             '  }' \
             '}'
         q = q.replace('$fields', ' '.join(fields))
@@ -68,4 +69,4 @@ class Agent:
         })
         async with rqst.fetch() as resp:
             data = await resp.json()
-            return data['agents']
+            return data['agent_list']
