@@ -1,6 +1,15 @@
 Changes
 =======
 
+18.12.3 (2018-02-10)
+--------------------
+
+ - Add "--skip-sslcert-validation" option and environment variable equivalent.
+   (backported from master)
+
+ - Fix pretty-printing of server errors with no/null title field in the details.
+   (backported from master)
+
 18.12.2 (2018-01-30)
 --------------------
 
