@@ -17,6 +17,7 @@ def images():
         ('Registry', 'registry'),
         ('Tag', 'tag'),
         ('Digest', 'digest'),
+        ('Size', 'size_bytes'),
     ]
     with Session() as session:
         try:
@@ -28,7 +29,8 @@ def images():
             print('There are no registered images.')
             return
         print(tabulate((item.values() for item in items),
-                       headers=(item[0] for item in fields)))
+                       headers=(item[0] for item in fields),
+                       floatfmt=',.0f'))
 
 @admin.command()
 @click.option('-r', '--registry', type=str, default=None,
