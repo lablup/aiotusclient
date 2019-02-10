@@ -117,9 +117,10 @@ def format_error(exc: Exception):
             yield 'Check the agent status or ask the administrator for help.'
             agent_exc = agent_details.get('exception', None)
             if agent_exc is not None:
-                yield '\n\u279c ' + agent_exc
-            else:
-                yield '\n\u279c ' + agent_details['title']
+                yield '\n\u279c ' + str(agent_exc)
+            desc = agent_details.get('title', None)
+            if desc is not None:
+                yield '\n\u279c ' + str(desc)
         content = exc.data.get('content', None)
         if content:
             yield '\n' + content
