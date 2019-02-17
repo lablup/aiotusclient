@@ -28,9 +28,10 @@ def vfolders(access_key):
     else:
         q = 'query($ak:String) { vfolders(access_key:$ak) { $fields } }'
     q = q.replace('$fields', ' '.join(item[1] for item in fields))
+    v = {'ak': access_key}
     with Session() as session:
         try:
-            resp = session.Admin.query(q)
+            resp = session.Admin.query(q, v)
         except Exception as e:
             print_error(e)
             sys.exit(1)
