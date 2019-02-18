@@ -271,6 +271,7 @@ class Request:
         self._sign(full_url.relative())
         ws_ctx = self.session.aiohttp_session.ws_connect(
             str(full_url),
+            autoping=True, heartbeat=30.0,
             headers=self.headers)
         return WebSocketContextManager(self.session, ws_ctx, **kwargs)
 
