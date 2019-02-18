@@ -1,6 +1,11 @@
 Changes
 =======
 
+19.03.0b4 (2018-02-15)
+----------------------
+
+ - Fix an error when pretty-printing agent exceptions.
+
 19.03.0b3 (2018-02-08)
 ----------------------
 

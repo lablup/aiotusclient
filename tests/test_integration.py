@@ -23,7 +23,7 @@ suite.  Of course, the service must be fully configured as follows:
    python -m ai.backend.client.gateway.server --service-port=8081
 
  - The agent should have access to a Docker daemon and the
-   "lablup/kernel-python:latest" docker image.
+   "lablup/python" docker image.
 
  - The gateway must have access to a test database that has pre-populated
    fixture data.
@@ -171,7 +171,7 @@ async def test_async_auth(intgr_config):
 @pytest.mark.integration
 def test_kernel_lifecycles(intgr_config):
     with Session(config=intgr_config) as sess:
-        kernel = sess.Kernel.get_or_create('python:latest')
+        kernel = sess.Kernel.get_or_create('python:3.6-ubuntu18.04')
         kernel_id = kernel.kernel_id
         info = kernel.get_info()
         # the tag may be different depending on alias/metadata config.
@@ -191,7 +191,7 @@ def test_kernel_lifecycles(intgr_config):
 @pytest.yield_fixture
 def py3_kernel(intgr_config):
     with Session(config=intgr_config) as sess:
-        kernel = sess.Kernel.get_or_create('python:latest')
+        kernel = sess.Kernel.get_or_create('python:3.6-ubuntu18.04')
         yield kernel
         kernel.destroy()
 
@@ -251,8 +251,8 @@ def test_kernel_get_or_create_reuse(intgr_config):
         try:
             # Sessions with same token and same language must be reused.
             t = token_hex(6)
-            kernel1 = sess.Kernel.get_or_create('python:latest', client_token=t)
-            kernel2 = sess.Kernel.get_or_create('python:latest', client_token=t)
+            kernel1 = sess.Kernel.get_or_create('python:3.6-ubuntu18.04', client_token=t)
+            kernel2 = sess.Kernel.get_or_create('python:3.6-ubuntu18.04', client_token=t)
             assert kernel1.kernel_id == kernel2.kernel_id
         finally:
             kernel1.destroy()
@@ -302,7 +302,7 @@ def test_kernel_execution_with_vfolder_mounts(intgr_config):
                 f.flush()
                 f.seek(0)
                 vfolder.upload([f.name])
-            kernel = sess.Kernel.get_or_create('python:latest', mounts=[
+            kernel = sess.Kernel.get_or_create('python:3.6-ubuntu18.04', mounts=[
                 vfname
             ])
             try:
