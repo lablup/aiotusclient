@@ -1,6 +1,14 @@
 Changes
 =======
 
+19.03.0rc1 (2018-02-25)
+-----------------------
+
+ - Support pagination of "admin sessions" and "admin agents" commands.
+
+ - Send websocket pings to keep connections and sessions alive while app services
+   are being used.
+
 19.03.0b4 (2018-02-15)
 ----------------------
 
