@@ -133,8 +133,9 @@ class Session(BaseSession):
         from .agent import Agent
         from .image import Image
         from .kernel import Kernel
-        from .keypair import KeyPair, ResourcePolicy
+        from .keypair import KeyPair
         from .manager import Manager
+        from .resource_policy import ResourcePolicy
         from .vfolder import VFolder
         self.Admin = type('Admin', (BaseFunction, ), {
             **Admin.__dict__,
@@ -189,7 +190,7 @@ class Session(BaseSession):
             'session': self,
         })
         '''
-        The :class:`~ai.backend.client.keypair.ResourcePolicy` function proxy
+        The :class:`~ai.backend.client.resource_policy.ResourcePolicy` function proxy
         bound to this session.
         '''
         self.VFolder = type('VFolder', (BaseFunction, ), {
@@ -256,8 +257,9 @@ class AsyncSession(BaseSession):
         from .agent import Agent
         from .image import Image
         from .kernel import Kernel
-        from .keypair import KeyPair, ResourcePolicy
+        from .keypair import KeyPair
         from .manager import Manager
+        from .resource_policy import ResourcePolicy
         from .vfolder import VFolder
         self.Admin = type('Admin', (BaseFunction, ), {
             **Admin.__dict__,
@@ -312,7 +314,7 @@ class AsyncSession(BaseSession):
             'session': self,
         })
         '''
-        The :class:`~ai.backend.client.keypair.ResourcePolicy` function proxy
+        The :class:`~ai.backend.client.resource_policy.ResourcePolicy` function proxy
         bound to this session.
         '''
         self.VFolder = type('VFolder', (BaseFunction, ), {
