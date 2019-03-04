@@ -67,6 +67,49 @@ class ResourcePolicy:
 
     @api_function
     @classmethod
+    async def update(cls, name: str,
+                     default_for_unspecified: int,
+                     total_resource_slots: int,
+                     max_concurrent_sessions: int,
+                     max_containers_per_session: int,
+                     max_vfolder_count: int,
+                     max_vfolder_size: int,
+                     idle_timeout: int,
+                     allowed_vfolder_hosts: Sequence[str]) -> dict:
+        """
+        Updates an existing keypair resource policy with the given options.
+        You need an admin privilege for this operation.
+        """
+        q = 'mutation($name: String!, $input: ModifyKeyPairResourcePolicyInput!) {' \
+            + \
+            '  modify_keypair_resource_policy(name: $name, props: $input) {' \
+            '    ok msg' \
+            '  }' \
+            '}'
+        variables = {
+            'name': name,
+            'input': {
+                'default_for_unspecified': default_for_unspecified,
+                'total_resource_slots': total_resource_slots,
+                'max_concurrent_sessions': max_concurrent_sessions,
+                'max_containers_per_session': max_containers_per_session,
+                'max_vfolder_count': max_vfolder_count,
+                'max_vfolder_size': max_vfolder_size,
+                'idle_timeout': idle_timeout,
+                'allowed_vfolder_hosts': allowed_vfolder_hosts,
+            },
+        }
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': q,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['modify_keypair_resource_policy']
+
+    @api_function
+    @classmethod
     async def list(cls, fields: Iterable[str] = None) -> Sequence[dict]:
         '''
         Lists the keypair resource policies.
@@ -126,3 +169,28 @@ class ResourcePolicy:
         async with rqst.fetch() as resp:
             data = await resp.json()
             return data['keypair_resource_policy']
+
+    @api_function
+    @classmethod
+    async def delete(cls, name: str) -> dict:
+        """
+        Deletes an existing keypair resource policy with given name.
+        You need an admin privilege for this operation.
+        """
+        q = 'mutation($name: String!) {' \
+            + \
+            '  delete_keypair_resource_policy(name: $name) {' \
+            '    ok msg' \
+            '  }' \
+            '}'
+        variables = {
+            'name': name,
+        }
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': q,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['delete_keypair_resource_policy']

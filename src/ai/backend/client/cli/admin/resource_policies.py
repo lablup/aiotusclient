@@ -1,5 +1,4 @@
 import sys
-from typing import Sequence
 
 import click
 from tabulate import tabulate
@@ -130,3 +129,77 @@ def add(name, default_for_unspecified, total_resource_slots, max_concurrent_sess
             sys.exit(1)
         item = data['resource_policy']
         print('Keypair resource policy ' + item['name'] + ' is created.')
+
+
+@resource_policies.command()
+@click.argument('name', type=str, default=None, metavar='NAME')
+@click.option('--default-for-unspecified', type=str,
+              help='Default behavior for unspecified resources: '
+                   'LIMITED, UNLIMITED')
+@click.option('--total-resource-slots', type=str,
+              help='Set total resource slots.')
+@click.option('--max-concurrent-sessions', type=int,
+              help='Number of maximum concurrent sessions.')
+@click.option('--max-containers-per-session', type=int,
+              help='Number of maximum containers per session.')
+@click.option('--max-vfolder-count', type=int,
+              help='Number of maximum virtual folders allowed.')
+@click.option('--max-vfolder-size', type=int,
+              help='Maximum virtual folder size (future plan).')
+@click.option('--idle-timeout', type=int,
+              help='The maximum period of time allowed for kernels to wait '
+                   'further requests.')
+@click.option('--allowed-vfolder-hosts', help='Locations to create virtual folders.')
+def update(name, default_for_unspecified, total_resource_slots,
+           max_concurrent_sessions, max_containers_per_session, max_vfolder_count,
+           max_vfolder_size, idle_timeout, allowed_vfolder_hosts):
+    """
+    Update an existing keypair resource policy.
+
+    NAME: NAME of a keypair resource policy to update.
+    """
+    with Session() as session:
+        try:
+            data = session.ResourcePolicy.update(
+                name,
+                default_for_unspecified=default_for_unspecified,
+                total_resource_slots=total_resource_slots,
+                max_concurrent_sessions=max_concurrent_sessions,
+                max_containers_per_session=max_containers_per_session,
+                max_vfolder_count=max_vfolder_count,
+                max_vfolder_size=max_vfolder_size,
+                idle_timeout=idle_timeout,
+                allowed_vfolder_hosts=allowed_vfolder_hosts,
+            )
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        if not data['ok']:
+            print_fail('KeyPair Resource Policy creation has failed: {0}'
+                       .format(data['msg']))
+            sys.exit(1)
+        print('Update succeeded.')
+
+
+@resource_policies.command()
+@click.argument('name', type=str, default=None, metavar='NAME')
+def delete(name):
+    """
+    Delete a keypair resource policy.
+
+    NAME: NAME of a keypair resource policy to delete.
+    """
+    with Session() as session:
+        if input('Are you sure? (y/n): ').lower().strip()[:1] != 'y':
+            print('Canceled.')
+            sys.exit(1)
+        try:
+            data = session.ResourcePolicy.delete(name)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        if not data['ok']:
+            print_fail('KeyPair Resource Policy deletion has failed: {0}'
+                       .format(data['msg']))
+            sys.exit(1)
+        print('Resource policy ' + name + ' is deleted.')
