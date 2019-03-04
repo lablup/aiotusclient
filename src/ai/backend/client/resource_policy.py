@@ -110,6 +110,31 @@ class ResourcePolicy:
 
     @api_function
     @classmethod
+    async def delete(cls, name: str) -> dict:
+        """
+        Deletes an existing keypair resource policy with given name.
+        You need an admin privilege for this operation.
+        """
+        q = 'mutation($name: String!) {' \
+            + \
+            '  delete_keypair_resource_policy(name: $name) {' \
+            '    ok msg' \
+            '  }' \
+            '}'
+        variables = {
+            'name': name,
+        }
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': q,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['delete_keypair_resource_policy']
+
+    @api_function
+    @classmethod
     async def list(cls, fields: Iterable[str] = None) -> Sequence[dict]:
         '''
         Lists the keypair resource policies.
@@ -169,28 +194,3 @@ class ResourcePolicy:
         async with rqst.fetch() as resp:
             data = await resp.json()
             return data['keypair_resource_policy']
-
-    @api_function
-    @classmethod
-    async def delete(cls, name: str) -> dict:
-        """
-        Deletes an existing keypair resource policy with given name.
-        You need an admin privilege for this operation.
-        """
-        q = 'mutation($name: String!) {' \
-            + \
-            '  delete_keypair_resource_policy(name: $name) {' \
-            '    ok msg' \
-            '  }' \
-            '}'
-        variables = {
-            'name': name,
-        }
-        rqst = Request(cls.session, 'POST', '/admin/graphql')
-        rqst.set_json({
-            'query': q,
-            'variables': variables,
-        })
-        async with rqst.fetch() as resp:
-            data = await resp.json()
-            return data['delete_keypair_resource_policy']
