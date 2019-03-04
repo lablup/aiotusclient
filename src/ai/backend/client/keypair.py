@@ -4,7 +4,7 @@ from .base import api_function
 from .request import Request
 
 __all__ = (
-    'KeyPair',
+    'KeyPair', 'ResourcePolicy'
 )
 
 
@@ -15,6 +15,9 @@ class KeyPair:
 
     session = None
     '''The client session instance that this function class is bound to.'''
+
+    def __init__(self, access_key: str):
+        self.access_key = access_key
 
     @api_function
     @classmethod
@@ -99,9 +102,6 @@ class KeyPair:
             data = await resp.json()
             return data['keypairs']
 
-    def __init__(self, access_key: str):
-        self.access_key = access_key
-
     @api_function
     async def info(self, fields: Iterable[str] = None) -> dict:
         '''
@@ -147,3 +147,48 @@ class KeyPair:
         You need an admin privilege for this operation.
         '''
         raise NotImplementedError
+
+
+class ResourcePolicy:
+    """
+    Provides interactions with keypair resource policy.
+    """
+    session = None
+    """The client session instance that this function class is bound to."""
+
+    def __init__(self, access_key: str):
+        self.access_key = access_key
+
+    @api_function
+    async def info(self, name: str, fields: Iterable[str] = None) -> dict:
+        """
+        Returns the resource policy's information.
+
+        :param fields: Additional per-agent query fields to fetch.
+
+        .. versionadded:: 19.03
+        """
+        if fields is None:
+            fields = (
+                'name', 'created_at',
+                'total_resource_slots', 'max_concurrent_sessions',
+                'max_vfolder_count', 'max_vfolder_size',
+                'idle_timeout',
+            )
+        q = 'query($name: String!) {' \
+            '  keypair_resource_policy(name: $name) {' \
+            '    $fields' \
+            '  }' \
+            '}'
+        q = q.replace('$fields', ' '.join(fields))
+        variables = {
+            'name': name,
+        }
+        rqst = Request(self.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': q,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['keypair_resource_policy']

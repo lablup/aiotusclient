@@ -72,7 +72,8 @@ class BaseSession(metaclass=abc.ABCMeta):
 
     __slots__ = (
         '_config', '_closed', 'aiohttp_session',
-        'Admin', 'Agent', 'Image', 'Kernel', 'KeyPair', 'Manager', 'VFolder',
+        'Admin', 'Agent', 'Image', 'Kernel', 'KeyPair', 'Manager', 'ResourcePolicy',
+        'VFolder',
     )
 
     def __init__(self, *, config: APIConfig = None):
@@ -132,7 +133,7 @@ class Session(BaseSession):
         from .agent import Agent
         from .image import Image
         from .kernel import Kernel
-        from .keypair import KeyPair
+        from .keypair import KeyPair, ResourcePolicy
         from .manager import Manager
         from .vfolder import VFolder
         self.Admin = type('Admin', (BaseFunction, ), {
@@ -181,6 +182,14 @@ class Session(BaseSession):
         })
         '''
         The :class:`~ai.backend.client.manager.Manager` function proxy
+        bound to this session.
+        '''
+        self.ResourcePolicy = type('ResourcePolicy', (BaseFunction, ), {
+            **ResourcePolicy.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.keypair.ResourcePolicy` function proxy
         bound to this session.
         '''
         self.VFolder = type('VFolder', (BaseFunction, ), {
@@ -247,7 +256,7 @@ class AsyncSession(BaseSession):
         from .agent import Agent
         from .image import Image
         from .kernel import Kernel
-        from .keypair import KeyPair
+        from .keypair import KeyPair, ResourcePolicy
         from .manager import Manager
         from .vfolder import VFolder
         self.Admin = type('Admin', (BaseFunction, ), {
@@ -296,6 +305,14 @@ class AsyncSession(BaseSession):
         })
         '''
         The :class:`~ai.backend.client.manager.Manager` function proxy
+        bound to this session.
+        '''
+        self.ResourcePolicy = type('ResourcePolicy', (BaseFunction, ), {
+            **ResourcePolicy.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.keypair.ResourcePolicy` function proxy
         bound to this session.
         '''
         self.VFolder = type('VFolder', (BaseFunction, ), {
