@@ -177,7 +177,7 @@ class ResourcePolicy:
                 'max_vfolder_count', 'max_vfolder_size',
                 'idle_timeout',
             )
-        q = 'query($name: String!) {' \
+        q = 'query($name: String) {' \
             '  keypair_resource_policy(name: $name) {' \
             '    $fields' \
             '  }' \

@@ -9,11 +9,12 @@ from ..pretty import print_error, print_fail
 
 
 @admin.command()
-@click.argument('name', type=str, default=None, metavar='NAME')
+@click.option('-n', '--name', type=str, default=None,
+              help='Name of the resource policy.')
 def resource_policy(name):
     """
-    Show details about a keypair resource policy.
-    (admin privilege required)
+    Show details about a keypair resource policy. When `name` option is omitted, the
+    resource policy for the current access_key will be returned.
     """
     fields = [
         ('Name', 'name'),
