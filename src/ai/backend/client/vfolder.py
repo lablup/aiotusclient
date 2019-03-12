@@ -57,8 +57,18 @@ class VFolder:
     async def delete(self):
         rqst = Request(self.session, 'DELETE', '/folders/{0}'.format(self.name))
         async with rqst.fetch() as resp:
-            if resp.status == 200:
-                return await resp.json()
+            return await resp.json()
+
+    @api_function
+    async def rename(self, new_name):
+        assert _rx_slug.search(new_name) is not None, 'Invalid vfolder name format'
+        rqst = Request(self.session, 'POST', '/folders/{0}/rename'.format(self.name))
+        rqst.set_json({
+            'new_name': new_name,
+        })
+        async with rqst.fetch() as resp:
+            self.name = new_name
+            return await resp.text()
 
     @api_function
     async def upload(self, files: Sequence[Union[str, Path]],
@@ -93,7 +103,7 @@ class VFolder:
                            'POST', '/folders/{}/upload'.format(self.name))
             rqst.attach_files(attachments)
             async with rqst.fetch() as resp:
-                return resp
+                return await resp.text()
 
     @api_function
     async def mkdir(self, path: Union[str, Path]):
@@ -103,7 +113,7 @@ class VFolder:
             'path': path,
         })
         async with rqst.fetch() as resp:
-            return resp
+            return await resp.text()
 
     @api_function
     async def delete_files(self,
@@ -116,7 +126,7 @@ class VFolder:
             'recursive': recursive,
         })
         async with rqst.fetch() as resp:
-            return resp
+            return await resp.text()
 
     @api_function
     async def download(self, files: Sequence[Union[str, Path]],
