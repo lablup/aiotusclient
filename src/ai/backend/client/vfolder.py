@@ -57,7 +57,7 @@ class VFolder:
     async def delete(self):
         rqst = Request(self.session, 'DELETE', '/folders/{0}'.format(self.name))
         async with rqst.fetch() as resp:
-            return await resp.json()
+            return {}
 
     @api_function
     async def rename(self, new_name):
