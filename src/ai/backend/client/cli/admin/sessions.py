@@ -2,8 +2,10 @@ import sys
 
 import click
 from tabulate import tabulate
+import textwrap
 
 from . import admin
+from ...helper import is_admin
 from ...session import Session, is_legacy_server
 from ..pretty import print_error
 
@@ -26,6 +28,9 @@ def sessions(status, access_key, id_only, all):
     fields = [
         ('Session ID', 'sess_id'),
     ]
+    with Session() as session:
+        if is_admin(session):
+            fields.append(('Owner', 'access_key'))
     if not id_only:
         fields.extend([
             ('Image', 'image'),
@@ -42,12 +47,15 @@ def sessions(status, access_key, id_only, all):
             del fields[2]
 
     def execute_paginated_query(limit, offset):
-        q = 'query($limit:Int!, $offset:Int!, $ak:String, $status:String) {' \
-            '  compute_session_list(limit:$limit, offset:$offset, access_key:$ak, status:$status) {' \
-            '   items { $fields }' \
-            '   total_count' \
-            ' }' \
-            '}'
+        q = '''
+        query($limit:Int!, $offset:Int!, $ak:String, $status:String) {
+          compute_session_list(
+              limit:$limit, offset:$offset, access_key:$ak, status:$status) {
+            items { $fields }
+            total_count
+          }
+        }'''
+        q = textwrap.dedent(q).strip()
         q = q.replace('$fields', ' '.join(item[1] for item in fields))
         v = {
             'limit': limit,
@@ -110,7 +118,8 @@ def sessions(status, access_key, id_only, all):
             result = execute_paginated_query(paginating_interval, offset=0)
             total_count = result['total_count']
             if total_count == 0:
-                print('There are no compute sessions currently {0}.'.format(status.lower()))
+                print('There are no compute sessions currently {0}.'
+                      .format(status.lower()))
                 return
             items = result['items']
             items = round_mem(items)
