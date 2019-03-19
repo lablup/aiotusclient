@@ -17,7 +17,7 @@ from humanize import naturalsize
 from tabulate import tabulate
 
 from . import main
-from .admin.sessions import session
+from .admin.sessions import session as cli_admin_session
 from ..compat import current_loop, token_hex
 from ..exceptions import BackendError
 from ..session import Session, AsyncSession, is_legacy_server
@@ -589,6 +589,8 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
 @click.option('-t', '--session-id', '--client-token', metavar='SESSID',
               help='Specify a human-readable session ID or name. '
                    'If not set, a random hex string is used.')
+@click.option('-o', '--owner', '--owner-access-key', metavar='ACCESS_KEY',
+              help='Set the owner of the target session explicitly.')
 @click.option('-e', '--env', metavar='KEY=VAL', type=str, multiple=True,
               help='Environment variable (may appear multiple times)')
 @click.option('-m', '--mount', type=str, multiple=True,
@@ -602,7 +604,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                    'The unit of mem(ory) is MiB.')
 @click.option('--cluster-size', metavar='NUMBER', type=int, default=1,
               help='The size of cluster in number of containers.')
-def start(lang, session_id, env, mount, tag, resources, cluster_size):
+def start(lang, session_id, owner, env, mount, tag, resources, cluster_size):
     '''
     Prepare and start a single compute session without executing codes.
     You may use the created session to execute codes using the "run" command
@@ -632,6 +634,7 @@ def start(lang, session_id, env, mount, tag, resources, cluster_size):
                 mounts=mount,
                 envs=envs,
                 resources=resources,
+                owner_access_key=owner,
                 tag=tag)
         except Exception as e:
             print_error(e)
@@ -651,9 +654,11 @@ def start(lang, session_id, env, mount, tag, resources, cluster_size):
 
 @main.command(aliases=['rm', 'kill'])
 @click.argument('sess_id_or_alias', metavar='SESSID', nargs=-1)
+@click.option('-o', '--owner', '--owner-access-key', metavar='ACCESS_KEY',
+              help='Specify the owner of the target session explicitly.')
 @click.option('-s', '--stats', is_flag=True,
               help='Show resource usage statistics after termination')
-def terminate(sess_id_or_alias, stats):
+def terminate(sess_id_or_alias, owner, stats):
     '''
     Terminate the given session.
 
@@ -664,7 +669,7 @@ def terminate(sess_id_or_alias, stats):
         has_failure = False
         for sess in sess_id_or_alias:
             try:
-                kernel = session.Kernel(sess)
+                kernel = session.Kernel(sess, owner)
                 ret = kernel.destroy()
             except Exception as e:
                 print_error(e)
@@ -683,12 +688,14 @@ def terminate(sess_id_or_alias, stats):
 
 @click.command()
 @click.argument('sess_id_or_alias', metavar='NAME')
+@click.option('-o', '--owner', '--owner-access-key', metavar='ACCESS_KEY',
+              help='Specify the owner of the target session explicitly.')
 @click.pass_context
-def info(ctx, sess_id_or_alias):
+def info(ctx, sess_id_or_alias, owner):
     '''
     Show detailed information for a running compute session.
     This is an alias of the "admin session <sess_id>" command.
 
     SESSID: session ID or its alias given when creating the session.
     '''
-    ctx.forward(session)
+    ctx.forward(cli_admin_session)

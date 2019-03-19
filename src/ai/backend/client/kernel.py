@@ -54,7 +54,8 @@ class Kernel:
                             envs: Mapping[str, str] = None,
                             resources: Mapping[str, int] = None,
                             cluster_size: int = 1,
-                            tag: str = None) -> 'Kernel':
+                            tag: str = None,
+                            owner_access_key: str = None) -> 'Kernel':
         '''
         Get-or-creates a compute session.
         If *client_token* is ``None``, it creates a new compute session as long as
@@ -76,6 +77,8 @@ class Kernel:
         :param cluster_size: The number of containers in this compute session.
             Must be at least 1.
         :param tag: An optional string to annotate extra information.
+        :param owner: An optional access key that owns the created session. (Only
+            available to administrators)
 
         :returns: The :class:`Kernel` instance.
         '''
@@ -103,13 +106,14 @@ class Kernel:
         })
         async with rqst.fetch() as resp:
             data = await resp.json()
-            o = cls(data['kernelId'])  # type: ignore
+            o = cls(data['kernelId'], owner_access_key)  # type: ignore
             o.created = data.get('created', True)     # True is for legacy
             o.service_ports = data.get('servicePorts', [])
             return o
 
-    def __init__(self, kernel_id: str):
+    def __init__(self, kernel_id: str, owner_access_key: str = None):
         self.kernel_id = kernel_id
+        self.owner_access_key = owner_access_key
 
     @api_function
     async def destroy(self):
@@ -118,8 +122,12 @@ class Kernel:
         Since the server literally kills the container(s), all ongoing executions are
         forcibly interrupted.
         '''
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         rqst = Request(self.session,
-                       'DELETE', '/kernel/{}'.format(self.kernel_id))
+                       'DELETE', '/kernel/{}'.format(self.kernel_id),
+                       params=params)
         async with rqst.fetch() as resp:
             if resp.status == 200:
                 return await resp.json()
@@ -131,8 +139,12 @@ class Kernel:
         The server force-destroys the current running container(s), but keeps their
         temporary scratch directories intact.
         '''
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         rqst = Request(self.session,
-                       'PATCH', '/kernel/{}'.format(self.kernel_id))
+                       'PATCH', '/kernel/{}'.format(self.kernel_id),
+                       params=params)
         async with rqst.fetch():
             pass
 
@@ -143,8 +155,12 @@ class Kernel:
         This may fail without any explicit errors depending on the code being
         executed.
         '''
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         rqst = Request(self.session,
-                       'POST', '/kernel/{}/interrupt'.format(self.kernel_id))
+                       'POST', '/kernel/{}/interrupt'.format(self.kernel_id),
+                       params=params)
         async with rqst.fetch():
             pass
 
@@ -165,8 +181,12 @@ class Kernel:
         :returns: An ordered list of strings.
         '''
         opts = {} if opts is None else opts
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         rqst = Request(self.session,
-            'POST', '/kernel/{}/complete'.format(self.kernel_id))
+            'POST', '/kernel/{}/complete'.format(self.kernel_id),
+            params=params)
         rqst.set_json({
             'code': code,
             'options': {
@@ -184,8 +204,12 @@ class Kernel:
         '''
         Retrieves a brief information about the compute session.
         '''
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         rqst = Request(self.session,
-                       'GET', '/kernel/{}'.format(self.kernel_id))
+                       'GET', '/kernel/{}'.format(self.kernel_id),
+                       params=params)
         async with rqst.fetch() as resp:
             return await resp.json()
 
@@ -194,8 +218,12 @@ class Kernel:
         '''
         Retrieves the console log of the compute session container.
         '''
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         rqst = Request(self.session,
-                       'GET', '/kernel/{}/logs'.format(self.kernel_id))
+                       'GET', '/kernel/{}/logs'.format(self.kernel_id),
+                       params=params)
         async with rqst.fetch() as resp:
             return await resp.json()
 
@@ -228,11 +256,15 @@ class Kernel:
         :returns: :ref:`An execution result object <execution-result-object>`
         '''
         opts = opts if opts is not None else {}
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         if mode in {'query', 'continue', 'input'}:
             assert code is not None, \
                    'The code argument must be a valid string even when empty.'
             rqst = Request(self.session,
-                'POST', '/kernel/{}'.format(self.kernel_id))
+                'POST', '/kernel/{}'.format(self.kernel_id),
+                params=params)
             rqst.set_json({
                 'mode': mode,
                 'code': code,
@@ -240,7 +272,8 @@ class Kernel:
             })
         elif mode == 'batch':
             rqst = Request(self.session,
-                'POST', '/kernel/{}'.format(self.kernel_id))
+                'POST', '/kernel/{}'.format(self.kernel_id),
+                params=params)
             rqst.set_json({
                 'mode': mode,
                 'code': code,
@@ -254,7 +287,8 @@ class Kernel:
             })
         elif mode == 'complete':
             rqst = Request(self.session,
-                'POST', '/kernel/{}/complete'.format(self.kernel_id))
+                'POST', '/kernel/{}/complete'.format(self.kernel_id),
+                params=params)
             rqst.set_json({
                 'code': code,
                 'options': {
@@ -291,6 +325,9 @@ class Kernel:
             The default value is the current working directory.
         :param show_progress: Displays a progress bar during uploads.
         '''
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         base_path = (Path.cwd() if basedir is None
                      else Path(basedir).resolve())
         files = [Path(file).resolve() for file in files]
@@ -317,7 +354,8 @@ class Kernel:
                     raise ValueError(msg) from None
 
             rqst = Request(self.session,
-                           'POST', '/kernel/{}/upload'.format(self.kernel_id))
+                           'POST', '/kernel/{}/upload'.format(self.kernel_id),
+                           params=params)
             rqst.attach_files(attachments)
             async with rqst.fetch() as resp:
                 return resp
@@ -335,8 +373,12 @@ class Kernel:
         :param dest: The destination directory in the client-side.
         :param show_progress: Displays a progress bar during downloads.
         '''
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         rqst = Request(self.session,
-                       'GET', '/kernel/{}/download'.format(self.kernel_id))
+                       'GET', '/kernel/{}/download'.format(self.kernel_id),
+                       params=params)
         rqst.set_json({
             'files': [*map(str, files)],
         })
@@ -383,8 +425,12 @@ class Kernel:
 
         :param path: The directory path in the compute session.
         '''
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         rqst = Request(self.session,
-                       'GET', '/kernel/{}/files'.format(self.kernel_id))
+                       'GET', '/kernel/{}/files'.format(self.kernel_id),
+                       params=params)
         rqst.set_json({
             'path': path,
         })
@@ -399,8 +445,12 @@ class Kernel:
 
         :returns: a :class:`StreamPty` object.
         '''
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         request = Request(self.session,
-                          'GET', '/stream/kernel/{}/pty'.format(self.kernel_id))
+                          'GET', '/stream/kernel/{}/pty'.format(self.kernel_id),
+                          params=params)
         return request.connect_websocket(response_cls=StreamPty)
 
     # only supported in AsyncKernel
@@ -412,6 +462,9 @@ class Kernel:
         Since the returned websocket represents a run loop, there is no need to
         specify *run_id* explicitly.
         '''
+        params = {}
+        if self.owner_access_key:
+            params['owner_access_key'] = self.owner_access_key
         opts = {} if opts is None else opts
         if mode == 'query':
             opts = {}
@@ -426,7 +479,8 @@ class Kernel:
             msg = 'Invalid stream-execution mode: {0}'.format(mode)
             raise BackendClientError(msg)
         request = Request(self.session,
-                          'GET', '/stream/kernel/{}/execute'.format(self.kernel_id))
+                          'GET', '/stream/kernel/{}/execute'.format(self.kernel_id),
+                          params=params)
 
         async def send_code(ws):
             await ws.send_json({
