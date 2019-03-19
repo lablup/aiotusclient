@@ -19,7 +19,7 @@ from tabulate import tabulate
 from . import main
 from .admin.sessions import session as cli_admin_session
 from ..compat import current_loop, token_hex
-from ..exceptions import BackendError
+from ..exceptions import BackendError, BackendAPIError
 from ..session import Session, AsyncSession, is_legacy_server
 from .pretty import (
     print_info, print_wait, print_done, print_error, print_fail, print_warn,
@@ -671,6 +671,13 @@ def terminate(sess_id_or_alias, owner, stats):
             try:
                 kernel = session.Kernel(sess, owner)
                 ret = kernel.destroy()
+            except BackendAPIError as e:
+                print_error(e)
+                if e.status == 404:
+                    print_info(
+                        'If you are an admin, use "-o" / "--owner" option '
+                        'to terminate other user\'s session.')
+                has_failure = True
             except Exception as e:
                 print_error(e)
                 has_failure = True
