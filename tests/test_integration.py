@@ -176,7 +176,7 @@ def test_kernel_lifecycles(intgr_config):
         info = kernel.get_info()
         # the tag may be different depending on alias/metadata config.
         lang = info['lang']
-        assert lang.startswith('python:') or lang.startswith('lablup/python:')
+        assert lang.startswith('index.docker.io/lablup/python:')
         assert info['numQueriesExecuted'] == 1
         info = kernel.get_info()
         assert info['numQueriesExecuted'] == 2
@@ -378,4 +378,4 @@ def test_admin_api(py3_kernel):
     assert 'compute_sessions' in resp
     assert len(resp['compute_sessions']) >= 1
     lang = resp['compute_sessions'][0]['lang']
-    assert lang.startswith('python:') or lang.startswith('lablup/python:')
+    assert lang.startswith('index.docker.io/lablup/python:')
