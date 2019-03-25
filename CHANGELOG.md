@@ -1,6 +1,16 @@
 Changes
 =======
 
+19.03.0rc2 (2018-03-26)
+-----------------------
+
+ - NEW: Add SDK/CLI support for resource policy management.
+
+ - NEW: Add SDK/CLI support for vfolder renaming.
+
+ - NEW: Add SDK/CLI support for owner_access_key in the kernel APIs and "-o" /
+   "--owner-access-key" argument to the kernel-releated CLI commands.
+
 19.03.0rc1 (2018-02-25)
 -----------------------
 
