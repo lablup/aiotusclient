@@ -106,7 +106,7 @@ def sessions(status, access_key, id_only, all):
                 yield table + '\n'
 
             if is_first:
-                    is_first = False
+                is_first = False
             if not offset < total_count:
                 break
 

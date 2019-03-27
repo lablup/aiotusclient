@@ -11,9 +11,9 @@ def test_generate_signature(defconfig):
         version=defconfig.version,
         endpoint=defconfig.endpoint,
         date=datetime.now(tzutc()),
-        request_path='/path/to/api/',
+        rel_url='/path/to/api/',
+        content_type='plain/text',
         content=b'"test data"',
-        content_type='application/json',
         access_key=defconfig.access_key,
         secret_key=defconfig.secret_key,
         hash_type='md5'

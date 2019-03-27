@@ -31,7 +31,8 @@ class Agent:
                               status: str = 'ALIVE',
                               fields: Iterable[str] = None) -> Sequence[dict]:
         '''
-        Fetches the list of agents with the given status with limit and offset for pagination.
+        Fetches the list of agents with the given status with limit and offset for
+        pagination.
 
         :param limit: number of agents to get
         :param offset: offset index of agents to get

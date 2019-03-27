@@ -73,13 +73,13 @@ def agents(status, all):
         del fields[6]
 
     def execute_paginated_query(limit, offset):
-            try:
-                resp_agents = session.Agent.list_with_limit(limit, offset, status,
-                                                            fields=(item[1] for item in fields))
-            except Exception as e:
-                print_error(e)
-                sys.exit(1)
-            return resp_agents
+        try:
+            resp_agents = session.Agent.list_with_limit(
+                limit, offset, status, fields=(item[1] for item in fields))
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        return resp_agents
 
     def round_mem(results):
         for item in results:
