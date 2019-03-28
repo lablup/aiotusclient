@@ -32,18 +32,22 @@ class TestImage:
 
     async def test_alias_dealias_image_by_admin(self):
         with Session() as sess:
-            def get_test_aliases():
-                items = sess.Image.list(fields=('name', 'tag', 'aliases'))
+            def get_test_image_info():
+                items = sess.Image.list(
+                    fields=('name', 'registry', 'tag', 'aliases'))
                 for item in items:
                     if 'lua' in item['name'] and '5.1-alpine3.8' in item['tag']:
-                        return item['aliases']
+                        return item
 
+            img_info = get_test_image_info()
             test_alias = 'testalias-b9f1ce136f584ca892d5fef3e78dd11d'
-            sess.Image.aliasImage(test_alias, 'lua:5.1-alpine3.8')
-            assert get_test_aliases() == [test_alias]
+            test_target = img_info['registry'] + '/' + img_info['name'] + ':' + \
+                img_info['tag']
+            sess.Image.aliasImage(test_alias, test_target)
+            assert get_test_image_info()['aliases'] == [test_alias]
 
             sess.Image.dealiasImage(test_alias)
-            assert len(get_test_aliases()) == 0
+            assert len(get_test_image_info()['aliases']) == 0
 
     async def test_user_cannot_mutate_alias_dealias(self, userconfig):
         with Session() as sess:
