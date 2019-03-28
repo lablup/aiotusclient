@@ -13,6 +13,9 @@ python:
 os:
   - linux
   # - osx  # not supported yet
+env:
+  global:
+    - BACKEND_CLIENT_CLOUD_TEST=1  # use beta server for integration tests
 
 # test stage
 install:

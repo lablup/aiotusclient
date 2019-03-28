@@ -18,6 +18,7 @@ def images():
         ('Tag', 'tag'),
         ('Digest', 'digest'),
         ('Size', 'size_bytes'),
+        ('Aliases', 'aliases'),
     ]
     with Session() as session:
         try:
