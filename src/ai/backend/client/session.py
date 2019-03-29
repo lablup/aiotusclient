@@ -179,7 +179,7 @@ class Session(BaseSession):
         '''
         self.Manager = type('Manager', (BaseFunction, ), {
             **Manager.__dict__,
-            '_session': self,
+            'session': self,
         })
         '''
         The :class:`~ai.backend.client.manager.Manager` function proxy
@@ -303,7 +303,7 @@ class AsyncSession(BaseSession):
         '''
         self.Manager = type('Manager', (BaseFunction, ), {
             **Manager.__dict__,
-            '_session': self,
+            'session': self,
         })
         '''
         The :class:`~ai.backend.client.manager.Manager` function proxy

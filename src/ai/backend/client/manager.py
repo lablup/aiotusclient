@@ -19,12 +19,12 @@ class Manager:
         '''
         Returns the current status of the configured API server.
         '''
-        rqst = Request(cls._session, 'GET', '/manager/status')
+        rqst = Request(cls.session, 'GET', '/manager/status')
         rqst.set_json({
             'status': 'running',
         })
         async with rqst.fetch() as resp:
-            return resp.json()
+            return await resp.json()
 
     @api_function
     @classmethod
@@ -41,7 +41,7 @@ class Manager:
             session are still able to interact with them though they cannot create
             new compute sessions.
         '''
-        rqst = Request(cls._session, 'PUT', '/manager/status')
+        rqst = Request(cls.session, 'PUT', '/manager/status')
         rqst.set_json({
             'status': 'frozen',
             'force_kill': force_kill,
@@ -55,7 +55,7 @@ class Manager:
         '''
         Unfreezes the configured API server so that it resumes to normal operation.
         '''
-        rqst = Request(cls._session, 'PUT', '/manager/status')
+        rqst = Request(cls.session, 'PUT', '/manager/status')
         rqst.set_json({
             'status': 'running',
         })
