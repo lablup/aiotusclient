@@ -3,8 +3,8 @@ from unittest import mock
 import asynctest
 import pytest
 
-from tests import ContextMagicMock
 from ai.backend.client.session import Session
+from tests import ContextMagicMock
 
 
 @pytest.mark.asyncio

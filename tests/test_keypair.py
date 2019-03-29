@@ -15,8 +15,8 @@ class TestKeyPair:
     async def test_keypair_manipulation_operations(self):
         email = 'testion' + uuid.uuid4().hex + '@test.mars'
         access_key = None
-        try:
-            with Session() as sess:
+        with Session() as sess:
+            try:
                 # Create keypair
                 result = sess.KeyPair.create(user_id=email, is_active=True,
                                              is_admin=False,
@@ -48,10 +48,10 @@ class TestKeyPair:
                 sess.KeyPair.delete(access_key)
                 keypairs = sess.KeyPair.list(user_id=email)
                 assert len(keypairs) == 0
-        except Exception:
-            if access_key:
-                sess.KeyPair.delete(access_key)
-            raise
+            except Exception:
+                if access_key:
+                    sess.KeyPair.delete(access_key)
+                raise
 
     async def test_user_cannot_create_keypair(self, userconfig):
         email = 'testion' + uuid.uuid4().hex + '@test.mars'

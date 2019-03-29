@@ -71,7 +71,7 @@ def test_delete_vfolder():
             m.delete(build_url(session.config, '/folders/{}'.format(vfolder_name)),
                      status=204)
             resp = session.VFolder(vfolder_name).delete()
-            assert resp is None
+            assert resp == {}
 
 
 def test_vfolder_get_info():
@@ -104,7 +104,7 @@ def test_vfolder_upload(tmpdir):
                    status=201)
             resp = session.VFolder(vfolder_name).upload([mockfile.strpath],
                                                         basedir=tmpdir.strpath)
-            assert resp.status == 201
+            assert resp == ''
 
 
 def test_vfolder_delete_files():
@@ -116,7 +116,7 @@ def test_vfolder_delete_files():
                                '/folders/{}/delete_files'.format(vfolder_name)),
                      status=200, payload={})
             resp = session.VFolder(vfolder_name).delete_files(files)
-            assert resp.status == 200
+            assert resp == '{}'
 
 
 def test_vfolder_download(mocker):
