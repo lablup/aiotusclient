@@ -71,14 +71,12 @@ class TestRequest:
         assert rqst.content == mock_request_params['content']
         assert 'X-BackendAI-Version' in rqst.headers
 
-
     def test_request_set_content_none(self, mock_request_params):
         mock_request_params = mock_request_params.copy()
         mock_request_params['content'] = None
         rqst = Request(**mock_request_params)
         assert rqst.content == b''
         assert rqst._pack_content() is rqst.content
-
 
     def test_request_set_content(self, mock_request_params):
         rqst = Request(**mock_request_params)
@@ -100,7 +98,6 @@ class TestRequest:
         assert rqst.content_type == 'application/octet-stream'
         assert rqst._pack_content() is rqst.content
 
-
     def test_request_attach_files(self, mock_request_params):
         files = [
             AttachedFile('test1.txt', io.BytesIO(), 'application/octet-stream'),
@@ -121,7 +118,6 @@ class TestRequest:
         packed_content = rqst._pack_content()
         assert packed_content.is_multipart
 
-
     def test_build_correct_url(self, mock_request_params):
         canonical_url = 'http://127.0.0.1:8081/function?app=999'
 
@@ -133,7 +129,6 @@ class TestRequest:
         rqst = Request(**mock_request_params)
         assert str(rqst._build_url()) == canonical_url
 
-
     def test_fetch_invalid_method(self, mock_request_params):
         mock_request_params['method'] = 'STRANGE'
         rqst = Request(**mock_request_params)
@@ -141,7 +136,6 @@ class TestRequest:
         with pytest.raises(AssertionError):
             with rqst.fetch():
                 pass
-
 
     def test_fetch(self, dummy_endpoint):
         with aioresponses() as m, Session() as session:
@@ -175,7 +169,6 @@ class TestRequest:
                 assert resp.json() == {'a': 1234, 'b': None}
                 assert resp.content_length == len(body)
 
-
     def test_streaming_fetch(self, dummy_endpoint):
         # Read content by chunks.
         with aioresponses() as m, Session() as session:
@@ -195,7 +188,6 @@ class TestRequest:
                 with pytest.raises(AssertionError):
                     assert resp.text()
 
-
     def test_invalid_requests(self, dummy_endpoint):
         with aioresponses() as m, Session() as session:
             body = json.dumps({
@@ -212,9 +204,9 @@ class TestRequest:
                 with rqst.fetch():
                     pass
                 assert e.status == 404
-                assert e.data['type'] == 'https://api.backend.ai/probs/kernel-not-found'
+                assert e.data['type'] == \
+                    'https://api.backend.ai/probs/kernel-not-found'
                 assert e.data['title'] == 'Kernel Not Found'
-
 
     @pytest.mark.asyncio
     async def test_fetch_invalid_method_async(self):
@@ -223,7 +215,6 @@ class TestRequest:
             with pytest.raises(AssertionError):
                 async with rqst.fetch():
                     pass
-
 
     @pytest.mark.asyncio
     async def test_fetch_client_error_async(self, dummy_endpoint):
@@ -236,7 +227,6 @@ class TestRequest:
                     async with rqst.fetch():
                         pass
 
-
     @pytest.mark.asyncio
     async def test_fetch_cancellation_async(self, dummy_endpoint):
         with aioresponses() as m:
@@ -248,7 +238,6 @@ class TestRequest:
                     async with rqst.fetch():
                         pass
 
-
     @pytest.mark.asyncio
     async def test_fetch_timeout_async(self, dummy_endpoint):
         with aioresponses() as m:
@@ -259,7 +248,6 @@ class TestRequest:
                 with pytest.raises(asyncio.TimeoutError):
                     async with rqst.fetch():
                         pass
-
 
     def test_response_sync(self, defconfig, dummy_endpoint):
         body = b'{"test": 1234}'
@@ -274,7 +262,6 @@ class TestRequest:
                 with rqst.fetch() as resp:
                     assert resp.text() == '{"test": 1234}'
                     assert resp.json() == {'test': 1234}
-
 
     @pytest.mark.asyncio
     async def test_response_async(self, defconfig, dummy_endpoint):
