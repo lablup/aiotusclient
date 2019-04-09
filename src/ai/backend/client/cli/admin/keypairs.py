@@ -24,6 +24,7 @@ def keypair():
         ('Res.Policy', 'resource_policy'),
         ('Rate Limit', 'rate_limit'),
         ('Concur.Limit', 'concurrency_limit'),
+        ('Concur.Used', 'concurrency_used'),
     ]
     with Session() as session:
         try:
@@ -64,6 +65,7 @@ def keypairs(ctx, user_id, is_active):
         ('Res.Policy', 'resource_policy'),
         ('Rate Limit', 'rate_limit'),
         ('Concur.Limit', 'concurrency_limit'),
+        ('Concur.Used', 'concurrency_used'),
     ]
     try:
         user_id = int(user_id)
