@@ -1,6 +1,15 @@
 Changes
 =======
 
+19.03.0 (2018-04-10)
+--------------------
+
+ - Include "concurrency_used" when fetching keypairs in "admin keypair" commands.
+
+ - Add support for the vfolder host listing API.
+
+ - Improve test cases and coverage.
+
 19.03.0rc2 (2018-03-26)
 -----------------------
 
