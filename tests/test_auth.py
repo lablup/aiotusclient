@@ -93,4 +93,3 @@ def test_generate_signature(defconfig):
     assert kwargs['hash_type'].upper() in headers['Authorization']
     assert kwargs['access_key'] in headers['Authorization']
     assert signature in headers['Authorization']
-
