@@ -72,8 +72,8 @@ class BaseSession(metaclass=abc.ABCMeta):
 
     __slots__ = (
         '_config', '_closed', 'aiohttp_session',
-        'Admin', 'Agent', 'Image', 'Kernel', 'KeyPair', 'Manager', 'ResourcePolicy',
-        'VFolder',
+        'Admin', 'Agent', 'Image', 'Kernel', 'KeyPair', 'Manager', 'Resource',
+        'ResourcePolicy', 'VFolder',
     )
 
     def __init__(self, *, config: APIConfig = None):
@@ -135,6 +135,7 @@ class Session(BaseSession):
         from .kernel import Kernel
         from .keypair import KeyPair
         from .manager import Manager
+        from .resource import Resource
         from .resource_policy import ResourcePolicy
         from .vfolder import VFolder
         self.Admin = type('Admin', (BaseFunction, ), {
@@ -183,6 +184,14 @@ class Session(BaseSession):
         })
         '''
         The :class:`~ai.backend.client.manager.Manager` function proxy
+        bound to this session.
+        '''
+        self.Resource= type('Resource', (BaseFunction, ), {
+            **Resource.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.resource.Resource` function proxy
         bound to this session.
         '''
         self.ResourcePolicy = type('ResourcePolicy', (BaseFunction, ), {
@@ -259,6 +268,7 @@ class AsyncSession(BaseSession):
         from .kernel import Kernel
         from .keypair import KeyPair
         from .manager import Manager
+        from .resource import Resource
         from .resource_policy import ResourcePolicy
         from .vfolder import VFolder
         self.Admin = type('Admin', (BaseFunction, ), {
@@ -307,6 +317,14 @@ class AsyncSession(BaseSession):
         })
         '''
         The :class:`~ai.backend.client.manager.Manager` function proxy
+        bound to this session.
+        '''
+        self.Resource= type('Resource', (BaseFunction, ), {
+            **Resource.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.resource.Resource` function proxy
         bound to this session.
         '''
         self.ResourcePolicy = type('ResourcePolicy', (BaseFunction, ), {
