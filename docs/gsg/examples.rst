@@ -15,7 +15,7 @@ This is the minimal code to execute a code snippet with this client SDK.
   from ai.backend.client import Session
 
   with Session() as session:
-      kern = session.Kernel.get_or_create('lua')
+      kern = session.Kernel.get_or_create('python:3.6-ubuntu18.04')
       code = 'print("hello world")'
       mode = 'query'
       run_id = None
@@ -56,7 +56,7 @@ You first need to upload the files after creating the session and construct a
   from ai.backend.client import Session
 
   with Session() as session:
-      kern = session.Kernel.get_or_create('python')
+      kern = session.Kernel.get_or_create('python:3.6-ubuntu18.04')
       kern.upload(['mycode.py', 'setup.py'])
       code = ''
       mode = 'batch'
@@ -148,7 +148,8 @@ features such as ``stream_execute()`` which streams the execution results via we
 
   async def main():
       async with AsyncSession() as session:
-          kern = await session.Kernel.get_or_create('lua5', client_token='mysession')
+          kern = await session.Kernel.get_or_create('python:3.6-ubuntu18.04',
+                                                    client_token='mysession')
           code = 'print("hello world")'
           mode = 'query'
           async with kern.stream_execute(code, mode=mode) as stream:

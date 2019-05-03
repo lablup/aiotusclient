@@ -24,7 +24,7 @@ class Resource:
         '''
         rqst = Request(cls.session, 'GET', '/resource/presets')
         async with rqst.fetch() as resp:
-           return await resp.json()
+            return await resp.json()
 
     @api_function
     @classmethod
@@ -35,4 +35,4 @@ class Resource:
         '''
         rqst = Request(cls.session, 'POST', '/resource/check-presets')
         async with rqst.fetch() as resp:
-           return await resp.json()
+            return await resp.json()
