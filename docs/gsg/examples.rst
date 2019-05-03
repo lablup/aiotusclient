@@ -143,6 +143,7 @@ features such as ``stream_execute()`` which streams the execution results via we
 
   import asyncio
   import json
+  import sys
   import aiohttp
   from ai.backend.client import AsyncSession
 
