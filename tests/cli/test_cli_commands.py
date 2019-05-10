@@ -22,8 +22,11 @@ def test_print_help(cmd, capsys, mocker):
 def test_config(capsys, mocker):
     mocker.patch.object(sys, 'argv', ['backend.ai', 'config'])
     config = get_config()
-    main()
-    out, _ = capsys.readouterr()
+    try:
+        main()
+    except SystemExit:
+        pass
+    out, _ = map(str, capsys.readouterr())
     assert str(config.endpoint) in out
     assert config.version in out
     assert config.access_key in out
@@ -37,19 +40,22 @@ def test_compiler_shortcut(mocker):
         main()
     except SystemExit:
         pass
-    assert sys.argv == ['lcc', 'c', '-h']
+    assert sys.argv == ['lcc', '-h']
 
     mocker.patch.object(sys, 'argv', ['lpython', '-h'])
     try:
         main()
     except SystemExit:
         pass
-    assert sys.argv == ['lpython', 'python', '-h']
+    assert sys.argv == ['lpython', '-h']
 
 
 class TestRunCommand:
     def test_either_code_or_file_is_required(self, capsys, mocker):
         mocker.patch.object(sys, 'argv', ['backend.ai', 'run', 'python'])
-        main()
+        try:
+            main()
+        except SystemExit:
+            pass
         _, err = capsys.readouterr()
         assert 'provide the command-line code snippet using "-c"' in err
