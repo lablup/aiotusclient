@@ -186,7 +186,7 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.manager.Manager` function proxy
         bound to this session.
         '''
-        self.Resource= type('Resource', (BaseFunction, ), {
+        self.Resource = type('Resource', (BaseFunction, ), {
             **Resource.__dict__,
             'session': self,
         })
@@ -319,7 +319,7 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.manager.Manager` function proxy
         bound to this session.
         '''
-        self.Resource= type('Resource', (BaseFunction, ), {
+        self.Resource = type('Resource', (BaseFunction, ), {
             **Resource.__dict__,
             'session': self,
         })

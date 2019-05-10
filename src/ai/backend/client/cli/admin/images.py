@@ -33,6 +33,7 @@ def images():
                        headers=(item[0] for item in fields),
                        floatfmt=',.0f'))
 
+
 @admin.command()
 @click.option('-r', '--registry', type=str, default=None,
               help='The name (usually hostname or "lablup") '
@@ -49,6 +50,7 @@ def rescan_images(registry):
             print("kernel image metadata updated")
         else:
             print("rescanning failed: {0}".format(result['msg']))
+
 
 @admin.command()
 @click.argument('alias', type=str)
