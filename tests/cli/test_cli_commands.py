@@ -14,8 +14,9 @@ def test_print_help(cmd, capsys, mocker):
         main()
     except SystemExit:
         pass
-    out, _ = capsys.readouterr()
-    assert 'usage: backend.ai' in out
+    out, err = capsys.readouterr()
+    assert 'Usage: backend.ai' in out or \
+           'Usage: backend.ai' in err
 
 
 def test_config(capsys, mocker):
@@ -36,14 +37,14 @@ def test_compiler_shortcut(mocker):
         main()
     except SystemExit:
         pass
-    assert sys.argv == ['lcc', 'run', 'c', '-h']
+    assert sys.argv == ['lcc', 'c', '-h']
 
     mocker.patch.object(sys, 'argv', ['lpython', '-h'])
     try:
         main()
     except SystemExit:
         pass
-    assert sys.argv == ['lpython', 'run', 'python', '-h']
+    assert sys.argv == ['lpython', 'python', '-h']
 
 
 class TestRunCommand:

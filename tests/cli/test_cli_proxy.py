@@ -54,9 +54,7 @@ def api_app(event_loop):
 
 @pytest.fixture
 def proxy_app(event_loop):
-    args = Namespace()
-    args.testing = True
-    app = proxy_command(args)
+    app = proxy_command([])
     runner = web.AppRunner(app)
 
     async def start(port):
