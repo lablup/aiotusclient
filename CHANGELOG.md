@@ -1,6 +1,15 @@
 Changes
 =======
 
+19.03.1 (2018-05-10)
+--------------------
+
+ - Fix support for Python 3.5 due to f-string literals in the vfolder module.
+
+ - Fix the broken unit test suite for both Python 3.5 and 3.6.
+
+ - Update the docs and examples.
+
 19.03.0 (2018-04-10)
 --------------------
 
