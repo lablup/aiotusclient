@@ -6,6 +6,7 @@ import aiohttp
 from aioresponses import aioresponses
 import pytest
 
+from ai.backend.client.config import get_config
 from ai.backend.client.exceptions import BackendClientError, BackendAPIError
 from ai.backend.client.request import Request, Response, AttachedFile
 from ai.backend.client.session import Session, AsyncSession
@@ -119,7 +120,8 @@ class TestRequest:
         assert packed_content.is_multipart
 
     def test_build_correct_url(self, mock_request_params):
-        canonical_url = 'http://127.0.0.1:8081/function?app=999'
+        config = get_config()
+        canonical_url = str(config.endpoint).rstrip('/') + '/function?app=999'
 
         mock_request_params['path'] = '/function'
         rqst = Request(**mock_request_params)
