@@ -1,11 +1,9 @@
-from argparse import Namespace
-
 import aiohttp
 from aiohttp import web
 import pytest
 
 from ai.backend.client import config
-from ai.backend.client.cli.proxy import proxy as proxy_command
+from ai.backend.client.cli.proxy import create_proxy_app
 
 
 @pytest.fixture
@@ -54,7 +52,7 @@ def api_app(event_loop):
 
 @pytest.fixture
 def proxy_app(event_loop):
-    app = proxy_command([])
+    app = create_proxy_app()
     runner = web.AppRunner(app)
 
     async def start(port):

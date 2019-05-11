@@ -184,6 +184,17 @@ async def cleanup_proxy(app):
     await app['client_session'].close()
 
 
+def create_proxy_app():
+    app = web.Application()
+    app.on_startup.append(startup_proxy)
+    app.on_cleanup.append(cleanup_proxy)
+
+    app.router.add_route("GET", r'/stream/{path:.*$}', websocket_handler)
+    app.router.add_route("GET", r'/wsproxy/{path:.*$}', websocket_handler)
+    app.router.add_route('*', r'/{path:.*$}', web_handler)
+    return app
+
+
 @main.command(context_settings=dict(allow_extra_args=True))
 @click.option('--bind', type=str, default='localhost',
               help='The IP/host address to bind this proxy.')
@@ -196,13 +207,5 @@ def proxy(ctx, bind, port):
     Run a non-encrypted non-authorized API proxy server.
     Use this only for development and testing!
     """
-    app = web.Application()
-    app.on_startup.append(startup_proxy)
-    app.on_cleanup.append(cleanup_proxy)
-
-    app.router.add_route("GET", r'/stream/{path:.*$}', websocket_handler)
-    app.router.add_route("GET", r'/wsproxy/{path:.*$}', websocket_handler)
-    app.router.add_route('*', r'/{path:.*$}', web_handler)
-    if getattr(ctx.args, 'testing', False):
-        return app
+    app = create_proxy_app()
     web.run_app(app, host=bind, port=port)
