@@ -48,8 +48,9 @@ def test_config_unset(runner, monkeypatch):
     monkeypatch.delenv('BACKEND_ACCESS_KEY', raising=False)
     monkeypatch.delenv('BACKEND_SECRET_KEY', raising=False)
     monkeypatch.delenv('BACKEND_ENDPOINT', raising=False)
+    # now this works as "anonymous" session config.
     result = runner.invoke(main, ['config'])
-    assert result.exit_code == 1
+    assert result.exit_code == 0
 
 
 def test_compiler_shortcut(mocker):
