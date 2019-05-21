@@ -28,9 +28,13 @@ def sessions(status, access_key, id_only, all):
     fields = [
         ('Session ID', 'sess_id'),
     ]
-    with Session() as session:
-        if is_admin(session):
-            fields.append(('Owner', 'access_key'))
+    try:
+        with Session() as session:
+            if is_admin(session):
+                fields.append(('Owner', 'access_key'))
+    except Exception as e:
+        print_error(e)
+        sys.exit(1)
     if not id_only:
         fields.extend([
             ('Image', 'image'),
@@ -112,25 +116,30 @@ def sessions(status, access_key, id_only, all):
 
     with Session() as session:
         paginating_interval = 10
-        if all:
-            click.echo_via_pager(_generate_paginated_results(paginating_interval))
-        else:
-            result = execute_paginated_query(paginating_interval, offset=0)
-            total_count = result['total_count']
-            if total_count == 0:
-                print('There are no compute sessions currently {0}.'
-                      .format(status.lower()))
-                return
-            items = result['items']
-            items = round_mem(items)
-            if id_only:
-                for item in items:
-                    print(item['sess_id'])
+        try:
+            if all:
+                click.echo_via_pager(_generate_paginated_results(paginating_interval))
             else:
-                print(tabulate([item.values() for item in items],
-                                headers=(item[0] for item in fields)))
-            if total_count > paginating_interval:
-                print("More sessions can be displayed by using --all option.")
+                result = execute_paginated_query(paginating_interval, offset=0)
+                total_count = result['total_count']
+                if total_count == 0:
+                    print('There are no compute sessions currently {0}.'
+                          .format(status.lower()))
+                    return
+                items = result['items']
+                items = round_mem(items)
+                if id_only:
+                    for item in items:
+                        print(item['sess_id'])
+                else:
+                    print(tabulate([item.values() for item in items],
+                                    headers=(item[0] for item in fields)))
+                if total_count > paginating_interval:
+                    print("More sessions can be displayed "
+                          "by using --all option.")
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
 
 
 @admin.command()
