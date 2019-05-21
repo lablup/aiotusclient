@@ -7,7 +7,7 @@ setup_requires = [
 ]
 install_requires = [
     'multidict>=4.0',
-    'aiohttp~=3.4.0',
+    'aiohttp~=3.5.0',
     'async_timeout~=3.0',  # to avoid pip10 resolver issue
     'attrs>=18.0',       # to avoid pip10 resolver issue
     'namedlist>=1.6',

@@ -11,8 +11,7 @@ __all__ = [
 _config = None
 
 
-def get_env(key: str,
-            default: Any = None,
+def get_env(key: str, default: Any = None, *,
             clean: Callable[[str], Any] = lambda v: v):
     '''
     Retrieves a configuration value from the environment variables.
@@ -73,7 +72,8 @@ class APIConfig:
     :param version: The API protocol version.
     :param user_agent: A custom user-agent string which is sent to the API
         server as a ``User-Agent`` HTTP header.
-    :param access_key: The API access key.
+    :param access_key: The API access key.  If deliberately set to an empty string, the API
+        requests will be made without signatures (anonymously).
     :param secret_key: The API secret key.
     :param hash_type: The hash type to generate per-request authentication
         signatures.
@@ -85,6 +85,7 @@ class APIConfig:
 
     DEFAULTS = {
         'endpoint': 'https://api.backend.ai',
+        'domain': 'default',
         'version': 'v4.20190315',
         'hash_type': 'sha256',
     }
@@ -94,6 +95,7 @@ class APIConfig:
 
     def __init__(self, *,
                  endpoint: Union[URL, str] = None,
+                 domain: str = None,
                  version: str = None,
                  user_agent: str = None,
                  access_key: str = None,
@@ -105,10 +107,11 @@ class APIConfig:
         self._endpoint = (
             _clean_url(endpoint) if endpoint else
             get_env('ENDPOINT', self.DEFAULTS['endpoint'], clean=_clean_url))
+        self._domain = domain if domain else get_env('DOMAIN', self.DEFAULTS['domain'])
         self._version = version if version else self.DEFAULTS['version']
         self._user_agent = user_agent if user_agent else get_user_agent()
-        self._access_key = access_key if access_key else get_env('ACCESS_KEY')
-        self._secret_key = secret_key if secret_key else get_env('SECRET_KEY')
+        self._access_key = access_key if access_key is not None else get_env('ACCESS_KEY', '')
+        self._secret_key = secret_key if secret_key is not None else get_env('SECRET_KEY', '')
         self._hash_type = hash_type.lower() if hash_type else \
                           self.DEFAULTS['hash_type']
         arg_vfolders = set(vfolder_mounts) if vfolder_mounts else set()
@@ -117,12 +120,21 @@ class APIConfig:
         # prefer the argument flag and fallback to env if the flag is not set.
         self._skip_sslcert_validation = (skip_sslcert_validation
              if skip_sslcert_validation else
-             get_env('SKIP_SSLCERT_VALIDATION', default='no', clean=bool_env))
+             get_env('SKIP_SSLCERT_VALIDATION', 'no', clean=bool_env))
+
+    @property
+    def is_anonymous(self) -> bool:
+        return self._access_key == ''
 
     @property
     def endpoint(self) -> URL:
         '''The configured endpoint URL prefix.'''
         return self._endpoint
+
+    @property
+    def domain(self) -> str:
+        '''The configured domain.'''
+        return self._domain
 
     @property
     def user_agent(self) -> str:

@@ -112,6 +112,7 @@ class Request:
         self.date = None
         self.headers = CIMultiDict([
             ('User-Agent', self.config.user_agent),
+            ('X-BackendAI-Domain', self.config.domain),
             ('X-BackendAI-Version', self.config.version),
         ])
         self._attached_files = None
@@ -242,7 +243,8 @@ class Request:
         if self.content_type is not None:
             self.headers['Content-Type'] = self.content_type
         full_url = self._build_url()
-        self._sign(full_url.relative())
+        if not self.config.is_anonymous:
+            self._sign(full_url.relative())
         rqst_ctx = self.session.aiohttp_session.request(
             self.method,
             str(full_url),
@@ -268,7 +270,8 @@ class Request:
         # websocket is always a "binary" stream.
         self.content_type = 'application/octet-stream'
         full_url = self._build_url()
-        self._sign(full_url.relative())
+        if not self.config.is_anonymous:
+            self._sign(full_url.relative())
         ws_ctx = self.session.aiohttp_session.ws_connect(
             str(full_url),
             autoping=True, heartbeat=30.0,

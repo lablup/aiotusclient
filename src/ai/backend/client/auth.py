@@ -1,5 +1,19 @@
+import enum
 import hashlib
 import hmac
+
+import attr
+
+
+class AuthTokenTypes(enum.Enum):
+    KEYPAIR = 'keypair'
+    JWT = 'jwt'
+
+
+@attr.s
+class AuthToken:
+    type = attr.ib(default=AuthTokenTypes.KEYPAIR)  # type: AuthTokenTypes
+    content = attr.ib(default=None)                 # type: str
 
 
 def generate_signature(method, version, endpoint,
