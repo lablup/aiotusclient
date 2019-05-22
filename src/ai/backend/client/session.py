@@ -73,7 +73,7 @@ class BaseSession(metaclass=abc.ABCMeta):
     __slots__ = (
         '_config', '_closed', 'aiohttp_session',
         'Admin', 'Agent', 'Image', 'Kernel', 'KeyPair', 'Manager', 'Resource',
-        'ResourcePolicy', 'VFolder',
+        'ResourcePolicy', 'User', 'VFolder',
     )
 
     def __init__(self, *, config: APIConfig = None):
@@ -137,6 +137,7 @@ class Session(BaseSession):
         from .manager import Manager
         from .resource import Resource
         from .resource_policy import ResourcePolicy
+        from .user import User
         from .vfolder import VFolder
         self.Admin = type('Admin', (BaseFunction, ), {
             **Admin.__dict__,
@@ -200,6 +201,14 @@ class Session(BaseSession):
         })
         '''
         The :class:`~ai.backend.client.resource_policy.ResourcePolicy` function proxy
+        bound to this session.
+        '''
+        self.User = type('User', (BaseFunction, ), {
+            **User.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.user.User` function proxy
         bound to this session.
         '''
         self.VFolder = type('VFolder', (BaseFunction, ), {
@@ -270,6 +279,7 @@ class AsyncSession(BaseSession):
         from .manager import Manager
         from .resource import Resource
         from .resource_policy import ResourcePolicy
+        from .user import User
         from .vfolder import VFolder
         self.Admin = type('Admin', (BaseFunction, ), {
             **Admin.__dict__,
@@ -333,6 +343,14 @@ class AsyncSession(BaseSession):
         })
         '''
         The :class:`~ai.backend.client.resource_policy.ResourcePolicy` function proxy
+        bound to this session.
+        '''
+        self.User = type('User', (BaseFunction, ), {
+            **User.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.user.User` function proxy
         bound to this session.
         '''
         self.VFolder = type('VFolder', (BaseFunction, ), {
