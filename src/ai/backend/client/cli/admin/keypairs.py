@@ -149,7 +149,7 @@ def update(access_key, resource_policy, is_admin, is_active,  rate_limit):
             print_error(e)
             sys.exit(1)
         if not data['ok']:
-            print_fail('KeyPair creation has failed: {0}'.format(data['msg']))
+            print_fail('KeyPair update has failed: {0}'.format(data['msg']))
             sys.exit(1)
         print('Key pair is updated: ' + access_key + '.')
 

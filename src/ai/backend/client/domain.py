@@ -1,0 +1,168 @@
+import textwrap
+from typing import Iterable, Sequence
+
+from .base import api_function
+from .request import Request
+
+__all__ = (
+    'Domain',
+)
+
+
+class Domain:
+    '''
+    Provides a shortcut of :func:`Admin.query()
+    <ai.backend.client.admin.Admin.query>` that fetches various domain
+    information.
+
+    .. note::
+
+      All methods in this function class require your API access key to
+      have the *admin* privilege.
+    '''
+
+    session = None
+    '''The client session instance that this function class is bound to.'''
+
+    @api_function
+    @classmethod
+    async def list(cls, fields: Iterable[str] = None) -> Sequence[dict]:
+        '''
+        Fetches the list of domains.
+
+        :param fields: Additional per-domain query fields to fetch.
+        '''
+        if fields is None:
+            fields = ('name', 'description', 'is_active', 'created_at', 'total_resource_slots')
+        query = textwrap.dedent('''\
+            query {
+                domains {$fields}
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['domains']
+
+    @api_function
+    @classmethod
+    async def detail(cls, name: str, fields: Iterable[str] = None) -> Sequence[dict]:
+        '''
+        Fetch information of a domain with name.
+
+        :param name: Name of the domain to fetch.
+        :param fields: Additional per-domain query fields to fetch.
+        '''
+        if fields is None:
+            fields = ('name', 'description', 'is_active', 'created_at', 'total_resource_slots')
+        query = textwrap.dedent('''\
+            query($name: String!) {
+                domain(name: $name) {$fields}
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {'name': name}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['domain']
+
+    @api_function
+    @classmethod
+    async def create(cls, name: str, description: str = '', is_active: bool = True,
+                     total_resource_slots: str = None, fields: Iterable[str] = None) -> dict:
+        '''
+        Creates a new domain with the given options.
+        You need an admin privilege for this operation.
+        '''
+        if fields is None:
+            fields = ('name',)
+        query = textwrap.dedent('''\
+            mutation($name: String!, $input: DomainInput!) {
+                create_domain(name: $name, props: $input) {
+                    ok msg domain {$fields}
+                }
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {
+            'name': name,
+            'input': {
+                'description': description,
+                'is_active': is_active,
+                'total_resource_slots': total_resource_slots,
+            },
+        }
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['create_domain']
+
+    @api_function
+    @classmethod
+    async def update(cls, name: str, new_name: str = None, description: str = None,
+                     is_active: bool = None, total_resource_slots: str = None,
+                     fields: Iterable[str] = None) -> dict:
+        '''
+        Update existing domain.
+        You need an admin privilege for this operation.
+        '''
+        query = textwrap.dedent('''\
+            mutation($name: String!, $input: ModifyDomainInput!) {
+                modify_domain(name: $name, props: $input) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {
+            'name': name,
+            'input': {
+                'name': new_name,
+                'description': description,
+                'is_active': is_active,
+                'total_resource_slots': total_resource_slots,
+            },
+        }
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['modify_domain']
+
+    @api_function
+    @classmethod
+    async def delete(cls, name: str):
+        '''
+        Deletes an existing domain.
+        '''
+        query = textwrap.dedent('''\
+            mutation($name: String!) {
+                delete_domain(name: $name) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {'name': name}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['delete_domain']
