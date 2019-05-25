@@ -1,3 +1,4 @@
+import textwrap
 from typing import Iterable, Sequence
 
 from .base import api_function
@@ -71,3 +72,26 @@ class Agent:
         async with rqst.fetch() as resp:
             data = await resp.json()
             return data['agent_list']
+
+    @api_function
+    @classmethod
+    async def detail(cls, agent_id: str, fields: Iterable[str] = None) -> Sequence[dict]:
+        if fields is None:
+            fields = ('id', 'status', 'addr', 'region', 'first_contact',
+                      'cpu_cur_pct', 'mem_cur_bytes',
+                      'available_slots', 'occupied_slots')
+        query = textwrap.dedent('''\
+            query($agent_id: String!) {
+                agent(agent_id: $agent_id) {$fields}
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {'agent_id': agent_id}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['agent']

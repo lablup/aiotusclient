@@ -28,24 +28,19 @@ def agent(agent_id):
     if is_legacy_server():
         del fields[9]
         del fields[6]
-    q = 'query($agent_id:String!) {' \
-        '  agent(agent_id:$agent_id) { $fields }' \
-        '}'
-    q = q.replace('$fields', ' '.join(item[1] for item in fields))
-    v = {'agent_id': agent_id}
     with Session() as session:
         try:
-            resp = session.Admin.query(q, v)
+            resp = session.Agent.detail(agent_id=agent_id,
+                                        fields=(item[1] for item in fields))
         except Exception as e:
             print_error(e)
             sys.exit(1)
-        info = resp['agent']
         rows = []
         for name, key in fields:
-            if key == 'mem_cur_bytes' and info[key] is not None:
-                info[key] = round(info[key] / 2 ** 20, 1)
-            if key in info:
-                rows.append((name, info[key]))
+            if key == 'mem_cur_bytes' and resp[key] is not None:
+                resp[key] = round(resp[key] / 2 ** 20, 1)
+            if key in resp:
+                rows.append((name, resp[key]))
         print(tabulate(rows, headers=('Field', 'Value')))
 
 
