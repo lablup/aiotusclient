@@ -72,7 +72,7 @@ class BaseSession(metaclass=abc.ABCMeta):
 
     __slots__ = (
         '_config', '_closed', 'aiohttp_session',
-        'Admin', 'Agent', 'Domain', 'Image', 'Kernel', 'KeyPair', 'Manager', 'Resource',
+        'Admin', 'Agent', 'Domain', 'Group', 'Image', 'Kernel', 'KeyPair', 'Manager', 'Resource',
         'ResourcePolicy', 'User', 'VFolder',
     )
 
@@ -132,6 +132,7 @@ class Session(BaseSession):
         from .admin import Admin
         from .agent import Agent
         from .domain import Domain
+        from .group import Group
         from .image import Image
         from .kernel import Kernel
         from .keypair import KeyPair
@@ -162,6 +163,14 @@ class Session(BaseSession):
         })
         '''
         The :class:`~ai.backend.client.agent.Domain` function proxy
+        bound to this session.
+        '''
+        self.Group = type('Group', (BaseFunction, ), {
+            **Group.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.agent.Group` function proxy
         bound to this session.
         '''
         self.Image = type('Image', (BaseFunction, ), {
@@ -283,6 +292,7 @@ class AsyncSession(BaseSession):
         from .admin import Admin
         from .agent import Agent
         from .domain import Domain
+        from .group import Group
         from .image import Image
         from .kernel import Kernel
         from .keypair import KeyPair
@@ -307,12 +317,12 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.agent.Agent` function proxy
         bound to this session.
         '''
-        self.Domain = type('Domain', (BaseFunction, ), {
-            **Domain.__dict__,
+        self.Group = type('Group', (BaseFunction, ), {
+            **Group.__dict__,
             'session': self,
         })
         '''
-        The :class:`~ai.backend.client.agent.Domain` function proxy
+        The :class:`~ai.backend.client.agent.Group` function proxy
         bound to this session.
         '''
         self.Image = type('Image', (BaseFunction, ), {

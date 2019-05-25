@@ -1,0 +1,167 @@
+import textwrap
+from typing import Iterable, Sequence
+
+from .base import api_function
+from .request import Request
+
+__all__ = (
+    'Group',
+)
+
+
+class Group:
+    '''
+    Provides a shortcut of :func:`Admin.query()
+    <ai.backend.client.admin.Admin.query>` that fetches various group information.
+
+    .. note::
+
+      All methods in this function class require your API access key to
+      have the *admin* privilege.
+    '''
+
+    session = None
+    '''The client session instance that this function class is bound to.'''
+
+    @api_function
+    @classmethod
+    async def list(cls, domain_name: str, fields: Iterable[str] = None) -> Sequence[dict]:
+        '''
+        Fetches the list of groups.
+
+        :param fields: Additional per-group query fields to fetch.
+        '''
+        if fields is None:
+            fields = ('id', 'name', 'description', 'is_active', 'created_at', 'domain_name')
+        query = textwrap.dedent('''\
+            query($domain_name: String!) {
+                groups(domain_name: $domain_name) {$fields}
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {'domain_name': domain_name}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['groups']
+
+    @api_function
+    @classmethod
+    async def detail(cls, gid: str, fields: Iterable[str] = None) -> Sequence[dict]:
+        '''
+        Fetch information of a group with group ID.
+
+        :param gid: ID of the group to fetch.
+        :param fields: Additional per-group query fields to fetch.
+        '''
+        if fields is None:
+            fields = ('id', 'name', 'description', 'is_active', 'created_at', 'domain_name')
+        query = textwrap.dedent('''\
+            query($gid: String!) {
+                group(id: $gid) {$fields}
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {'gid': gid}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['group']
+
+    @api_function
+    @classmethod
+    async def create(cls, domain_name: str, name: str, description: str = '',
+                     is_active: bool = True, fields: Iterable[str] = None) -> dict:
+        '''
+        Creates a new group with the given options.
+        You need an admin privilege for this operation.
+        '''
+        if fields is None:
+            fields = ('domain_name', 'name',)
+        query = textwrap.dedent('''\
+            mutation($name: String!, $input: GroupInput!) {
+                create_group(name: $name, props: $input) {
+                    ok msg group {$fields}
+                }
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {
+            'name': name,
+            'input': {
+                'description': description,
+                'is_active': is_active,
+                'domain_name': domain_name,
+            },
+        }
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['create_group']
+
+    @api_function
+    @classmethod
+    async def update(cls, gid: str, name: str = None, description: str = None,
+                     is_active: bool = None, fields: Iterable[str] = None) -> dict:
+        '''
+        Update existing group.
+        You need an admin privilege for this operation.
+        '''
+        query = textwrap.dedent('''\
+            mutation($gid: String!, $input: ModifyGroupInput!) {
+                modify_group(gid: $gid, props: $input) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {
+            'gid': gid,
+            'input': {
+                'name': name,
+                'description': description,
+                'is_active': is_active,
+            },
+        }
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['modify_group']
+
+    @api_function
+    @classmethod
+    async def delete(cls, gid: str):
+        '''
+        Deletes an existing group.
+        '''
+        query = textwrap.dedent('''\
+            mutation($gid: String!) {
+                delete_group(gid: $gid) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {'gid': gid}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['delete_group']
