@@ -10,7 +10,7 @@ def admin():
 
 def _attach_command():
     from . import (  # noqa
-        agents, domains, groups, images, keypairs, resource_policies, sessions, vfolders
+        agents, domains, groups, images, keypairs, resource_policies, sessions, users, vfolders
     )
 
 
