@@ -267,12 +267,16 @@ def _prepare_mount_arg(mount):
                    '(e.g: -r cpu=2 -r mem=256 -r cuda.device=1)')
 @click.option('-q', '--quiet', is_flag=True,
               help='Hide execution details but show only the kernel outputs.')
+@click.option('-g', '--group-id', metavar='GROUPID', default=None,
+              help='Group ID where the session is spawned. '
+                   'Requesting user should be a member of the group.'
+                   'If not specified, the first user\'s group will be used.')
 # @click.option('--legacy', is_flag=True,
 #               help='Use the legacy synchronous polling mode to '
 #                    'fetch console outputs.')
 def run(lang, files, session_id, cluster_size, code, clean, build, exec, terminal,
         basedir, rm, env, env_range, build_range, exec_range, max_parallel, mount,
-        stats, tag, resources, quiet):
+        stats, tag, resources, quiet, group_id):
     '''
     Run the given code snippet or files in a session.
     Depending on the session ID you give (default is random),
@@ -365,6 +369,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 mounts=mount,
                 envs=envs,
                 resources=resources,
+                group_id=group_id,
                 tag=tag)
         except Exception as e:
             print_error(e)
@@ -434,6 +439,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 mounts=mount,
                 envs=envs,
                 resources=resources,
+                group_id=group_id,
                 tag=tag)
         except BackendError as e:
             print_fail('[{0}] {1}'.format(idx, e))
@@ -604,7 +610,11 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                    'The unit of mem(ory) is MiB.')
 @click.option('--cluster-size', metavar='NUMBER', type=int, default=1,
               help='The size of cluster in number of containers.')
-def start(lang, session_id, owner, env, mount, tag, resources, cluster_size):
+@click.option('-g', '--group-id', metavar='GROUPID', default=None,
+              help='Group ID where the session is spawned. '
+                   'Requesting user should be a member of the group.'
+                   'If not specified, the first user\'s group will be used.')
+def start(lang, session_id, owner, env, mount, tag, resources, cluster_size, group_id):
     '''
     Prepare and start a single compute session without executing codes.
     You may use the created session to execute codes using the "run" command
@@ -635,6 +645,7 @@ def start(lang, session_id, owner, env, mount, tag, resources, cluster_size):
                 envs=envs,
                 resources=resources,
                 owner_access_key=owner,
+                group_id=group_id,
                 tag=tag)
         except Exception as e:
             print_error(e)

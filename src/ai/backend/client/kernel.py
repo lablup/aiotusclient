@@ -54,6 +54,7 @@ class Kernel:
                             envs: Mapping[str, str] = None,
                             resources: Mapping[str, int] = None,
                             cluster_size: int = 1,
+                            group_id: str = None,
                             tag: str = None,
                             owner_access_key: str = None) -> 'Kernel':
         '''
@@ -97,6 +98,7 @@ class Kernel:
             'lang': lang,
             'tag': tag,
             'clientSessionToken': client_token,
+            'group_id': group_id,
             'config': {
                 'mounts': mounts,
                 'environ': envs,
