@@ -108,6 +108,7 @@ class User:
                      role: str = 'user', is_active: bool = True,
                      need_password_change: bool = False,
                      description: str = '',
+                     group_ids: Iterable[str] = None,
                      fields: Iterable[str] = None) -> dict:
         '''
         Creates a new user with the given options.
@@ -134,6 +135,7 @@ class User:
                 'need_password_change': need_password_change,
                 'description': description,
                 'domain_name': domain_name,
+                'group_ids': group_ids,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')
@@ -150,6 +152,7 @@ class User:
     async def update(cls, email: str, password: str = None, username: str = None,
                      full_name: str = None, role: str = None, is_active: bool = None,
                      need_password_change: bool = None, description: str = None,
+                     group_ids: Iterable[str] = None,
                      fields: Iterable[str] = None) -> dict:
         '''
         Update existing user.
@@ -172,6 +175,7 @@ class User:
                 'is_active': is_active,
                 'need_password_change': need_password_change,
                 'description': description,
+                'group_ids': group_ids,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')
