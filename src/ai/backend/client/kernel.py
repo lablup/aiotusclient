@@ -54,7 +54,8 @@ class Kernel:
                             envs: Mapping[str, str] = None,
                             resources: Mapping[str, int] = None,
                             cluster_size: int = 1,
-                            group_id: str = None,
+                            domain_name: str = None,
+                            group_name: str = None,
                             tag: str = None,
                             owner_access_key: str = None) -> 'Kernel':
         '''
@@ -92,13 +93,20 @@ class Kernel:
             mounts = []
         if resources is None:
             resources = {}
+        if domain_name is None:
+            # Even if config.domain is None, it can be guessed in the manager by user information.
+            domain_name = cls.session.config.domain
+        assert group_name is not None, \
+                'Group name should be specified. Try "default" for fair guess.'
+
         mounts.extend(cls.session.config.vfolder_mounts)
         rqst = Request(cls.session, 'POST', '/kernel/create')
         rqst.set_json({
             'lang': lang,
             'tag': tag,
             'clientSessionToken': client_token,
-            'group_id': group_id,
+            'domain_name': domain_name,
+            'group_name': group_name,
             'config': {
                 'mounts': mounts,
                 'environ': envs,
