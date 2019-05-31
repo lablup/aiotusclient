@@ -1,4 +1,5 @@
 import sys
+from typing import Iterable
 
 import click
 from tabulate import tabulate
@@ -161,3 +162,47 @@ def delete(gid):
             print_fail('Group deletion has failed: {0}'.format(data['msg']))
             sys.exit(1)
         print('Group is deleted: ' + gid + '.')
+
+
+@groups.command()
+@click.argument('gid', type=str, metavar='GROUP_ID')
+@click.argument('user_uuids', type=str, metavar='USER_UUIDS', nargs=-1)
+def add_users(gid, user_uuids):
+    '''
+    Add users to a group.
+
+    GROUP_ID: Group ID where users will be belong to.
+    USER_UUIDS: List of users' uuids to be added to the group.
+    '''
+    with Session() as session:
+        try:
+            data = session.Group.add_users(gid, user_uuids)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        if not data['ok']:
+            print_fail('Error on adding users to group: {0}'.format(data['msg']))
+            sys.exit(1)
+        print('Users are added to the group')
+
+
+@groups.command()
+@click.argument('gid', type=str, metavar='GROUP_ID')
+@click.argument('user_uuids', type=str, metavar='USER_UUIDS', nargs=-1)
+def remove_users(gid, user_uuids):
+    '''
+    Remove users from a group.
+
+    GROUP_ID: Group ID where users currently belong to.
+    USER_UUIDS: List of users' uuids to be removed from the group.
+    '''
+    with Session() as session:
+        try:
+            data = session.Group.remove_users(gid, user_uuids)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        if not data['ok']:
+            print_fail('Error on removing users to group: {0}'.format(data['msg']))
+            sys.exit(1)
+        print('Users are removed from the group')

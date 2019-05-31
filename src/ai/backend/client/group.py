@@ -165,3 +165,65 @@ class Group:
         async with rqst.fetch() as resp:
             data = await resp.json()
             return data['delete_group']
+
+    @api_function
+    @classmethod
+    async def add_users(cls, gid: str, user_uuids: Iterable[str],
+                        fields: Iterable[str] = None) -> dict:
+        '''
+        Add users to a group.
+        You need an admin privilege for this operation.
+        '''
+        query = textwrap.dedent('''\
+            mutation($gid: String!, $input: ModifyGroupInput!) {
+                modify_group(gid: $gid, props: $input) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {
+            'gid': gid,
+            'input': {
+                'user_update_mode': 'add',
+                'user_uuids': user_uuids,
+            },
+        }
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['modify_group']
+
+    @api_function
+    @classmethod
+    async def remove_users(cls, gid: str, user_uuids: Iterable[str],
+                           fields: Iterable[str] = None) -> dict:
+        '''
+        Remove users from a group.
+        You need an admin privilege for this operation.
+        '''
+        query = textwrap.dedent('''\
+            mutation($gid: String!, $input: ModifyGroupInput!) {
+                modify_group(gid: $gid, props: $input) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {
+            'gid': gid,
+            'input': {
+                'user_update_mode': 'remove',
+                'user_uuids': user_uuids,
+            },
+        }
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['modify_group']
