@@ -14,6 +14,8 @@ def config():
     print('Client version: {0}'.format(click.style(__version__, bold=True)))
     print('API endpoint: {0}'.format(click.style(str(config.endpoint), bold=True)))
     print('API version: {0}'.format(click.style(config.version, bold=True)))
+    if config.domain:
+        print('Domain name: "{0}"'.format(click.style(config.domain, bold=True)))
     if config.is_anonymous:
         print('Access key: (this is an anonymous session)')
     else:
