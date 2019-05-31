@@ -9,13 +9,12 @@ from ...session import Session
 
 
 @admin.command()
-@click.argument('name', type=str)
+@click.option('-n', '--name', type=str, default=None,
+              help="Domain name to get information.")
 def domain(name):
     '''
     Show the information about the given domain.
-
-    \b
-    NAME: Domain.
+    If name is not give, user's own domain information will be retrieved.
     '''
     fields = [
         ('Name', 'name'),
@@ -27,7 +26,7 @@ def domain(name):
     with Session() as session:
         try:
             resp = session.Domain.detail(name=name,
-                                        fields=(item[1] for item in fields))
+                                         fields=(item[1] for item in fields))
         except Exception as e:
             print_error(e)
             sys.exit(1)

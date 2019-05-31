@@ -34,7 +34,7 @@ class Group:
         if fields is None:
             fields = ('id', 'name', 'description', 'is_active', 'created_at', 'domain_name')
         query = textwrap.dedent('''\
-            query($domain_name: String!) {
+            query($domain_name: String) {
                 groups(domain_name: $domain_name) {$fields}
             }
         ''')

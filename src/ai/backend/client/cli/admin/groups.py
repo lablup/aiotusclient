@@ -51,16 +51,9 @@ def groups(ctx, domain_name):
     '''
     List and manage groups.
     (admin privilege required)
-
-    \b
-    DOMAIN_NAME: Domain name to list groups belongs to it.
     '''
     if ctx.invoked_subcommand is not None:
         return
-    if domain_name is None:
-        print('Domain name should be given with "-d" option. '
-              'If you want to see help for groups command, append "-h" option.')
-        sys.exit(1)
     fields = [
         ('ID', 'id'),
         ('Name', 'name'),

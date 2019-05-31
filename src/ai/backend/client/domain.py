@@ -60,7 +60,7 @@ class Domain:
         if fields is None:
             fields = ('name', 'description', 'is_active', 'created_at', 'total_resource_slots')
         query = textwrap.dedent('''\
-            query($name: String!) {
+            query($name: String) {
                 domain(name: $name) {$fields}
             }
         ''')
