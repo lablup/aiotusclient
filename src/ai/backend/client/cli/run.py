@@ -14,6 +14,7 @@ import traceback
 import aiohttp
 import click
 from humanize import naturalsize
+import tabulate as tabulate_mod
 from tabulate import tabulate
 
 from . import main
@@ -27,6 +28,8 @@ from .pretty import (
 )
 
 _rx_range_key = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+
+tabulate_mod.PRESERVE_WHITESPACE = True
 
 
 def drange(start: Decimal, stop: Decimal, num: int):
@@ -189,15 +192,55 @@ def _noop(*args, **kwargs):
 
 def _format_stats(stats):
     formatted = []
-    for k, v in stats.items():
-        if k.endswith('_size') or k.endswith('_bytes'):
-            v = naturalsize(v, binary=True)
-        elif k == 'cpu_used':
-            k += '_msec'
-            v = '{0:,}'.format(int(v))
-        else:
-            v = '{0:,}'.format(int(v))
-        formatted.append((k, v))
+    version = stats.pop('version', 1)
+    if version == 1:
+        stats.pop('precpu_used', None)
+        stats.pop('precpu_system_used', None)
+        stats.pop('cpu_system_used', None)
+        for key, val in stats.items():
+            if key.endswith('_size') or key.endswith('_bytes'):
+                val = naturalsize(val, binary=True)
+            elif key == 'cpu_used':
+                key += '_msec'
+                val = '{0:,}'.format(int(val))
+            else:
+                val = '{0:,}'.format(int(val))
+            formatted.append((key, val))
+    elif version == 2:
+        max_integer_len = 0
+        max_fraction_len = 0
+        for key, metric in stats.items():
+            unit = metric['unit_hint']
+            if unit == 'bytes':
+                val = metric.get('stats.max', metric['current'])
+                val = naturalsize(val, binary=True)
+                val, unit = val.rsplit(' ', maxsplit=1)
+                val = '{:,}'.format(Decimal(val))
+            elif unit == 'msec':
+                val = '{:,}'.format(Decimal(metric['current']))
+                unit = 'msec'
+            elif unit == 'percent':
+                val = metric['pct']
+                unit = '%'
+            else:
+                val = metric['current']
+                unit = ''
+            ip, _, fp = val.partition('.')
+            il = len(ip)
+            fl = len(fp)
+            max_integer_len = max(il, max_integer_len)
+            max_fraction_len = max(fl, max_fraction_len)
+            formatted.append([key, val, unit])
+        fstr_int_only = '{0:>' + str(max_integer_len) + '}'
+        fstr_float = '{0:>' + str(max_integer_len) + '}.{1:<' + str(max_fraction_len) + '}'
+        for item in formatted:
+            ip, _, fp = item[1].partition('.')
+            if fp == '':
+                item[1] = fstr_int_only.format(ip) + ' ' * (max_fraction_len + 1)
+            else:
+                item[1] = fstr_float.format(ip, fp)
+    else:
+        print_warn('Unsupported statistics result version. Upgrade your client.')
     return tabulate(formatted)
 
 
@@ -423,9 +466,6 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 if stats:
                     _stats = ret.get('stats', None) if ret else None
                     if _stats:
-                        _stats.pop('precpu_used', None)
-                        _stats.pop('precpu_system_used', None)
-                        _stats.pop('cpu_system_used', None)
                         print('[{0}] Statistics:\n{1}'
                               .format(idx, _format_stats(_stats)))
                     else:
@@ -516,9 +556,6 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                     if stats:
                         _stats = ret.get('stats', None) if ret else None
                         if _stats:
-                            _stats.pop('precpu_used', None)
-                            _stats.pop('precpu_system_used', None)
-                            _stats.pop('cpu_system_used', None)
                             stats_str = _format_stats(_stats)
                             print(format_info('[{0}] Statistics:'.format(idx)) +
                                   '\n{0}'.format(stats_str))
@@ -529,6 +566,10 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                             print_warn('[{0}] Statistics: unavailable.'.format(idx))
                             if is_multi:
                                 print('Statistics: unavailable.', file=stderr)
+            except Exception as e:
+                print_fail('[{0}] Error while printing stats'.format(idx))
+                traceback.print_exc()
+                raise RuntimeError(e)
             finally:
                 if is_multi:
                     stdout.close()
