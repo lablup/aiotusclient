@@ -226,10 +226,8 @@ def _format_stats(stats):
                 val = metric['current']
                 unit = ''
             ip, _, fp = val.partition('.')
-            il = len(ip)
-            fl = len(fp)
-            max_integer_len = max(il, max_integer_len)
-            max_fraction_len = max(fl, max_fraction_len)
+            max_integer_len = max(len(ip), max_integer_len)
+            max_fraction_len = max(len(fp), max_fraction_len)
             formatted.append([key, val, unit])
         fstr_int_only = '{0:>' + str(max_integer_len) + '}'
         fstr_float = '{0:>' + str(max_integer_len) + '}.{1:<' + str(max_fraction_len) + '}'
