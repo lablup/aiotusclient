@@ -1,6 +1,15 @@
 Changes
 =======
 
+19.06.0a1 (2018-06-03)
+----------------------
+
+ - Add support for specifying domain and groups. (lablup/backend.ai-manager#148)
+
+ - Add support for the new "/auth/authorize" API.
+
+ - Include Python 3.7 as an officially supported Python version.
+
 19.03.1 (2018-05-10)
 --------------------
 
