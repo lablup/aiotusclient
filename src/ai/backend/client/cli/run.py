@@ -308,10 +308,10 @@ def _prepare_mount_arg(mount):
                    '(e.g: -r cpu=2 -r mem=256 -r cuda.device=1)')
 @click.option('-q', '--quiet', is_flag=True,
               help='Hide execution details but show only the kernel outputs.')
-@click.option('-d', '--domain-name', metavar='DOMAIN_NAME', default=None,
+@click.option('-d', '--domain', metavar='DOMAIN_NAME', default=None,
               help='Domain name where the session will be spawned. '
                    'If not specified, config\'s domain name will be used.')
-@click.option('-g', '--group-name', metavar='GROUP_NAME', default=None,
+@click.option('-g', '--group', metavar='GROUP_NAME', default=None,
               help='Group name where the session is spawned. '
                    'User should be a member of the group to execute the code.')
 # @click.option('--legacy', is_flag=True,
@@ -319,7 +319,7 @@ def _prepare_mount_arg(mount):
 #                    'fetch console outputs.')
 def run(lang, files, session_id, cluster_size, code, clean, build, exec, terminal,
         basedir, rm, env, env_range, build_range, exec_range, max_parallel, mount,
-        stats, tag, resources, quiet, domain_name, group_name):
+        stats, tag, resources, quiet, domain, group):
     '''
     Run the given code snippet or files in a session.
     Depending on the session ID you give (default is random),
@@ -412,8 +412,8 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 mounts=mount,
                 envs=envs,
                 resources=resources,
-                domain_name=domain_name,
-                group_name=group_name,
+                domain_name=domain,
+                group_name=group,
                 tag=tag)
         except Exception as e:
             print_error(e)
@@ -480,8 +480,8 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 mounts=mount,
                 envs=envs,
                 resources=resources,
-                domain_name=domain_name,
-                group_name=group_name,
+                domain_name=domain,
+                group_name=group,
                 tag=tag)
         except BackendError as e:
             print_fail('[{0}] {1}'.format(idx, e))
@@ -656,14 +656,14 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                    'The unit of mem(ory) is MiB.')
 @click.option('--cluster-size', metavar='NUMBER', type=int, default=1,
               help='The size of cluster in number of containers.')
-@click.option('-d', '--domain-name', metavar='DOMAIN_NAME', default=None,
+@click.option('-d', '--domain', metavar='DOMAIN_NAME', default=None,
               help='Domain name where the session will be spawned. '
                    'If not specified, config\'s domain name will be used.')
-@click.option('-g', '--group-name', metavar='GROUP_NAME', default=None,
+@click.option('-g', '--group', metavar='GROUP_NAME', default=None,
               help='Group name where the session is spawned. '
                    'User should be a member of the group to execute the code.')
 def start(lang, session_id, owner, env, mount, tag, resources, cluster_size,
-          domain_name, group_name):
+          domain, group):
     '''
     Prepare and start a single compute session without executing codes.
     You may use the created session to execute codes using the "run" command
@@ -694,8 +694,8 @@ def start(lang, session_id, owner, env, mount, tag, resources, cluster_size,
                 envs=envs,
                 resources=resources,
                 owner_access_key=owner,
-                domain_name=domain_name,
-                group_name=group_name,
+                domain_name=domain,
+                group_name=group,
                 tag=tag)
         except Exception as e:
             print_error(e)
