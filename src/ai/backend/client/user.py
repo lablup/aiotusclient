@@ -85,18 +85,30 @@ class User:
         if fields is None:
             fields = ('uuid', 'username', 'email', 'need_password_change', 'is_active',
                       'created_at', 'domain_name', 'role')
-        query = textwrap.dedent('''\
-            query($email: String) {
-                user(email: $email) {$fields}
-            }
-        ''')
+        if email is None:
+            query = textwrap.dedent('''\
+                query {
+                    user {$fields}
+                }
+            ''')
+        else:
+            query = textwrap.dedent('''\
+                query($email: String) {
+                    user(email: $email) {$fields}
+                }
+            ''')
         query = query.replace('$fields', ' '.join(fields))
         variables = {'email': email}
         rqst = Request(cls.session, 'POST', '/admin/graphql')
-        rqst.set_json({
-            'query': query,
-            'variables': variables,
-        })
+        if email is None:
+            rqst.set_json({
+                'query': query,
+            })
+        else:
+            rqst.set_json({
+                'query': query,
+                'variables': variables,
+            })
         async with rqst.fetch() as resp:
             data = await resp.json()
             return data['user']
