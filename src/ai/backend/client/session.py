@@ -73,7 +73,7 @@ class BaseSession(metaclass=abc.ABCMeta):
     __slots__ = (
         '_config', '_closed', 'aiohttp_session',
         'Admin', 'Agent', 'Domain', 'Group', 'Image', 'Kernel', 'KeyPair', 'Manager', 'Resource',
-        'ResourcePolicy', 'User', 'VFolder',
+        'KeypairResourcePolicy', 'User', 'VFolder',
     )
 
     def __init__(self, *, config: APIConfig = None):
@@ -138,7 +138,7 @@ class Session(BaseSession):
         from .keypair import KeyPair
         from .manager import Manager
         from .resource import Resource
-        from .resource_policy import ResourcePolicy
+        from .keypair_resource_policy import KeypairResourcePolicy
         from .user import User
         from .vfolder import VFolder
         self.Admin = type('Admin', (BaseFunction, ), {
@@ -213,12 +213,12 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.resource.Resource` function proxy
         bound to this session.
         '''
-        self.ResourcePolicy = type('ResourcePolicy', (BaseFunction, ), {
-            **ResourcePolicy.__dict__,
+        self.KeypairResourcePolicy = type('KeypairResourcePolicy', (BaseFunction, ), {
+            **KeypairResourcePolicy.__dict__,
             'session': self,
         })
         '''
-        The :class:`~ai.backend.client.resource_policy.ResourcePolicy` function proxy
+        The :class:`~ai.backend.client.keypair_resource_policy.KeypairResourcePolicy` function proxy
         bound to this session.
         '''
         self.User = type('User', (BaseFunction, ), {
@@ -298,7 +298,7 @@ class AsyncSession(BaseSession):
         from .keypair import KeyPair
         from .manager import Manager
         from .resource import Resource
-        from .resource_policy import ResourcePolicy
+        from .keypair_resource_policy import KeypairResourcePolicy
         from .user import User
         from .vfolder import VFolder
         self.Admin = type('Admin', (BaseFunction, ), {
@@ -365,12 +365,12 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.resource.Resource` function proxy
         bound to this session.
         '''
-        self.ResourcePolicy = type('ResourcePolicy', (BaseFunction, ), {
-            **ResourcePolicy.__dict__,
+        self.KeypairResourcePolicy = type('KeypairResourcePolicy', (BaseFunction, ), {
+            **KeypairResourcePolicy.__dict__,
             'session': self,
         })
         '''
-        The :class:`~ai.backend.client.resource_policy.ResourcePolicy` function proxy
+        The :class:`~ai.backend.client.keypair_resource_policy.KeypairResourcePolicy` function proxy
         bound to this session.
         '''
         self.User = type('User', (BaseFunction, ), {

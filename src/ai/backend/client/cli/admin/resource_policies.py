@@ -11,7 +11,7 @@ from ..pretty import print_error, print_fail
 @admin.command()
 @click.option('-n', '--name', type=str, default=None,
               help='Name of the resource policy.')
-def resource_policy(name):
+def keypair_resource_policy(name):
     """
     Show details about a keypair resource policy. When `name` option is omitted, the
     resource policy for the current access_key will be returned.
@@ -30,7 +30,7 @@ def resource_policy(name):
     ]
     with Session() as session:
         try:
-            rp = session.ResourcePolicy(session.config.access_key)
+            rp = session.KeypairResourcePolicy(session.config.access_key)
             info = rp.info(name, fields=(item[1] for item in fields))
         except Exception as e:
             print_error(e)
@@ -46,9 +46,9 @@ def resource_policy(name):
 
 @admin.group(invoke_without_command=True)
 @click.pass_context
-def resource_policies(ctx):
+def keypair_resource_policies(ctx):
     '''
-    List and manage resource policies.
+    List and manage keypair resource policies.
     (admin privilege required)
     '''
     if ctx.invoked_subcommand is not None:
@@ -67,7 +67,7 @@ def resource_policies(ctx):
     ]
     with Session() as session:
         try:
-            items = session.ResourcePolicy.list(fields=(item[1] for item in fields))
+            items = session.KeypairResourcePolicy.list(fields=(item[1] for item in fields))
         except Exception as e:
             print_error(e)
             sys.exit(1)
@@ -78,7 +78,7 @@ def resource_policies(ctx):
                        headers=(item[0] for item in fields)))
 
 
-@resource_policies.command()
+@keypair_resource_policies.command()
 @click.argument('name', type=str, default=None, metavar='NAME')
 @click.option('--default-for-unspecified', type=str, default='UNLIMITED',
               help='Default behavior for unspecified resources: '
@@ -110,7 +110,7 @@ def add(name, default_for_unspecified, total_resource_slots, max_concurrent_sess
     '''
     with Session() as session:
         try:
-            data = session.ResourcePolicy.create(
+            data = session.KeypairResourcePolicy.create(
                 name,
                 default_for_unspecified=default_for_unspecified,
                 total_resource_slots=total_resource_slots,
@@ -132,7 +132,7 @@ def add(name, default_for_unspecified, total_resource_slots, max_concurrent_sess
         print('Keypair resource policy ' + item['name'] + ' is created.')
 
 
-@resource_policies.command()
+@keypair_resource_policies.command()
 @click.argument('name', type=str, default=None, metavar='NAME')
 @click.option('--default-for-unspecified', type=str,
               help='Default behavior for unspecified resources: '
@@ -161,7 +161,7 @@ def update(name, default_for_unspecified, total_resource_slots,
     """
     with Session() as session:
         try:
-            data = session.ResourcePolicy.update(
+            data = session.KeypairResourcePolicy.update(
                 name,
                 default_for_unspecified=default_for_unspecified,
                 total_resource_slots=total_resource_slots,
@@ -182,7 +182,7 @@ def update(name, default_for_unspecified, total_resource_slots,
         print('Update succeeded.')
 
 
-@resource_policies.command()
+@keypair_resource_policies.command()
 @click.argument('name', type=str, default=None, metavar='NAME')
 def delete(name):
     """
@@ -195,7 +195,7 @@ def delete(name):
             print('Canceled.')
             sys.exit(1)
         try:
-            data = session.ResourcePolicy.delete(name)
+            data = session.KeypairResourcePolicy.delete(name)
         except Exception as e:
             print_error(e)
             sys.exit(1)

@@ -4,11 +4,11 @@ from .base import api_function
 from .request import Request
 
 __all__ = (
-    'ResourcePolicy'
+    'KeypairResourcePolicy'
 )
 
 
-class ResourcePolicy:
+class KeypairResourcePolicy:
     """
     Provides interactions with keypair resource policy.
     """
