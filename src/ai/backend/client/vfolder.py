@@ -216,9 +216,9 @@ class VFolder:
 
     @api_function
     @classmethod
-    async def accept_invitation(cls, inv_id: str, inv_ak: str):
+    async def accept_invitation(cls, inv_id: str):
         rqst = Request(cls.session, 'POST', '/folders/invitations/accept')
-        rqst.set_json({'inv_id': inv_id, 'inv_ak': inv_ak})
+        rqst.set_json({'inv_id': inv_id})
         async with rqst.fetch() as resp:
             return await resp.json()
 

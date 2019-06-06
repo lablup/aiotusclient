@@ -207,12 +207,12 @@ def test_vfolder_accept_invitation():
     with Session() as session:
         with aioresponses() as m:
             payload = {
-                'msg': ('Access key (inv-ak by invitee@lablup.com) now can access'
+                'msg': ('User invitee@lablup.com now can access'
                         ' vfolder fake-vfolder-id'),
             }
             m.post(build_url(session.config, '/folders/invitations/accept'),
                    status=200, payload=payload)
-            resp = session.VFolder.accept_invitation('inv-id', 'inv-ak')
+            resp = session.VFolder.accept_invitation('inv-id')
             assert resp == payload
 
 

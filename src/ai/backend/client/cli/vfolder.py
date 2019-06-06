@@ -325,11 +325,8 @@ def invitations():
                 while True:
                     action = input('Choose action. (a)ccept, (r)eject, (c)ancel: ')
                     if action.lower() == 'a':
-                        # TODO: Let user can select access_key among many.
-                        #       Currently, the config objects holds only one key.
-                        config = get_config()
                         result = session.VFolder.accept_invitation(
-                            invitations[selection]['id'], config.access_key)
+                            invitations[selection]['id'])
                         print(result['msg'])
                         break
                     elif action.lower() == 'r':
