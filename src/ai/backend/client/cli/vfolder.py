@@ -25,6 +25,9 @@ def list():
         ('ID', 'id'),
         ('Owner', 'is_owner'),
         ('Permission', 'permission'),
+        ('Type', 'type'),
+        ('User', 'user'),
+        ('Group', 'group'),
     ]
     with Session() as session:
         try:
@@ -56,7 +59,9 @@ def list_hosts():
 @vfolder.command()
 @click.argument('name', type=str)
 @click.argument('host', type=str, default=None)
-def create(name, host):
+@click.option('-g', '--group', metavar='GROUP_ID', type=str, default=None,
+              help='Group ID. Specify this option if you want to create a group folder.')
+def create(name, host, group):
     '''Create a new virtual folder.
 
     \b
@@ -65,7 +70,7 @@ def create(name, host):
     '''
     with Session() as session:
         try:
-            result = session.VFolder.create(name, host)
+            result = session.VFolder.create(name, host, group)
             print('Virtual folder "{0}" is created.'.format(result['name']))
         except Exception as e:
             print_error(e)
@@ -124,6 +129,9 @@ def info(name):
             print('- Owner:', result['is_owner'])
             print('- Permission:', result['permission'])
             print('- Number of files: {0}'.format(result['numFiles']))
+            print('- Type: {0}'.format(result['type']))
+            print('- Group ID: {0}'.format(result['group']))
+            print('- User ID: {0}'.format(result['user']))
         except Exception as e:
             print_error(e)
             sys.exit(1)

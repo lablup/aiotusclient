@@ -24,21 +24,22 @@ class VFolder:
     session = None
     '''The client session instance that this function class is bound to.'''
 
+    def __init__(self, name: str):
+        assert _rx_slug.search(name) is not None, 'Invalid vfolder name format'
+        self.name = name
+
     @api_function
     @classmethod
-    async def create(cls, name: str, host: str = None):
+    async def create(cls, name: str, host: str = None, group: str = None):
         assert _rx_slug.search(name) is not None, 'Invalid vfolder name format'
         rqst = Request(cls.session, 'POST', '/folders')
         rqst.set_json({
             'name': name,
             'host': host,
+            'group': group,
         })
         async with rqst.fetch() as resp:
             return await resp.json()
-
-    def __init__(self, name: str):
-        assert _rx_slug.search(name) is not None, 'Invalid vfolder name format'
-        self.name = name
 
     @api_function
     @classmethod
