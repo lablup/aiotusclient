@@ -43,8 +43,9 @@ class VFolder:
 
     @api_function
     @classmethod
-    async def list(cls):
+    async def list(cls, list_all=False):
         rqst = Request(cls.session, 'GET', '/folders')
+        rqst.set_json({'all': list_all})
         async with rqst.fetch() as resp:
             return await resp.json()
 

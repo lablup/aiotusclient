@@ -18,7 +18,9 @@ def vfolder():
 
 
 @vfolder.command()
-def list():
+@click.option('-a', '--list-all', is_flag=True, default=None,
+              help='List all virtual folders (superadmin previlige is required).')
+def list(list_all):
     '''List virtual folders that belongs to the current user.'''
     fields = [
         ('Name', 'name'),
@@ -31,7 +33,7 @@ def list():
     ]
     with Session() as session:
         try:
-            resp = session.VFolder.list()
+            resp = session.VFolder.list(list_all)
             if not resp:
                 print('There is no virtual folders created yet.')
                 return
