@@ -32,7 +32,8 @@ class Group:
         :param fields: Additional per-group query fields to fetch.
         '''
         if fields is None:
-            fields = ('id', 'name', 'description', 'is_active', 'created_at', 'domain_name')
+            fields = ('id', 'name', 'description', 'is_active', 'created_at', 'domain_name',
+                      'total_resource_slots',)
         query = textwrap.dedent('''\
             query($domain_name: String) {
                 groups(domain_name: $domain_name) {$fields}
@@ -59,7 +60,8 @@ class Group:
         :param fields: Additional per-group query fields to fetch.
         '''
         if fields is None:
-            fields = ('id', 'name', 'description', 'is_active', 'created_at', 'domain_name')
+            fields = ('id', 'name', 'description', 'is_active', 'created_at', 'domain_name',
+                      'total_resource_slots',)
         query = textwrap.dedent('''\
             query($gid: String!) {
                 group(id: $gid) {$fields}
@@ -79,7 +81,8 @@ class Group:
     @api_function
     @classmethod
     async def create(cls, domain_name: str, name: str, description: str = '',
-                     is_active: bool = True, fields: Iterable[str] = None) -> dict:
+                     is_active: bool = True, total_resource_slots: str = None,
+                     fields: Iterable[str] = None) -> dict:
         '''
         Creates a new group with the given options.
         You need an admin privilege for this operation.
@@ -100,6 +103,7 @@ class Group:
                 'description': description,
                 'is_active': is_active,
                 'domain_name': domain_name,
+                'total_resource_slots': total_resource_slots,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')
@@ -114,7 +118,8 @@ class Group:
     @api_function
     @classmethod
     async def update(cls, gid: str, name: str = None, description: str = None,
-                     is_active: bool = None, fields: Iterable[str] = None) -> dict:
+                     is_active: bool = None, total_resource_slots: str = None,
+                     fields: Iterable[str] = None) -> dict:
         '''
         Update existing group.
         You need an admin privilege for this operation.
@@ -132,6 +137,7 @@ class Group:
                 'name': name,
                 'description': description,
                 'is_active': is_active,
+                'total_resource_slots': total_resource_slots,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')

@@ -16,6 +16,8 @@ def config():
     print('API version: {0}'.format(click.style(config.version, bold=True)))
     if config.domain:
         print('Domain name: "{0}"'.format(click.style(config.domain, bold=True)))
+    if config.group:
+        print('Group name: "{0}"'.format(click.style(config.group, bold=True)))
     if config.is_anonymous:
         print('Access key: (this is an anonymous session)')
     else:

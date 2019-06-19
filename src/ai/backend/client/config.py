@@ -85,9 +85,10 @@ class APIConfig:
 
     DEFAULTS = {
         'endpoint': 'https://api.backend.ai',
-        'domain': 'default',
         'version': 'v4.20190315',
         'hash_type': 'sha256',
+        'domain': 'default',
+        'group': 'default',
     }
     '''
     The default values except the access and secret keys.
@@ -96,6 +97,7 @@ class APIConfig:
     def __init__(self, *,
                  endpoint: Union[URL, str] = None,
                  domain: str = None,
+                 group: str = None,
                  version: str = None,
                  user_agent: str = None,
                  access_key: str = None,
@@ -108,6 +110,7 @@ class APIConfig:
             _clean_url(endpoint) if endpoint else
             get_env('ENDPOINT', self.DEFAULTS['endpoint'], clean=_clean_url))
         self._domain = domain if domain else get_env('DOMAIN', self.DEFAULTS['domain'])
+        self._group = group if group else get_env('GROUP', self.DEFAULTS['group'])
         self._version = version if version else self.DEFAULTS['version']
         self._user_agent = user_agent if user_agent else get_user_agent()
         self._access_key = access_key if access_key is not None else get_env('ACCESS_KEY', '')
@@ -135,6 +138,11 @@ class APIConfig:
     def domain(self) -> str:
         '''The configured domain.'''
         return self._domain
+
+    @property
+    def group(self) -> str:
+        '''The configured group.'''
+        return self._group
 
     @property
     def user_agent(self) -> str:

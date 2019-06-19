@@ -96,8 +96,8 @@ class Kernel:
         if domain_name is None:
             # Even if config.domain is None, it can be guessed in the manager by user information.
             domain_name = cls.session.config.domain
-        assert group_name is not None, \
-                'Group name should be specified. Try "default" for fair guess.'
+        if group_name is None:
+            group_name = cls.session.config.group
 
         mounts.extend(cls.session.config.vfolder_mounts)
         rqst = Request(cls.session, 'POST', '/kernel/create')
@@ -119,6 +119,8 @@ class Kernel:
             o = cls(data['kernelId'], owner_access_key)  # type: ignore
             o.created = data.get('created', True)     # True is for legacy
             o.service_ports = data.get('servicePorts', [])
+            o.domain = domain_name
+            o.group = group_name
             return o
 
     def __init__(self, kernel_id: str, owner_access_key: str = None):

@@ -490,7 +490,8 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
             print_fail('[{0}] {1}'.format(idx, e))
             return
         if kernel.created:
-            vprint_done('[{0}] Session {1} is ready.'.format(idx, kernel.kernel_id))
+            vprint_done('[{0}] Session {1} is ready (domain={2}, group={3}).'
+                        .format(idx, kernel.kernel_id, kernel.domain, kernel.group))
         else:
             vprint_done('[{0}] Reusing session {1}...'.format(idx, kernel.kernel_id))
 

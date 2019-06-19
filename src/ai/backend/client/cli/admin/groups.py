@@ -84,7 +84,9 @@ def groups(ctx, domain_name):
               help='Description of new group.')
 @click.option('-i', '--inactive', is_flag=True,
               help='New group will be inactive.')
-def add(domain_name, name, description, inactive):
+@click.option('--total_resource_slots', type=str, default='{}',
+              help='Set total resource slots.')
+def add(domain_name, name, description, inactive, total_resource_slots):
     '''
     Add new group. A group must belong to a domain, so DOMAIN_NAME should be provided.
 
@@ -98,6 +100,7 @@ def add(domain_name, name, description, inactive):
                 domain_name, name,
                 description=description,
                 is_active=not inactive,
+                total_resource_slots=total_resource_slots,
             )
         except Exception as e:
             print_error(e)
@@ -114,7 +117,8 @@ def add(domain_name, name, description, inactive):
 @click.option('-n', '--name', type=str, help='New name of the group')
 @click.option('-d', '--description', type=str, help='Description of the group')
 @click.option('--is-active', type=bool, help='Set group inactive.')
-def update(gid, name, description, is_active):
+@click.option('--total_resource_slots', type=str, help='Update total resource slots.')
+def update(gid, name, description, is_active, total_resource_slots):
     '''
     Update an existing group. Domain name is not necessary since group ID is unique.
 
@@ -127,6 +131,7 @@ def update(gid, name, description, is_active):
                 name=name,
                 description=description,
                 is_active=is_active,
+                total_resource_slots=total_resource_slots,
             )
         except Exception as e:
             print_error(e)
