@@ -25,22 +25,25 @@ class Group:
 
     @api_function
     @classmethod
-    async def list(cls, domain_name: str, fields: Iterable[str] = None) -> Sequence[dict]:
+    async def list(cls, domain_name: str, list_all: bool = False,
+                   fields: Iterable[str] = None) -> Sequence[dict]:
         '''
         Fetches the list of groups.
 
+        :param domain_name: Name of domain to list groups.
+        :param list_all: List all groups across all domains (superadmin only).
         :param fields: Additional per-group query fields to fetch.
         '''
         if fields is None:
             fields = ('id', 'name', 'description', 'is_active', 'created_at', 'domain_name',
                       'total_resource_slots',)
         query = textwrap.dedent('''\
-            query($domain_name: String) {
-                groups(domain_name: $domain_name) {$fields}
+            query($domain_name: String, $all: Boolean) {
+                groups(domain_name: $domain_name, all: $all) {$fields}
             }
         ''')
         query = query.replace('$fields', ' '.join(fields))
-        variables = {'domain_name': domain_name}
+        variables = {'domain_name': domain_name, 'all': list_all}
         rqst = Request(cls.session, 'POST', '/admin/graphql')
         rqst.set_json({
             'query': query,

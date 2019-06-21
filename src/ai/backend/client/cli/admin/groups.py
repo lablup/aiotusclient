@@ -47,7 +47,9 @@ def group(gid):
 @click.pass_context
 @click.option('-d', '--domain-name', type=str, default=None,
               help='Domain name to list groups belongs to it.')
-def groups(ctx, domain_name):
+@click.option('-a', '--list-all', is_flag=True,
+              help='List all groups across domain (superadmin only).')
+def groups(ctx, domain_name, list_all):
     '''
     List and manage groups.
     (admin privilege required)
@@ -64,7 +66,7 @@ def groups(ctx, domain_name):
     ]
     with Session() as session:
         try:
-            resp = session.Group.list(domain_name=domain_name,
+            resp = session.Group.list(domain_name=domain_name, list_all=list_all,
                                       fields=(item[1] for item in fields))
         except Exception as e:
             print_error(e)
