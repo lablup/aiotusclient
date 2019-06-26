@@ -36,7 +36,7 @@ class Group:
         '''
         if fields is None:
             fields = ('id', 'name', 'description', 'is_active', 'created_at', 'domain_name',
-                      'total_resource_slots',)
+                      'total_resource_slots', 'allowed_vfolder_hosts', 'integration_id')
         query = textwrap.dedent('''\
             query($domain_name: String, $all: Boolean) {
                 groups(domain_name: $domain_name, all: $all) {$fields}
@@ -64,7 +64,7 @@ class Group:
         '''
         if fields is None:
             fields = ('id', 'name', 'description', 'is_active', 'created_at', 'domain_name',
-                      'total_resource_slots',)
+                      'total_resource_slots', 'allowed_vfolder_hosts', 'integration_id')
         query = textwrap.dedent('''\
             query($gid: String!) {
                 group(id: $gid) {$fields}
@@ -85,6 +85,8 @@ class Group:
     @classmethod
     async def create(cls, domain_name: str, name: str, description: str = '',
                      is_active: bool = True, total_resource_slots: str = None,
+                     allowed_vfolder_hosts: Iterable[str] = None,
+                     integration_id: str = None,
                      fields: Iterable[str] = None) -> dict:
         '''
         Creates a new group with the given options.
@@ -107,6 +109,8 @@ class Group:
                 'is_active': is_active,
                 'domain_name': domain_name,
                 'total_resource_slots': total_resource_slots,
+                'allowed_vfolder_hosts': allowed_vfolder_hosts,
+                'integration_id': integration_id,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')
@@ -122,6 +126,8 @@ class Group:
     @classmethod
     async def update(cls, gid: str, name: str = None, description: str = None,
                      is_active: bool = None, total_resource_slots: str = None,
+                     allowed_vfolder_hosts: Iterable[str] = None,
+                     integration_id: str = None,
                      fields: Iterable[str] = None) -> dict:
         '''
         Update existing group.
@@ -141,6 +147,8 @@ class Group:
                 'description': description,
                 'is_active': is_active,
                 'total_resource_slots': total_resource_slots,
+                'allowed_vfolder_hosts': allowed_vfolder_hosts,
+                'integration_id': integration_id,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')

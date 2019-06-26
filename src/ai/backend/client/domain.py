@@ -33,7 +33,9 @@ class Domain:
         :param fields: Additional per-domain query fields to fetch.
         '''
         if fields is None:
-            fields = ('name', 'description', 'is_active', 'created_at', 'total_resource_slots')
+            fields = ('name', 'description', 'is_active', 'created_at',
+                      'total_resource_slots', 'allowed_vfolder_hosts',
+                      'integration_id')
         query = textwrap.dedent('''\
             query {
                 domains {$fields}
@@ -58,7 +60,9 @@ class Domain:
         :param fields: Additional per-domain query fields to fetch.
         '''
         if fields is None:
-            fields = ('name', 'description', 'is_active', 'created_at', 'total_resource_slots')
+            fields = ('name', 'description', 'is_active', 'created_at',
+                      'total_resource_slots', 'allowed_vfolder_hosts',
+                      'integration_id',)
         query = textwrap.dedent('''\
             query($name: String) {
                 domain(name: $name) {$fields}
@@ -78,7 +82,10 @@ class Domain:
     @api_function
     @classmethod
     async def create(cls, name: str, description: str = '', is_active: bool = True,
-                     total_resource_slots: str = None, fields: Iterable[str] = None) -> dict:
+                     total_resource_slots: str = None,
+                     allowed_vfolder_hosts: Iterable[str] = None,
+                     integration_id: str = None,
+                     fields: Iterable[str] = None) -> dict:
         '''
         Creates a new domain with the given options.
         You need an admin privilege for this operation.
@@ -99,6 +106,8 @@ class Domain:
                 'description': description,
                 'is_active': is_active,
                 'total_resource_slots': total_resource_slots,
+                'allowed_vfolder_hosts': allowed_vfolder_hosts,
+                'integration_id': integration_id,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')
@@ -114,6 +123,8 @@ class Domain:
     @classmethod
     async def update(cls, name: str, new_name: str = None, description: str = None,
                      is_active: bool = None, total_resource_slots: str = None,
+                     allowed_vfolder_hosts: Iterable[str] = None,
+                     integration_id: str = None,
                      fields: Iterable[str] = None) -> dict:
         '''
         Update existing domain.
@@ -133,6 +144,8 @@ class Domain:
                 'description': description,
                 'is_active': is_active,
                 'total_resource_slots': total_resource_slots,
+                'allowed_vfolder_hosts': allowed_vfolder_hosts,
+                'integration_id': integration_id,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')

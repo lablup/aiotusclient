@@ -144,8 +144,6 @@ def sessions(status, access_key, id_only, all):
 
 @admin.command()
 @click.argument('sess_id_or_alias', metavar='SESSID')
-@click.option('-o', '--owner', '--owner-access-key', metavar='ACCESS_KEY',
-              help='Specify the owner of the target session explicitly.')
 def session(sess_id_or_alias):
     '''
     Show detailed information for a running compute session.

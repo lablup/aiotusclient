@@ -22,6 +22,7 @@ def domain(name):
         ('Active?', 'is_active'),
         ('Created At', 'created_at'),
         ('Total Resource Slots', 'total_resource_slots'),
+        ('Allowed vFolder Hosts', 'allowed_vfolder_hosts'),
     ]
     with Session() as session:
         try:
@@ -52,6 +53,7 @@ def domains(ctx):
         ('Active?', 'is_active'),
         ('Created At', 'created_at'),
         ('Total Resource Slots', 'total_resource_slots'),
+        ('Allowed vFolder Hosts', 'allowed_vfolder_hosts'),
     ]
     with Session() as session:
         try:
@@ -75,7 +77,10 @@ def domains(ctx):
               help='New domain will be inactive.')
 @click.option('--total_resource_slots', type=str, default='{}',
               help='Set total resource slots.')
-def add(name, description, inactive, total_resource_slots):
+@click.option('--allowed_vfolder_hosts', type=str, multiple=True,
+              help='Allowed virtual folder hosts.')
+def add(name, description, inactive, total_resource_slots,
+        allowed_vfolder_hosts):
     '''
     Add a new domain.
 
@@ -88,6 +93,7 @@ def add(name, description, inactive, total_resource_slots):
                 description=description,
                 is_active=not inactive,
                 total_resource_slots=total_resource_slots,
+                allowed_vfolder_hosts=allowed_vfolder_hosts,
             )
         except Exception as e:
             print_error(e)
@@ -106,7 +112,10 @@ def add(name, description, inactive, total_resource_slots):
 @click.option('--is-active', type=bool, help='Set domain inactive.')
 @click.option('--total_resource_slots', type=str,
               help='Update total resource slots.')
-def update(name, new_name, description, is_active, total_resource_slots):
+@click.option('--allowed_vfolder_hosts', type=str, multiple=True,
+              help='Allowed virtual folder hosts.')
+def update(name, new_name, description, is_active, total_resource_slots,
+           allowed_vfolder_hosts):
     '''
     Update an existing domain.
 
@@ -120,6 +129,7 @@ def update(name, new_name, description, is_active, total_resource_slots):
                 description=description,
                 is_active=is_active,
                 total_resource_slots=total_resource_slots,
+                allowed_vfolder_hosts=allowed_vfolder_hosts,
             )
         except Exception as e:
             print_error(e)

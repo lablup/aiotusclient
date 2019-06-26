@@ -25,6 +25,8 @@ def group(gid):
         ('Active?', 'is_active'),
         ('Created At', 'created_at'),
         ('Domain Name', 'domain_name'),
+        ('Total Resource Slots', 'total_resource_slots'),
+        ('Allowed vFolder Hosts', 'allowed_vfolder_hosts'),
     ]
     with Session() as session:
         try:
@@ -63,6 +65,8 @@ def groups(ctx, domain_name, list_all):
         ('Active?', 'is_active'),
         ('Created At', 'created_at'),
         ('Domain Name', 'domain_name'),
+        ('Total Resource Slots', 'total_resource_slots'),
+        ('Allowed vFolder Hosts', 'allowed_vfolder_hosts'),
     ]
     with Session() as session:
         try:
@@ -88,7 +92,10 @@ def groups(ctx, domain_name, list_all):
               help='New group will be inactive.')
 @click.option('--total_resource_slots', type=str, default='{}',
               help='Set total resource slots.')
-def add(domain_name, name, description, inactive, total_resource_slots):
+@click.option('--allowed_vfolder_hosts', type=str, multiple=True,
+              help='Allowed virtual folder hosts.')
+def add(domain_name, name, description, inactive, total_resource_slots,
+        allowed_vfolder_hosts):
     '''
     Add new group. A group must belong to a domain, so DOMAIN_NAME should be provided.
 
@@ -103,6 +110,7 @@ def add(domain_name, name, description, inactive, total_resource_slots):
                 description=description,
                 is_active=not inactive,
                 total_resource_slots=total_resource_slots,
+                allowed_vfolder_hosts=allowed_vfolder_hosts,
             )
         except Exception as e:
             print_error(e)
@@ -120,7 +128,10 @@ def add(domain_name, name, description, inactive, total_resource_slots):
 @click.option('-d', '--description', type=str, help='Description of the group')
 @click.option('--is-active', type=bool, help='Set group inactive.')
 @click.option('--total_resource_slots', type=str, help='Update total resource slots.')
-def update(gid, name, description, is_active, total_resource_slots):
+@click.option('--allowed_vfolder_hosts', type=str, multiple=True,
+              help='Allowed virtual folder hosts.')
+def update(gid, name, description, is_active, total_resource_slots,
+           allowed_vfolder_hosts):
     '''
     Update an existing group. Domain name is not necessary since group ID is unique.
 
@@ -134,6 +145,7 @@ def update(gid, name, description, is_active, total_resource_slots):
                 description=description,
                 is_active=is_active,
                 total_resource_slots=total_resource_slots,
+                allowed_vfolder_hosts=allowed_vfolder_hosts,
             )
         except Exception as e:
             print_error(e)
@@ -141,7 +153,7 @@ def update(gid, name, description, is_active, total_resource_slots):
         if not data['ok']:
             print_fail('Group update has failed: {0}'.format(data['msg']))
             sys.exit(1)
-        print('Group {0} is updated.'.format(name))
+        print('Group {0} is updated.'.format(gid))
 
 
 @groups.command()
