@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from .base import api_function
 from .request import Request
 
@@ -34,5 +36,42 @@ class Resource:
         information.
         '''
         rqst = Request(cls.session, 'POST', '/resource/check-presets')
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
+    @classmethod
+    async def usage_per_month(cls, month: str, group_ids: Sequence[str]):
+        '''
+        Get usage statistics for groups specified by `group_ids` at specific `month`.
+
+        :param month: The month you want to get the statistics (yyyymm).
+        :param group_ids: Groups IDs to be included in the result.
+        '''
+        rqst = Request(cls.session, 'GET', '/resource/usage/month')
+        rqst.set_json({
+            'month': month,
+            'group_ids': group_ids,
+        })
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
+    @classmethod
+    async def usage_per_period(cls, group_id: str, start_date: str, end_date: str):
+        '''
+        Get usage statistics for a group specified by `group_id` for time betweeen
+        `start_date` and `end_date`.
+
+        :param start_date: start date in string format (yyyymmdd).
+        :param end_date: end date in string format (yyyymmdd).
+        :param group_id: Groups ID to list usage statistics.
+        '''
+        rqst = Request(cls.session, 'GET', '/resource/usage/period')
+        rqst.set_json({
+            'group_id': group_id,
+            'start_date': start_date,
+            'end_date': end_date,
+        })
         async with rqst.fetch() as resp:
             return await resp.json()
