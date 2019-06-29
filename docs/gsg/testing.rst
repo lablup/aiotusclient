@@ -5,7 +5,8 @@ Unit Tests
 ----------
 
 Unit tests perform function-by-function tests to ensure their individual
-functionality.
+functionality.  This test suite runs without depending on the server-side
+and thus it is executed in Travis CI for every push.
 
 How to run
 ~~~~~~~~~~
@@ -18,7 +19,7 @@ How to run
 Integration Tests
 -----------------
 
-Integration tests combines multiple invocations to high-level interfaces to make underlying API requests
+Integration tests combine multiple invocations of high-level interfaces to make underlying API requests
 to a running gateway server to test the full functionality of the client as well as the manager.
 
 They are marked as "integration" using the ``@pytest.mark.integration`` decorator
@@ -74,12 +75,13 @@ random identifiers.
 How to run
 ~~~~~~~~~~
 
-Execute the gateway and at least one agent (in their corresponding virtualenvs and hosts):
+Execute the gateway and at least one agent in their respective virtualenvs and hosts:
 
 .. code-block:: console
 
    $ python -m ai.backend.client.gateway.server
    $ python -m ai.backend.client.agent.server
+   $ python -m ai.backend.client.agent.watcher
 
 Then run the tests:
 
