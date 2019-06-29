@@ -9,3 +9,4 @@ Getting Started
    examples
    session
    config
+   testing
