@@ -60,8 +60,9 @@ in the ``default`` domain and the ``default`` group.
 
   - Secret key: ``wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY``
 
-A ``testing-XXXX`` domain, a ``testing-XXXX`` group, and a few dummy users are created and used during
-the tests and destroyed after running tests.  ``XXXX`` will be filled with random identifiers.
+One or more ``testing-XXXX`` domain, one or more ``testing-XXXX`` groups, and one ore more dummy users
+are created and used during the tests and destroyed after running tests.  ``XXXX`` will be filled with
+random identifiers.
 
 
 .. tip::
