@@ -74,10 +74,15 @@ use ``-c`` option to pass the code string (like a shell).
 
 .. code-block:: console
 
-   $ backend.ai run python -c "print('hello world')"
+   $ backend.ai run python:3.6-ubuntu18.04 -c "print('hello world')"
    ∙ Client session token: d3694dda6e5a9f1e5c718e07bba291a9
    ✔ Kernel (ID: zuF1OzMIhFknyjUl7Apbvg) is ready.
    hello world
+
+By default, you need to specify language with full version tag like
+``python:3.6-ubuntu18.04``. Depending on the Backend.AI admin's language
+alias settings, this can be shortened just as ``python``. If you want to
+know defined language aliases, contact the admin of Backend.AI server.
 
 You can even run a C code on-the-fly. (Note that we put a dollar sign before
 the single-quoted code argument so that the shell to interpret ``'\n'`` as
@@ -85,7 +90,7 @@ actual newlines.)
 
 .. code-block:: console
 
-   $ backend.ai run c -c $'#include <stdio.h>\nint main() {printf("hello world\\n");}'
+   $ backend.ai run gcc:gcc6.4-alpine3.8 -c $'#include <stdio.h>\nint main() {printf("hello world\\n");}'
    ∙ Client session token: abc06ee5e03fce60c51148c6d2dd6126
    ✔ Kernel (ID: d1YXvee-uAJTx4AKYyeksA) is ready.
    hello world
@@ -100,7 +105,7 @@ them.  The below is a simple example to run `a sample C program
    Cloning into 'c-example'...
    Unpacking objects: 100% (5/5), done.
    $ cd c-example
-   $ backend.ai run c main.c mylib.c mylib.h
+   $ backend.ai run gcc:gcc6.4-alpine3.8 main.c mylib.c mylib.h
    ∙ Client session token: 1c352a572bc751a81d1f812186093c47
    ✔ Kernel (ID: kJ6CgWR7Tz3_v2WsDHOwLQ) is ready.
    ✔ Uploading done.
