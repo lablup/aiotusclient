@@ -75,3 +75,13 @@ class Resource:
         })
         async with rqst.fetch() as resp:
             return await resp.json()
+
+    @api_function
+    @classmethod
+    async def get_resource_slots(cls):
+        '''
+        Get supported resource slots of Backend.AI server.
+        '''
+        rqst = Request(cls.session, 'GET', '/config/resource-slots')
+        async with rqst.fetch() as resp:
+            return await resp.json()
