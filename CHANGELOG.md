@@ -1,6 +1,13 @@
 Changes
 =======
 
+19.06.0b1 (2018-07-14)
+----------------------
+
+ - Add support for per-group vfolders and usage statistics.
+
+ - Update support for domain and groups.
+
 19.06.0a1 (2018-06-03)
 ----------------------
 
