@@ -240,7 +240,7 @@ class Request:
                'Disallowed HTTP method: {}'.format(self.method)
         self.date = datetime.now(tzutc())
         self.headers['Date'] = self.date.isoformat()
-        if self.content_type is not None:
+        if self.content_type is not None and 'Content-Type' not in self.headers:
             self.headers['Content-Type'] = self.content_type
         full_url = self._build_url()
         if not self.config.is_anonymous:
