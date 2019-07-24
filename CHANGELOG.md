@@ -1,14 +1,22 @@
 Changes
 =======
 
-19.06.0b1 (2018-07-14)
+19.06.0b2 (2019-07-24)
+----------------------
+
+ - Fix handling the content-type HTTP header when proxying.
+   This allows sending multipart form uploads (e.g., vfolder uploads) via the proxy.
+
+ - Remove client-side vfolder naming checks.
+
+19.06.0b1 (2019-07-14)
 ----------------------
 
  - Add support for per-group vfolders and usage statistics.
 
  - Update support for domain and groups.
 
-19.06.0a1 (2018-06-03)
+19.06.0a1 (2019-06-03)
 ----------------------
 
  - Add support for specifying domain and groups. (lablup/backend.ai-manager#148)
@@ -17,7 +25,7 @@ Changes
 
  - Include Python 3.7 as an officially supported Python version.
 
-19.03.1 (2018-05-10)
+19.03.1 (2019-05-10)
 --------------------
 
  - Fix support for Python 3.5 due to f-string literals in the vfolder module.
@@ -26,7 +34,7 @@ Changes
 
  - Update the docs and examples.
 
-19.03.0 (2018-04-10)
+19.03.0 (2019-04-10)
 --------------------
 
  - Include "concurrency_used" when fetching keypairs in "admin keypair" commands.
@@ -35,7 +43,7 @@ Changes
 
  - Improve test cases and coverage.
 
-19.03.0rc2 (2018-03-26)
+19.03.0rc2 (2019-03-26)
 -----------------------
 
  - NEW: Add SDK/CLI support for resource policy management.
@@ -45,7 +53,7 @@ Changes
  - NEW: Add SDK/CLI support for owner_access_key in the kernel APIs and "-o" /
    "--owner-access-key" argument to the kernel-releated CLI commands.
 
-19.03.0rc1 (2018-02-25)
+19.03.0rc1 (2019-02-25)
 -----------------------
 
  - Support pagination of "admin sessions" and "admin agents" commands.
@@ -53,12 +61,12 @@ Changes
  - Send websocket pings to keep connections and sessions alive while app services
    are being used.
 
-19.03.0b4 (2018-02-15)
+19.03.0b4 (2019-02-15)
 ----------------------
 
  - Fix an error when pretty-printing agent exceptions.
 
-19.03.0b3 (2018-02-08)
+19.03.0b3 (2019-02-08)
 ----------------------
 
  - NEW: `--skip-sslcert-validation` CLI option.
@@ -66,12 +74,12 @@ Changes
  - Minor CLI updates: Add `cpu_using` field to "admin agents" statistics
    and `size_bytes` field to the "admin image" result.
 
-19.03.0b2 (2018-01-30)
+19.03.0b2 (2019-01-30)
 ----------------------
 
  - Minor fix for the CLI to show extra error details only when they are present.
 
-19.03.0b1 (2018-01-30)
+19.03.0b1 (2019-01-30)
 ----------------------
 
  - Support API v4.20190315 and change GraphQL fields for various admin commands
@@ -81,7 +89,7 @@ Changes
 
  - Fix various bugs.
 
-18.12.3 (2018-02-10)
+18.12.3 (2019-02-10)
 --------------------
 
  - Add "--skip-sslcert-validation" option and environment variable equivalent.
@@ -90,19 +98,19 @@ Changes
  - Fix pretty-printing of server errors with no/null title field in the details.
    (backported from master)
 
-18.12.2 (2018-01-30)
+18.12.2 (2019-01-30)
 --------------------
 
  - Minor fix for the CLI to show extra error details only when they are present.
    (backported from master)
 
-18.12.1 (2018-01-21)
+18.12.1 (2019-01-21)
 --------------------
 
  - Automatically detect the legacy mode (API version &lt;= v4.20181215).
    Removed "--legacy" option for the "run" command.
 
-18.12.0 (2018-01-06)
+18.12.0 (2019-01-06)
 --------------------
 
  - Fix various bugs.
