@@ -106,8 +106,12 @@ async def web_handler(request):
         # to be a transparent proxy.
         api_rqst = Request(
             session, request.method, path, request.content,
-            params=request.query,
-            content_type=request.content_type)
+            params=request.query)
+        if 'Content-Type' in request.headers:
+            api_rqst.content_type = request.content_type                        # set for signing
+            api_rqst.headers['Content-Type'] = request.headers['Content-Type']  # preserve raw value
+        if 'Content-Length' in request.headers:
+            api_rqst.headers['Content-Length'] = request.headers['Content-Length']
         # Uploading request body happens at the entering of the block,
         # and downloading response body happens in the read loop inside.
         async with api_rqst.fetch() as up_resp:
