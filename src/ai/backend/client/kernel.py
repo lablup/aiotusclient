@@ -503,6 +503,7 @@ class Kernel:
 
         return request.connect_websocket(on_enter=send_code)
 
+
 class StreamPty(WebSocketResponse):
     '''
     A derivative class of :class:`~ai.backend.client.request.WebSocketResponse` which

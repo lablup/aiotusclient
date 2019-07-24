@@ -7,7 +7,6 @@ import click
 from tabulate import tabulate
 
 from . import AliasGroup, main
-from ..config import get_config
 from .pretty import print_wait, print_done, print_error, print_fail
 from ..session import Session
 

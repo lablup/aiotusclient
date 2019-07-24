@@ -1,6 +1,5 @@
 import asyncio
 from pathlib import Path
-import re
 from typing import Sequence, Union
 import zlib
 

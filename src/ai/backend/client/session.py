@@ -291,7 +291,6 @@ class AsyncSession(BaseSession):
         from .base import BaseFunction
         from .admin import Admin
         from .agent import Agent
-        from .domain import Domain
         from .group import Group
         from .image import Image
         from .kernel import Kernel

@@ -1,5 +1,4 @@
 import sys
-from typing import Iterable
 
 import click
 from tabulate import tabulate
