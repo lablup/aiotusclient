@@ -11,3 +11,4 @@ High-level Function Reference
    keypair
    manager
    vfolder
+   scaling-group
