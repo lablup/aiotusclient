@@ -1,6 +1,8 @@
 import enum
 import hashlib
 import hmac
+from typing import Union
+from uuid import UUID
 
 import attr
 

@@ -72,7 +72,8 @@ class BaseSession(metaclass=abc.ABCMeta):
 
     __slots__ = (
         '_config', '_closed', 'aiohttp_session',
-        'Admin', 'Agent', 'Domain', 'Group', 'Image', 'Kernel', 'KeyPair', 'Manager', 'Resource',
+        'Admin', 'Agent', 'Domain', 'Group', 'ScalingGroup',
+        'Image', 'Kernel', 'KeyPair', 'Manager', 'Resource',
         'KeypairResourcePolicy', 'User', 'VFolder',
     )
 
@@ -139,8 +140,10 @@ class Session(BaseSession):
         from .manager import Manager
         from .resource import Resource
         from .keypair_resource_policy import KeypairResourcePolicy
+        from .scaling_group import ScalingGroup
         from .user import User
         from .vfolder import VFolder
+
         self.Admin = type('Admin', (BaseFunction, ), {
             **Admin.__dict__,
             'session': self,
@@ -149,6 +152,7 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.admin.Admin` function proxy
         bound to this session.
         '''
+
         self.Agent = type('Agent', (BaseFunction, ), {
             **Agent.__dict__,
             'session': self,
@@ -157,6 +161,7 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.agent.Agent` function proxy
         bound to this session.
         '''
+
         self.Domain = type('Domain', (BaseFunction, ), {
             **Domain.__dict__,
             'session': self,
@@ -165,6 +170,7 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.agent.Domain` function proxy
         bound to this session.
         '''
+
         self.Group = type('Group', (BaseFunction, ), {
             **Group.__dict__,
             'session': self,
@@ -173,6 +179,7 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.agent.Group` function proxy
         bound to this session.
         '''
+
         self.Image = type('Image', (BaseFunction, ), {
             **Image.__dict__,
             'session': self,
@@ -181,6 +188,7 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.image.Image` function proxy
         bound to this session.
         '''
+
         self.Kernel = type('Kernel', (BaseFunction, ), {
             **Kernel.__dict__,
             'session': self,
@@ -189,6 +197,7 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.kernel.Kernel` function proxy
         bound to this session.
         '''
+
         self.KeyPair = type('KeyPair', (BaseFunction, ), {
             **KeyPair.__dict__,
             'session': self,
@@ -197,6 +206,7 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.keypair.KeyPair` function proxy
         bound to this session.
         '''
+
         self.Manager = type('Manager', (BaseFunction, ), {
             **Manager.__dict__,
             'session': self,
@@ -205,6 +215,7 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.manager.Manager` function proxy
         bound to this session.
         '''
+
         self.Resource = type('Resource', (BaseFunction, ), {
             **Resource.__dict__,
             'session': self,
@@ -213,6 +224,7 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.resource.Resource` function proxy
         bound to this session.
         '''
+
         self.KeypairResourcePolicy = type('KeypairResourcePolicy', (BaseFunction, ), {
             **KeypairResourcePolicy.__dict__,
             'session': self,
@@ -221,6 +233,7 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.keypair_resource_policy.KeypairResourcePolicy` function proxy
         bound to this session.
         '''
+
         self.User = type('User', (BaseFunction, ), {
             **User.__dict__,
             'session': self,
@@ -229,6 +242,16 @@ class Session(BaseSession):
         The :class:`~ai.backend.client.user.User` function proxy
         bound to this session.
         '''
+
+        self.ScalingGroup = type('ScalingGroup', (BaseFunction, ), {
+            **ScalingGroup.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.scaling_group.ScalingGroup` function proxy
+        bound to this session.
+        '''
+
         self.VFolder = type('VFolder', (BaseFunction, ), {
             **VFolder.__dict__,
             'session': self,
@@ -298,8 +321,10 @@ class AsyncSession(BaseSession):
         from .manager import Manager
         from .resource import Resource
         from .keypair_resource_policy import KeypairResourcePolicy
+        from .scaling_group import ScalingGroup
         from .user import User
         from .vfolder import VFolder
+
         self.Admin = type('Admin', (BaseFunction, ), {
             **Admin.__dict__,
             'session': self,
@@ -308,6 +333,7 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.admin.Admin` function proxy
         bound to this session.
         '''
+
         self.Agent = type('Agent', (BaseFunction, ), {
             **Agent.__dict__,
             'session': self,
@@ -316,6 +342,7 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.agent.Agent` function proxy
         bound to this session.
         '''
+
         self.Group = type('Group', (BaseFunction, ), {
             **Group.__dict__,
             'session': self,
@@ -324,6 +351,7 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.agent.Group` function proxy
         bound to this session.
         '''
+
         self.Image = type('Image', (BaseFunction, ), {
             **Image.__dict__,
             'session': self,
@@ -332,6 +360,7 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.image.Image` function proxy
         bound to this session.
         '''
+
         self.Kernel = type('Kernel', (BaseFunction, ), {
             **Kernel.__dict__,
             'session': self,
@@ -340,6 +369,7 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.kernel.Kernel` function proxy
         bound to this session.
         '''
+
         self.KeyPair = type('KeyPair', (BaseFunction, ), {
             **KeyPair.__dict__,
             'session': self,
@@ -348,6 +378,7 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.keypair.KeyPair` function proxy
         bound to this session.
         '''
+
         self.Manager = type('Manager', (BaseFunction, ), {
             **Manager.__dict__,
             'session': self,
@@ -356,6 +387,7 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.manager.Manager` function proxy
         bound to this session.
         '''
+
         self.Resource = type('Resource', (BaseFunction, ), {
             **Resource.__dict__,
             'session': self,
@@ -364,6 +396,7 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.resource.Resource` function proxy
         bound to this session.
         '''
+
         self.KeypairResourcePolicy = type('KeypairResourcePolicy', (BaseFunction, ), {
             **KeypairResourcePolicy.__dict__,
             'session': self,
@@ -372,6 +405,7 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.keypair_resource_policy.KeypairResourcePolicy` function proxy
         bound to this session.
         '''
+
         self.User = type('User', (BaseFunction, ), {
             **User.__dict__,
             'session': self,
@@ -380,6 +414,16 @@ class AsyncSession(BaseSession):
         The :class:`~ai.backend.client.user.User` function proxy
         bound to this session.
         '''
+
+        self.ScalingGroup = type('ScalingGroup', (BaseFunction, ), {
+            **ScalingGroup.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.scaling_group.ScalingGroup` function proxy
+        bound to this session.
+        '''
+
         self.VFolder = type('VFolder', (BaseFunction, ), {
             **VFolder.__dict__,
             'session': self,

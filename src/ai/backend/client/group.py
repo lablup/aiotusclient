@@ -2,6 +2,7 @@ import textwrap
 from typing import Iterable, Sequence
 
 from .base import api_function
+from .exceptions import BackendClientError
 from .request import Request
 
 __all__ = (
@@ -11,7 +12,7 @@ __all__ = (
 
 class Group:
     '''
-    Provides a shortcut of :func:`Admin.query()
+    Provides a shortcut of :func:`Group.query()
     <ai.backend.client.admin.Admin.query>` that fetches various group information.
 
     .. note::
@@ -35,15 +36,35 @@ class Group:
         :param fields: Additional per-group query fields to fetch.
         '''
         if fields is None:
-            fields = ('id', 'name', 'description', 'is_active', 'created_at', 'domain_name',
-                      'total_resource_slots', 'allowed_vfolder_hosts', 'integration_id')
-        query = textwrap.dedent('''\
-            query($domain_name: String, $all: Boolean) {
-                groups(domain_name: $domain_name, all: $all) {$fields}
-            }
-        ''')
-        query = query.replace('$fields', ' '.join(fields))
-        variables = {'domain_name': domain_name, 'all': list_all}
+            fields = ('id', 'name', 'description', 'is_active',
+                      'created_at', 'domain_name',
+                      'total_resource_slots', 'allowed_vfolder_hosts',
+                      'integration_id')
+        is_superadmin = False
+        rqst = Request(cls.session, 'GET', '/auth/role')
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            is_superadmin = (data['global_role'] == 'superadmin')
+        if not is_superadmin and list_all:
+            raise BackendClientError(
+                'Superadmin privilege is required '
+                'to list all groups across domains.')
+        if is_superadmin:
+            query = textwrap.dedent('''\
+                query($domain_name: String, $all: Boolean) {
+                    groups(domain_name: $domain_name, all: $all) {$fields}
+                }
+            ''')
+            query = query.replace('$fields', ' '.join(fields))
+            variables = {'domain_name': domain_name, 'all': list_all}
+        else:
+            query = textwrap.dedent('''\
+                query($domain_name: String) {
+                    groups(domain_name: $domain_name) {$fields}
+                }
+            ''')
+            query = query.replace('$fields', ' '.join(fields))
+            variables = {'domain_name': domain_name}
         rqst = Request(cls.session, 'POST', '/admin/graphql')
         rqst.set_json({
             'query': query,
