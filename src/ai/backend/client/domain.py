@@ -34,7 +34,7 @@ class Domain:
         '''
         if fields is None:
             fields = ('name', 'description', 'is_active', 'created_at',
-                      'total_resource_slots', 'allowed_vfolder_hosts',
+                      'total_resource_slots', 'allowed_vfolder_hosts', 'allowed_docker_registries',
                       'integration_id')
         query = textwrap.dedent('''\
             query {
@@ -61,7 +61,7 @@ class Domain:
         '''
         if fields is None:
             fields = ('name', 'description', 'is_active', 'created_at',
-                      'total_resource_slots', 'allowed_vfolder_hosts',
+                      'total_resource_slots', 'allowed_vfolder_hosts', 'allowed_docker_registries',
                       'integration_id',)
         query = textwrap.dedent('''\
             query($name: String) {
@@ -84,6 +84,7 @@ class Domain:
     async def create(cls, name: str, description: str = '', is_active: bool = True,
                      total_resource_slots: str = None,
                      allowed_vfolder_hosts: Iterable[str] = None,
+                     allowed_docker_registries: Iterable[str] = None,
                      integration_id: str = None,
                      fields: Iterable[str] = None) -> dict:
         '''
@@ -107,6 +108,7 @@ class Domain:
                 'is_active': is_active,
                 'total_resource_slots': total_resource_slots,
                 'allowed_vfolder_hosts': allowed_vfolder_hosts,
+                'allowed_docker_registries': allowed_docker_registries,
                 'integration_id': integration_id,
             },
         }
@@ -124,6 +126,7 @@ class Domain:
     async def update(cls, name: str, new_name: str = None, description: str = None,
                      is_active: bool = None, total_resource_slots: str = None,
                      allowed_vfolder_hosts: Iterable[str] = None,
+                     allowed_docker_registries: Iterable[str] = None,
                      integration_id: str = None,
                      fields: Iterable[str] = None) -> dict:
         '''
@@ -145,6 +148,7 @@ class Domain:
                 'is_active': is_active,
                 'total_resource_slots': total_resource_slots,
                 'allowed_vfolder_hosts': allowed_vfolder_hosts,
+                'allowed_docker_registries': allowed_docker_registries,
                 'integration_id': integration_id,
             },
         }
