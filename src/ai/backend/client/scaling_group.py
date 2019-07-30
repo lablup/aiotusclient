@@ -1,3 +1,7 @@
+import json
+import textwrap
+from typing import Iterable, Mapping, Sequence
+
 from .base import api_function
 from .request import Request
 
@@ -32,3 +36,164 @@ class ScalingGroup:
                        params={'group': group})
         async with rqst.fetch() as resp:
             return await resp.json()
+
+    @api_function
+    @classmethod
+    async def list(cls, fields: Iterable[str] = None) -> Sequence[dict]:
+        '''
+        List available scaling groups for the current user,
+        considering the user, the user's domain, and the designated user group.
+        '''
+        if fields is None:
+            fields = ('name', 'description', 'is_active',
+                      'created_at',
+                      'driver', 'driver_opts',
+                      'scheduler', 'scheduler_opts',)
+        query = textwrap.dedent('''\
+            query($is_active: Boolean) {
+                scaling_groups(is_active: $is_active) {
+                    $fields
+                }
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {'is_active': None}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['scaling_groups']
+
+    @api_function
+    @classmethod
+    async def detail(cls, name: str, fields: Iterable[str] = None) -> Sequence[dict]:
+        '''
+        Fetch information of a scaling group by name.
+
+        :param name: Name of the scaling group.
+        :param fields: Additional per-scaling-group query fields.
+        '''
+        if fields is None:
+            fields = ('name', 'description', 'is_active',
+                      'created_at',
+                      'driver', 'driver_opts',
+                      'scheduler', 'scheduler_opts',)
+        query = textwrap.dedent('''\
+            query($name: String) {
+                scaling_group(name: $name) {$fields}
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {'name': name}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['scaling_group']
+
+    @api_function
+    @classmethod
+    async def create(cls, name: str, description: str = '', is_active: bool = True,
+                     driver: str = None, driver_opts: Mapping[str, str] = None,
+                     scheduler: str = None, scheduler_opts: Mapping[str, str] = None,
+                     fields: Iterable[str] = None) -> dict:
+        '''
+        Creates a new scaling group with the given options.
+        '''
+        if fields is None:
+            fields = ('name',)
+        query = textwrap.dedent('''\
+            mutation($name: String!, $input: ScalingGroupInput!) {
+                create_scaling_group(name: $name, props: $input) {
+                    ok msg scaling_group {$fields}
+                }
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {
+            'name': name,
+            'input': {
+                'description': description,
+                'is_active': is_active,
+                'driver': driver,
+                'driver_opts': json.dumps(driver_opts),
+                'scheduler': scheduler,
+                'scheduler_opts': json.dumps(scheduler_opts),
+            },
+        }
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['create_scaling_group']
+
+    @api_function
+    @classmethod
+    async def update(cls, name: str, description: str = '', is_active: bool = True,
+                     driver: str = None, driver_opts: Mapping[str, str] = None,
+                     scheduler: str = None, scheduler_opts: Mapping[str, str] = None,
+                     fields: Iterable[str] = None) -> dict:
+        '''
+        Update existing scaling group.
+        '''
+        if fields is None:
+            fields = ('name',)
+        query = textwrap.dedent('''\
+            mutation($name: String!, $input: ModifyScalingGroupInput!) {
+                modify_scaling_group(name: $name, props: $input) {
+                    ok msg
+                }
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {
+            'name': name,
+            'input': {
+                'description': description,
+                'is_active': is_active,
+                'driver': driver,
+                'driver_opts': json.dumps(driver_opts),
+                'scheduler': scheduler,
+                'scheduler_opts': json.dumps(scheduler_opts),
+            },
+        }
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['modify_scaling_group']
+
+    @api_function
+    @classmethod
+    async def delete(cls, name: str):
+        '''
+        Deletes an existing scaling group.
+        '''
+        query = textwrap.dedent('''\
+            mutation($name: String!) {
+                delete_scaling_group(name: $name) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {'name': name}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['delete_scaling_group']
