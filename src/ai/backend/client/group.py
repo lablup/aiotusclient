@@ -26,13 +26,12 @@ class Group:
 
     @api_function
     @classmethod
-    async def list(cls, domain_name: str, list_all: bool = False,
+    async def list(cls, domain_name: str,
                    fields: Iterable[str] = None) -> Sequence[dict]:
         '''
         Fetches the list of groups.
 
         :param domain_name: Name of domain to list groups.
-        :param list_all: List all groups across all domains (superadmin only).
         :param fields: Additional per-group query fields to fetch.
         '''
         if fields is None:
@@ -40,31 +39,13 @@ class Group:
                       'created_at', 'domain_name',
                       'total_resource_slots', 'allowed_vfolder_hosts',
                       'integration_id')
-        is_superadmin = False
-        rqst = Request(cls.session, 'GET', '/auth/role')
-        async with rqst.fetch() as resp:
-            data = await resp.json()
-            is_superadmin = (data['global_role'] == 'superadmin')
-        if not is_superadmin and list_all:
-            raise BackendClientError(
-                'Superadmin privilege is required '
-                'to list all groups across domains.')
-        if is_superadmin:
-            query = textwrap.dedent('''\
-                query($domain_name: String, $all: Boolean) {
-                    groups(domain_name: $domain_name, all: $all) {$fields}
-                }
-            ''')
-            query = query.replace('$fields', ' '.join(fields))
-            variables = {'domain_name': domain_name, 'all': list_all}
-        else:
-            query = textwrap.dedent('''\
-                query($domain_name: String) {
-                    groups(domain_name: $domain_name) {$fields}
-                }
-            ''')
-            query = query.replace('$fields', ' '.join(fields))
-            variables = {'domain_name': domain_name}
+        query = textwrap.dedent('''\
+            query($domain_name: String) {
+                groups(domain_name: $domain_name) {$fields}
+            }
+        ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {'domain_name': domain_name}
         rqst = Request(cls.session, 'POST', '/admin/graphql')
         rqst.set_json({
             'query': query,

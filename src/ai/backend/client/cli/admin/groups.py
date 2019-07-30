@@ -20,10 +20,10 @@ def group(gid):
     fields = [
         ('ID', 'id'),
         ('Name', 'name'),
+        ('Domain', 'domain_name'),
         ('Description', 'description'),
         ('Active?', 'is_active'),
         ('Created At', 'created_at'),
-        ('Domain Name', 'domain_name'),
         ('Total Resource Slots', 'total_resource_slots'),
         ('Allowed vFolder Hosts', 'allowed_vfolder_hosts'),
     ]
@@ -48,9 +48,7 @@ def group(gid):
 @click.pass_context
 @click.option('-d', '--domain-name', type=str, default=None,
               help='Domain name to list groups belongs to it.')
-@click.option('-a', '--list-all', is_flag=True,
-              help='List all groups across domain (superadmin only).')
-def groups(ctx, domain_name, list_all):
+def groups(ctx, domain_name):
     '''
     List and manage groups.
     (admin privilege required)
@@ -60,16 +58,16 @@ def groups(ctx, domain_name, list_all):
     fields = [
         ('ID', 'id'),
         ('Name', 'name'),
+        ('Domain', 'domain_name'),
         ('Description', 'description'),
         ('Active?', 'is_active'),
         ('Created At', 'created_at'),
-        ('Domain Name', 'domain_name'),
         ('Total Resource Slots', 'total_resource_slots'),
         ('Allowed vFolder Hosts', 'allowed_vfolder_hosts'),
     ]
     with Session() as session:
         try:
-            resp = session.Group.list(domain_name=domain_name, list_all=list_all,
+            resp = session.Group.list(domain_name=domain_name,
                                       fields=(item[1] for item in fields))
         except Exception as e:
             print_error(e)
