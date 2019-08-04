@@ -261,7 +261,7 @@ class ScalingGroup:
         :param domain: The name of a domain.
         '''
         query = textwrap.dedent('''\
-            mutation($scaling_group: String!, $domain: String!) {
+            mutation($domain: String!) {
                 disassociate_all_scaling_groups_with_domain(domain: $domain) {
                     ok msg
                 }
