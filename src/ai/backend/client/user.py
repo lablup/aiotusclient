@@ -115,6 +115,47 @@ class User:
 
     @api_function
     @classmethod
+    async def detail_by_uuid(cls, user_uuid: str = None, fields: Iterable[str] = None) -> Sequence[dict]:
+        '''
+        Fetch information of a user by user's uuid. If user_uuid is not specified,
+        requester's information will be returned.
+
+        :param user_uuid: UUID of the user to fetch.
+        :param fields: Additional per-user query fields to fetch.
+        '''
+        if fields is None:
+            fields = ('uuid', 'username', 'email', 'need_password_change', 'is_active',
+                      'created_at', 'domain_name', 'role')
+        if user_uuid is None:
+            query = textwrap.dedent('''\
+                query {
+                    user {$fields}
+                }
+            ''')
+        else:
+            query = textwrap.dedent('''\
+                query($user_id: String) {
+                    user_from_uuid(user_id: $user_id) {$fields}
+                }
+            ''')
+        query = query.replace('$fields', ' '.join(fields))
+        variables = {'user_id': user_uuid}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        if user_uuid is None:
+            rqst.set_json({
+                'query': query,
+            })
+        else:
+            rqst.set_json({
+                'query': query,
+                'variables': variables,
+            })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['user_from_uuid']
+
+    @api_function
+    @classmethod
     async def create(cls, domain_name: str, email: str, password: str,
                      username: str = None, full_name: str = None,
                      role: str = 'user', is_active: bool = True,
