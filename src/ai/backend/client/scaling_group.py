@@ -197,3 +197,82 @@ class ScalingGroup:
         async with rqst.fetch() as resp:
             data = await resp.json()
             return data['delete_scaling_group']
+
+    @api_function
+    @classmethod
+    async def associate_domain(cls, scaling_group: str, domain: str):
+        '''
+        Associate scaling_group with domain.
+
+        :param scaling_group: The name of a scaling group.
+        :param domain: The name of a domain.
+        '''
+        query = textwrap.dedent('''\
+            mutation($scaling_group: String!, $domain: String!) {
+                associate_scaling_group_with_domain(
+                        scaling_group: $scaling_group, domain: $domain) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {'scaling_group': scaling_group, 'domain': domain}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['associate_scaling_group_with_domain']
+
+    @api_function
+    @classmethod
+    async def dissociate_domain(cls, scaling_group: str, domain: str):
+        '''
+        Dissociate scaling_group from domain.
+
+        :param scaling_group: The name of a scaling group.
+        :param domain: The name of a domain.
+        '''
+        query = textwrap.dedent('''\
+            mutation($scaling_group: String!, $domain: String!) {
+                disassociate_scaling_group_with_domain(
+                        scaling_group: $scaling_group, domain: $domain) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {'scaling_group': scaling_group, 'domain': domain}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['disassociate_scaling_group_with_domain']
+
+    @api_function
+    @classmethod
+    async def dissociate_all_domain(cls, domain: str):
+        '''
+        Dissociate all scaling_groups from domain.
+
+        :param domain: The name of a domain.
+        '''
+        query = textwrap.dedent('''\
+            mutation($scaling_group: String!, $domain: String!) {
+                disassociate_all_scaling_groups_with_domain(domain: $domain) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {'domain': domain}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['disassociate_all_scaling_groups_with_domain']

@@ -23,6 +23,7 @@ def domain(name):
         ('Created At', 'created_at'),
         ('Total Resource Slots', 'total_resource_slots'),
         ('Allowed vFolder Hosts', 'allowed_vfolder_hosts'),
+        ('Scaling Groups', 'scaling_groups'),
     ]
     with Session() as session:
         try:
@@ -54,6 +55,7 @@ def domains(ctx):
         ('Created At', 'created_at'),
         ('Total Resource Slots', 'total_resource_slots'),
         ('Allowed vFolder Hosts', 'allowed_vfolder_hosts'),
+        ('Scaling Groups', 'scaling_groups'),
     ]
     with Session() as session:
         try:

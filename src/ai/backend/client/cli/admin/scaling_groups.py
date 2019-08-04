@@ -16,7 +16,7 @@ def scaling_group(name):
     Show the information about the given scaling group.
     (superadmin privilege required)
     '''
-    fields =[
+    fields = [
         ('Name', 'name'),
         ('Description', 'description'),
         ('Active?', 'is_active'),
@@ -174,3 +174,49 @@ def delete(name):
             print_fail('Scaling group deletion has failed: {0}'.format(data['msg']))
             sys.exit(1)
         print('Scaling group is deleted: ' + name + '.')
+
+
+@scaling_groups.command()
+@click.argument('scaling_group', type=str, metavar='SCALING_GROUP')
+@click.argument('domain', type=str, metavar='DOMAIN')
+def associate_scaling_group(scaling_group, domain):
+    """
+    Associate a domain with a scaling_group.
+
+    \b
+    SCALING_GROUP: The name of a scaling group.
+    DOMAIN: The name of a domain.
+    """
+    with Session() as session:
+        try:
+            data = session.ScalingGroup.associate_domain(scaling_group, domain)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        if not data['ok']:
+            print_fail('Associating scaling group with domain failed: {0}'.format(data['msg']))
+            sys.exit(1)
+        print('Scaling group {} is assocatiated with domain {}.'.format(scaling_group, domain))
+
+
+@scaling_groups.command()
+@click.argument('scaling_group', type=str, metavar='SCALING_GROUP')
+@click.argument('domain', type=str, metavar='DOMAIN')
+def dissociate_scaling_group(scaling_group, domain):
+    """
+    Dissociate a domain from a scaling_group.
+
+    \b
+    SCALING_GROUP: The name of a scaling group.
+    DOMAIN: The name of a domain.
+    """
+    with Session() as session:
+        try:
+            data = session.ScalingGroup.dissociate_domain(scaling_group, domain)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        if not data['ok']:
+            print_fail('Dissociating scaling group from domain failed: {0}'.format(data['msg']))
+            sys.exit(1)
+        print('Scaling group {} is dissociated from domain {}.'.format(scaling_group, domain))

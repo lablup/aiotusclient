@@ -86,7 +86,6 @@ class Domain:
                      allowed_vfolder_hosts: Iterable[str] = None,
                      allowed_docker_registries: Iterable[str] = None,
                      integration_id: str = None,
-                     scaling_groups: Iterable[str] = None,
                      fields: Iterable[str] = None) -> dict:
         '''
         Creates a new domain with the given options.
@@ -111,7 +110,6 @@ class Domain:
                 'allowed_vfolder_hosts': allowed_vfolder_hosts,
                 'allowed_docker_registries': allowed_docker_registries,
                 'integration_id': integration_id,
-                'scaling_groups': scaling_groups,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')
@@ -130,7 +128,6 @@ class Domain:
                      allowed_vfolder_hosts: Iterable[str] = None,
                      allowed_docker_registries: Iterable[str] = None,
                      integration_id: str = None,
-                     scaling_groups: Iterable[str] = None,
                      fields: Iterable[str] = None) -> dict:
         '''
         Update existing domain.
@@ -153,7 +150,6 @@ class Domain:
                 'allowed_vfolder_hosts': allowed_vfolder_hosts,
                 'allowed_docker_registries': allowed_docker_registries,
                 'integration_id': integration_id,
-                'scaling_groups': scaling_groups,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')
