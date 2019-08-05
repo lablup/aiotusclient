@@ -263,31 +263,41 @@ def _prepare_mount_arg(mount):
 
 
 @main.command()
-@click.argument('lang', type=str)
+@click.argument('image', type=str)
 @click.argument('files', nargs=-1, type=click.Path())
 @click.option('-t', '--session-id', '--client-token', metavar='SESSID',
               help='Specify a human-readable session ID or name. '
                    'If not set, a random hex string is used.')
-@click.option('--cluster-size', metavar='NUMBER', type=int, default=1,
-              help='The size of cluster in number of containers.')
+# query-mode options
 @click.option('-c', '--code', metavar='CODE',
               help='The code snippet as a single string')
+@click.option('--terminal', is_flag=True,
+              help='Connect to the terminal-type kernel.')
+# batch-mode options
 @click.option('--clean', metavar='CMD',
               help='Custom shell command for cleaning up the base directory')
 @click.option('--build', metavar='CMD',
               help='Custom shell command for building the given files')
 @click.option('--exec', metavar='CMD',
               help='Custom shell command for executing the given files')
-@click.option('--terminal', is_flag=True,
-              help='Connect to the terminal-type kernel.')
 @click.option('--basedir', metavar='PATH', type=click.Path(), default=None,
               help='Base directory path of uploaded files. '
                    'All uploaded files must reside inside this directory.')
+# execution environment
+@click.option('-e', '--env', metavar='KEY=VAL', type=str, multiple=True,
+              help='Environment variable (may appear multiple times)')
+# extra options
 @click.option('--rm', is_flag=True,
               help='Terminate the session immediately after running '
                    'the given code or files')
-@click.option('-e', '--env', metavar='KEY=VAL', type=str, multiple=True,
-              help='Environment variable (may appear multiple times)')
+@click.option('-s', '--stats', is_flag=True,
+              help='Show resource usage statistics after termination '
+                   '(only works if "--rm" is given)')
+@click.option('--tag', type=str, default=None,
+              help='User-defined tag string to annotate sessions.')
+@click.option('-q', '--quiet', is_flag=True,
+              help='Hide execution details but show only the kernel outputs.')
+# experiment support
 @click.option('--env-range', metavar='RANGE_EXPR', multiple=True,
               type=range_expr, help='Range expression for environment variable.')
 @click.option('--build-range', metavar='RANGE_EXPR', multiple=True,
@@ -296,37 +306,39 @@ def _prepare_mount_arg(mount):
               help='Range expression for execution arguments.')
 @click.option('--max-parallel', metavar='NUM', type=int, default=2,
               help='The maximum number of parallel sessions.')
+# resource spec
 @click.option('-m', '--mount', type=str, multiple=True,
               help='User-owned virtual folder names to mount')
-@click.option('-s', '--stats', is_flag=True,
-              help='Show resource usage statistics after termination '
-                   '(only works if "--rm" is given)')
-@click.option('--tag', type=str, default=None,
-              help='User-defined tag string to annotate sessions.')
-@click.option('-r', '--resources', metavar='KEY=VAL', type=str, multiple=True,
+@click.option('--scaling-group', '--sgroup', type=str, default=None,
+              help='The scaling group to execute session. If not specified, '
+                   'all available scaling groups are included in the scheduling.')
+@click.option('-r', '--resources', '--resource', metavar='KEY=VAL', type=str, multiple=True,
               help='Set computation resources '
                    '(e.g: -r cpu=2 -r mem=256 -r cuda.device=1)')
-@click.option('-q', '--quiet', is_flag=True,
-              help='Hide execution details but show only the kernel outputs.')
+@click.option('--cluster-size', metavar='NUMBER', type=int, default=1,
+              help='The size of cluster in number of containers.')
+# resource grouping
 @click.option('-d', '--domain', metavar='DOMAIN_NAME', default=None,
               help='Domain name where the session will be spawned. '
                    'If not specified, config\'s domain name will be used.')
 @click.option('-g', '--group', metavar='GROUP_NAME', default=None,
               help='Group name where the session is spawned. '
                    'User should be a member of the group to execute the code.')
-# @click.option('--legacy', is_flag=True,
-#               help='Use the legacy synchronous polling mode to '
-#                    'fetch console outputs.')
-def run(lang, files, session_id, cluster_size, code, clean, build, exec, terminal,
-        basedir, rm, env, env_range, build_range, exec_range, max_parallel, mount,
-        stats, tag, resources, quiet, domain, group):
+def run(image, files, session_id,                          # base args
+        code, terminal,                                    # query-mode options
+        clean, build, exec, basedir,                       # batch-mode options
+        env,                                               # execution environment
+        rm, stats, tag, quiet,                             # extra options
+        env_range, build_range, exec_range, max_parallel,  # experiment support
+        mount, scaling_group, resources, cluster_size,     # resource spec
+        domain, group):                                    # resource grouping
     '''
     Run the given code snippet or files in a session.
     Depending on the session ID you give (default is random),
     it may reuse an existing session or create a new one.
 
     \b
-    LANG: The name (and version/platform tags appended after a colon) of session
+    IMAGE: The name (and version/platform tags appended after a colon) of session
           runtime or programming language.')
     FILES: The code file(s). Can be added multiple times.
     '''
@@ -406,7 +418,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                     clean_cmd, build_cmd, exec_cmd):
         try:
             kernel = session.Kernel.get_or_create(
-                lang,
+                image,
                 client_token=session_id,
                 cluster_size=cluster_size,
                 mounts=mount,
@@ -414,6 +426,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 resources=resources,
                 domain_name=domain,
                 group_name=group,
+                scaling_group=scaling_group,
                 tag=tag)
         except Exception as e:
             print_error(e)
@@ -474,7 +487,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                    is_multi=False):
         try:
             kernel = await session.Kernel.get_or_create(
-                lang,
+                image,
                 client_token=session_id,
                 cluster_size=cluster_size,
                 mounts=mount,
@@ -482,6 +495,7 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                 resources=resources,
                 domain_name=domain,
                 group_name=group,
+                scaling_group=scaling_group,
                 tag=tag)
         except BackendError as e:
             print_fail('[{0}] {1}'.format(idx, e))
@@ -638,18 +652,24 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
 
 
 @main.command()
-@click.argument('lang')
+@click.argument('image')
 @click.option('-t', '--session-id', '--client-token', metavar='SESSID',
               help='Specify a human-readable session ID or name. '
                    'If not set, a random hex string is used.')
 @click.option('-o', '--owner', '--owner-access-key', metavar='ACCESS_KEY',
               help='Set the owner of the target session explicitly.')
+# execution environment
 @click.option('-e', '--env', metavar='KEY=VAL', type=str, multiple=True,
               help='Environment variable (may appear multiple times)')
-@click.option('-m', '--mount', type=str, multiple=True,
-              help='User-owned virtual folder names to mount')
+# extra options
 @click.option('--tag', type=str, default=None,
               help='User-defined tag string to annotate sessions.')
+# resource spec
+@click.option('-m', '--mount', type=str, multiple=True,
+              help='User-owned virtual folder names to mount')
+@click.option('--scaling-group', '--sgroup', type=str, default=None,
+              help='The scaling group to execute session. If not specified, '
+                   'all available scaling groups are included in the scheduling.')
 @click.option('-r', '--resources', metavar='KEY=VAL', type=str, multiple=True,
               help='Set computation resources used by the session '
                    '(e.g: -r cpu=2 -r mem=256 -r gpu=1).'
@@ -657,14 +677,18 @@ def run(lang, files, session_id, cluster_size, code, clean, build, exec, termina
                    'The unit of mem(ory) is MiB.')
 @click.option('--cluster-size', metavar='NUMBER', type=int, default=1,
               help='The size of cluster in number of containers.')
+# resource grouping
 @click.option('-d', '--domain', metavar='DOMAIN_NAME', default=None,
               help='Domain name where the session will be spawned. '
                    'If not specified, config\'s domain name will be used.')
 @click.option('-g', '--group', metavar='GROUP_NAME', default=None,
               help='Group name where the session is spawned. '
                    'User should be a member of the group to execute the code.')
-def start(lang, session_id, owner, env, mount, tag, resources, cluster_size,
-          domain, group):
+def start(image, session_id, owner,                        # base args
+          env,                                            # execution environment
+          tag,                                            # extra options
+          mount, scaling_group, resources, cluster_size,  # resource spec
+          domain, group):                                 # resource grouping
     '''
     Prepare and start a single compute session without executing codes.
     You may use the created session to execute codes using the "run" command
@@ -673,8 +697,8 @@ def start(lang, session_id, owner, env, mount, tag, resources, cluster_size,
 
 
     \b
-    LANG: The name (and version/platform tags appended after a colon) of session
-          runtime or programming language.
+    IMAGE: The name (and version/platform tags appended after a colon) of session
+           runtime or programming language.
     '''
     if session_id is None:
         session_id = token_hex(5)
@@ -688,7 +712,7 @@ def start(lang, session_id, owner, env, mount, tag, resources, cluster_size,
     with Session() as session:
         try:
             kernel = session.Kernel.get_or_create(
-                lang,
+                image,
                 client_token=session_id,
                 cluster_size=cluster_size,
                 mounts=mount,
@@ -697,6 +721,7 @@ def start(lang, session_id, owner, env, mount, tag, resources, cluster_size,
                 owner_access_key=owner,
                 domain_name=domain,
                 group_name=group,
+                scaling_group=scaling_group,
                 tag=tag)
         except Exception as e:
             print_error(e)

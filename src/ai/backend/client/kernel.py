@@ -57,6 +57,7 @@ class Kernel:
                             domain_name: str = None,
                             group_name: str = None,
                             tag: str = None,
+                            scaling_group: str = None,
                             owner_access_key: str = None) -> 'Kernel':
         '''
         Get-or-creates a compute session.
@@ -112,6 +113,7 @@ class Kernel:
                 'environ': envs,
                 'clusterSize': cluster_size,
                 'resources': resources,
+                'scalingGroup': scaling_group,
             },
         })
         async with rqst.fetch() as resp:
