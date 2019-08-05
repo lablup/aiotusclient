@@ -85,3 +85,31 @@ class Resource:
         rqst = Request(cls.session, 'GET', '/config/resource-slots')
         async with rqst.fetch() as resp:
             return await resp.json()
+
+    @api_function
+    @classmethod
+    async def get_vfolder_types(cls):
+        rqst = Request(cls.session, 'GET', '/config/vfolder-types')
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
+    @classmethod
+    async def recalculate_usage(cls):
+        rqst = Request(cls.session, 'POST', '/resource/recalculate-usage')
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
+    @classmethod
+    async def user_monthly_stats(cls):
+        rqst = Request(cls.session, 'GET', '/resource/stats/user/month')
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
+    @classmethod
+    async def admin_monthly_stats(cls):
+        rqst = Request(cls.session, 'GET', '/resource/stats/admin/month')
+        async with rqst.fetch() as resp:
+            return await resp.json()
