@@ -1,6 +1,11 @@
 Changes
 =======
 
+19.09.0b3 (2019-08-05)
+----------------------
+ - Add support for scaling groups to both the API functions and the CLI.
+
+
 19.06.0b2 (2019-07-24)
 ----------------------
 
