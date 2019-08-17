@@ -85,6 +85,7 @@ class APIConfig:
 
     DEFAULTS = {
         'endpoint': 'https://api.backend.ai',
+        'endpoint_type': 'api',
         'version': 'v4.20190315',
         'hash_type': 'sha256',
         'domain': 'default',
@@ -96,6 +97,7 @@ class APIConfig:
 
     def __init__(self, *,
                  endpoint: Union[URL, str] = None,
+                 endpoint_type: str = None,
                  domain: str = None,
                  group: str = None,
                  version: str = None,
@@ -109,12 +111,20 @@ class APIConfig:
         self._endpoint = (
             _clean_url(endpoint) if endpoint else
             get_env('ENDPOINT', self.DEFAULTS['endpoint'], clean=_clean_url))
+        self._endpoint_type = endpoint_type if endpoint_type \
+                              else get_env('ENDPOINT_TYPE', self.DEFAULTS['endpoint_type'])
         self._domain = domain if domain else get_env('DOMAIN', self.DEFAULTS['domain'])
         self._group = group if group else get_env('GROUP', self.DEFAULTS['group'])
         self._version = version if version else self.DEFAULTS['version']
         self._user_agent = user_agent if user_agent else get_user_agent()
-        self._access_key = access_key if access_key is not None else get_env('ACCESS_KEY', '')
-        self._secret_key = secret_key if secret_key is not None else get_env('SECRET_KEY', '')
+        if self._endpoint_type == 'api':
+            self._access_key = access_key if access_key is not None \
+                               else get_env('ACCESS_KEY', '')
+            self._secret_key = secret_key if secret_key is not None \
+                               else get_env('SECRET_KEY', '')
+        else:
+            self._access_key = 'dummy'
+            self._secret_key = 'dummy'
         self._hash_type = hash_type.lower() if hash_type else \
                           self.DEFAULTS['hash_type']
         arg_vfolders = set(vfolder_mounts) if vfolder_mounts else set()
@@ -133,6 +143,11 @@ class APIConfig:
     def endpoint(self) -> URL:
         '''The configured endpoint URL prefix.'''
         return self._endpoint
+
+    @property
+    def endpoint_type(self) -> str:
+        '''The configured endpoint URL prefix.'''
+        return self._endpoint_type
 
     @property
     def domain(self) -> str:
