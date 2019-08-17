@@ -213,7 +213,7 @@ class Request:
         query_path = self.path.lstrip('/') if len(self.path) > 0 else ''
         if self.config.endpoint_type == 'session':
             if not query_path.startswith('server'):
-                query_path = f'func/{query_path}'
+                query_path = 'func/{0}'.format(query_path)
         path = '{0}/{1}'.format(base_url, query_path)
         url = self.config.endpoint.with_path(path)
         if self.params:
