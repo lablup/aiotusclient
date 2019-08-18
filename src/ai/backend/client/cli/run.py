@@ -41,7 +41,7 @@ def drange(start: Decimal, stop: Decimal, num: int):
     yield from (start + step * Decimal(tick) for tick in range(0, num))
 
 
-def range_expr(arg):
+class RangeExprOptionType(click.ParamType):
     '''
     Accepts a range expression which generates a range of values for a variable.
 
@@ -49,21 +49,28 @@ def range_expr(arg):
     Pythonic range: "range:1,10,2" (start, stop[, step]) as in Python's range
     Case range: "case:a,b,c" (comma-separated strings)
     '''
-    key, value = arg.split('=', maxsplit=1)
-    assert _rx_range_key.match(key), 'The key must be a valid slug string.'
-    try:
-        if value.startswith('case:'):
-            return key, value[5:].split(',')
-        elif value.startswith('linspace:'):
-            start, stop, num = value[9:].split(',')
-            return key, tuple(drange(Decimal(start), Decimal(stop), int(num)))
-        elif value.startswith('range:'):
-            range_args = map(int, value[6:].split(','))
-            return key, tuple(range(*range_args))
-        else:
-            raise ArgumentTypeError('Unrecognized range expression type')
-    except ValueError as e:
-        raise ArgumentTypeError(str(e))
+
+    name = 'Range Expression'
+
+    def convert(self, arg, param, ctx):
+        key, value = arg.split('=', maxsplit=1)
+        assert _rx_range_key.match(key), 'The key must be a valid slug string.'
+        try:
+            if value.startswith('case:'):
+                return key, value[5:].split(',')
+            elif value.startswith('linspace:'):
+                start, stop, num = value[9:].split(',')
+                return key, tuple(drange(Decimal(start), Decimal(stop), int(num)))
+            elif value.startswith('range:'):
+                range_args = map(int, value[6:].split(','))
+                return key, tuple(range(*range_args))
+            else:
+                self.fail('Unrecognized range expression type', param, ctx)
+        except ValueError as e:
+            self.fail(str(e), param, ctx)
+
+
+range_expr = RangeExprOptionType()
 
 
 async def exec_loop(stdout, stderr, kernel, mode, code, *, opts=None,
@@ -649,7 +656,6 @@ def run(image, files, session_id,                          # base args
                 loop.close()
     except Exception as e:
         print_fail('{0}'.format(e))
-        return
 
 
 @main.command()
