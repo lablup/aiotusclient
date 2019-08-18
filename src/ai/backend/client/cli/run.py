@@ -497,9 +497,6 @@ def run(image, files, session_id,                          # base args
                 group_name=group,
                 scaling_group=scaling_group,
                 tag=tag)
-        except BackendError as e:
-            print_fail('[{0}] {1}'.format(idx, e))
-            return
         except Exception as e:
             print_fail('[{0}] {1}'.format(idx, e))
             return
@@ -641,14 +638,18 @@ def run(image, files, session_id,                          # base args
                     print_fail('There were failed cases!')
                 sys.exit(1)
 
-    if is_legacy_server():
-        _run_cases_legacy()
-    else:
-        loop = asyncio.get_event_loop()
-        try:
-            loop.run_until_complete(_run_cases())
-        finally:
-            loop.close()
+    try:
+        if is_legacy_server():
+            _run_cases_legacy()
+        else:
+            loop = asyncio.get_event_loop()
+            try:
+                loop.run_until_complete(_run_cases())
+            finally:
+                loop.close()
+    except Exception as e:
+        print_fail('{0}'.format(e))
+        return
 
 
 @main.command()
