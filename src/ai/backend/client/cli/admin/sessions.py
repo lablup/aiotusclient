@@ -175,8 +175,8 @@ def session(sess_id_or_alias):
     ]
     if is_legacy_server():
         del fields[3]
-    q = 'query($sess_id:String) {' \
-        '  compute_session(sess_id:$sess_id) { $fields }' \
+    q = 'query($sess_id: String!) {' \
+        '  compute_session(sess_id: $sess_id) { $fields }' \
         '}'
     q = q.replace('$fields', ' '.join(item[1] for item in fields))
     v = {'sess_id': sess_id_or_alias}
