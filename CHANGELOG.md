@@ -1,8 +1,26 @@
 Changes
 =======
 
+19.09.0b4 (2019-08-21)
+----------------------
+
+ - NEW: Support for console server proxies with username/password-based session logins. (#63)
+   Set `BACKEND_ENDPOINT_TYPE=session` to enable this mode.
+   (`backend.ai login` \& `backend.ai logout` commands are now available for this)
+
+ - NEW: Commands for agent watcher controls (#62)
+
+ - FIX: Regression of the range expression support in `backend.ai run` command
+
+ - Now user-specific state (e.g., cookies for session-based login) and cache (e.g., output logs for
+   paralell execution when using range expressions) are stored platform-specific directories,
+   such as `~/.cache/backend.ai` (Linux), `~/Application Support/backend.ai` (MacOS), or
+   `%HOME%\AppData\Local\Lablup\backend.ai` (Windows). (#65)
+
+
 19.09.0b3 (2019-08-05)
 ----------------------
+
  - Add support for scaling groups to both the API functions and the CLI.
 
 
