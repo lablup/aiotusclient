@@ -77,8 +77,7 @@ Set ``BACKEND_ENDPOINT_TYPE`` to "session" and set the endpoint to the URL of yo
    Password:
    ✔ Login succeeded!
 
-   $ backend.ai ...
-   # just run any command
+   $ backend.ai ...  # run any command
 
    $ backend.ai logout
    ✔ Logout done.
@@ -151,7 +150,8 @@ Highlight: ``start`` and ``app`` command
 ``backend.ai start`` is simliar to the ``run`` command in that it creates a new compute session,
 but it does not execute anything there.
 You can subsequently call ``backend.ai run -t <sessionId> ...`` to execute codes snippets
-or connect to a container service such as Jupyter which runs inside the compute session.
+or use ``backend.ai app`` command to start a local proxy to a container service such as Jupyter which
+runs inside the compute session.
 
 .. code-block:: console
 
