@@ -1,6 +1,11 @@
 Changes
 =======
 
+19.09.0b5 (2019-08-21)
+----------------------
+
+ - FIX: Regression of ``backend.ai admin session`` command
+
 19.09.0b4 (2019-08-21)
 ----------------------
 
