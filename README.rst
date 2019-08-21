@@ -28,8 +28,8 @@ Backend.AI Client
 The official API client library for `Backend.AI <https://backend.ai>`_
 
 
-Usage
------
+Usage (KeyPair mode)
+--------------------
 
 You should set the access key and secret key as environment variables to use the API.
 Grab your keypair from `cloud.backend.ai <https://cloud.backend.ai>`_ or your cluster
@@ -43,6 +43,7 @@ the ``backend.ai`` command:
    export BACKEND_ACCESS_KEY=...
    export BACKEND_SECRET_KEY=...
    export BACKEND_ENDPOINT=https://my-precious-cluster
+   export BACKEND_ENDPOINT_TYPE=api
 
 On Windows, create a batch file as ``my-backend-ai.bat`` and run it before using
 the ``backend.ai`` command:
@@ -59,15 +60,43 @@ Note that it switches to the UTF-8 codepage for correct display of
 special characters used in the console logs.
 
 
+Usage (Session mode)
+--------------------
+
+Set ``BACKEND_ENDPOINT_TYPE`` to "session" and set the endpoint to the URL of your console server.
+
+.. code-block:: sh
+
+   export BACKEND_ENDPOINT=https://my-precious-cluster
+   export BACKEND_ENDPOINT_TYPE=session
+
+.. code-block:: console
+
+   $ backend.ai login
+   User ID: myid@mydomain.com
+   Password:
+   ✔ Login succeeded!
+
+   $ backend.ai ...
+   # just run any command
+
+   $ backend.ai logout
+   ✔ Logout done.
+
+The session expiration timeout is set by the console server.
+
+
 Command-line Interface
 ----------------------
 
 ``backend.ai`` command is the entry point of all sub commands.
-(Alternatively you can use a verbosely long version: ``python -m
-ai.backend.client.cli``)
+(Alternatively you can use a verbosely long version: ``python -m ai.backend.client.cli``)
 
 Highlight: ``run`` command
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``run`` command execute a code snippet or code source files on a Backend.AI compute session
+created on-the-fly.
 
 To run the code specified in the command line directly,
 use ``-c`` option to pass the code string (like a shell).
@@ -116,18 +145,25 @@ them.  The below is a simple example to run `a sample C program
 
 Please refer the ``--help`` manual provided by the ``run`` command.
 
-You may use a shortcut command ``lcc`` and ``lpython`` instead of typing the full
-Python module path like:
+Highlight: ``start`` and ``app`` command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``backend.ai start`` is simliar to the ``run`` command in that it creates a new compute session,
+but it does not execute anything there.
+You can subsequently call ``backend.ai run -t <sessionId> ...`` to execute codes snippets
+or connect to a container service such as Jupyter which runs inside the compute session.
 
 .. code-block:: console
 
-   $ lcc main.c mylib.c mylib.h
+   $ backend.ai start -t mysess -r cpu=1 -r mem=2g lablup/python:3.6-ubuntu18.04
+   ∙ Session ID mysess is created and ready.
+   ∙ This session provides the following app services: ipython, jupyter, jupyterlab
+   $ backend.ai app mysess jupyter
+   ∙ A local proxy to the application "jupyter" provided by the session "mysess" is available at: http://127.0.0.1:8080
 
-Since the client version 1.1.5, the sessions are no longer automatically cleaned up.
-To do that, add ``--rm`` option to the ``run`` command, like Docker CLI.
 
-Highlight: ``ps`` and ``terminate`` command
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Highlight: ``ps`` and ``rm`` command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can see the list of currently running sessions using your API keypair.
 
@@ -146,7 +182,7 @@ To terminate a session, you can use ``terminate`` or ``rm`` command.
 
 .. code-block:: console
 
-   $ backend.ai terminate 5baafb2136029228ca9d873e1f2b4f6a
+   $ backend.ai rm 5baafb2136029228ca9d873e1f2b4f6a
    ✔ Done.
 
 Highlight: ``proxy`` command

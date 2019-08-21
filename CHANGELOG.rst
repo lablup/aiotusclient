@@ -5,17 +5,17 @@ Changes
 ----------------------
 
  - NEW: Support for console server proxies with username/password-based session logins. (#63)
-   Set `BACKEND_ENDPOINT_TYPE=session` to enable this mode.
-   (`backend.ai login` \& `backend.ai logout` commands are now available for this)
+   Set ``BACKEND_ENDPOINT_TYPE=session`` to enable this mode.
+   (``backend.ai login`` \& ``backend.ai logout`` commands are now available for this)
 
  - NEW: Commands for agent watcher controls (#62)
 
- - FIX: Regression of the range expression support in `backend.ai run` command
+ - FIX: Regression of the range expression support in ``backend.ai run`` command
 
  - Now user-specific state (e.g., cookies for session-based login) and cache (e.g., output logs for
    paralell execution when using range expressions) are stored platform-specific directories,
-   such as `~/.cache/backend.ai` (Linux), `~/Application Support/backend.ai` (MacOS), or
-   `%HOME%\AppData\Local\Lablup\backend.ai` (Windows). (#65)
+   such as ``~/.cache/backend.ai`` (Linux), ``~/Application Support/backend.ai`` (MacOS), or
+   ``%HOME%\AppData\Local\Lablup\backend.ai`` (Windows). (#65)
 
 
 19.09.0b3 (2019-08-05)
@@ -92,10 +92,10 @@ Changes
 19.03.0b3 (2019-02-08)
 ----------------------
 
- - NEW: `--skip-sslcert-validation` CLI option.
+ - NEW: ``--skip-sslcert-validation`` CLI option.
 
- - Minor CLI updates: Add `cpu_using` field to "admin agents" statistics
-   and `size_bytes` field to the "admin image" result.
+ - Minor CLI updates: Add ``cpu_using`` field to "admin agents" statistics
+   and ``size_bytes`` field to the "admin image" result.
 
 19.03.0b2 (2019-01-30)
 ----------------------
@@ -197,18 +197,18 @@ Changes
 1.4.1 (2018-10-30)
 ------------------
 
- - Hotfix for regression in `Kernel.stream_pty()` method.
+ - Hotfix for regression in ``Kernel.stream_pty()`` method.
 
 1.4.0 (2018-09-23)
 ------------------
 
  - Support download and deletion of virtual folder files.
-   Check `backend.ai vfolder --help` for new commands!
+   Check ``backend.ai vfolder --help`` for new commands!
 
  - Allow customization of keypairs when creating new one via extra arguments.
-   See `backend.ai admin keypairs add --help` for available options.
+   See ``backend.ai admin keypairs add --help`` for available options.
 
- - Accept both integer and string values in `-u` / `--user` arguments for
+ - Accept both integer and string values in ``-u`` / ``--user`` arguments for
    Backend.AI v1.4+ forward compatibility.
 
 1.3.7 (2018-06-19)
@@ -229,7 +229,7 @@ Changes
  - Fix installation warnings about aiohttp/async_timeout/attrs version mismatch
    with the new pip 10 series.
 
-   NOTE: A workaround is to add `--upgrade-strategy=eager` option to `pip install`
+   NOTE: A workaround is to add ``--upgrade-strategy=eager`` option to ``pip install``
    command.
 
 1.3.4 (2018-04-08)
@@ -240,7 +240,7 @@ Changes
  - Drop dependency to requests and use aiohttp all the time, in favor of
    better streaming request/response handling for large files.
    Synchronous APIs will implicitly spawn event loops if not already there,
-   via `asyncio.get_event_loop()`.  You may also pass a loop object explicitly.
+   via ``asyncio.get_event_loop()``.  You may also pass a loop object explicitly.
 
  - Remove default timeout (10 secs) in asynchronous requests, to allow
    large file uploads that takes longer than that.
@@ -389,15 +389,15 @@ Changes
 
  - Now it uses "api.backend.ai" as the default endpoint.
 
- - It also searches `BACKEND_`-prefixed environment variables first and then
-   falls back to `SORNA_`-prefixed environment variables as legacy.
+ - It also searches ``BACKEND_``-prefixed environment variables first and then
+   falls back to ``SORNA_``-prefixed environment variables as legacy.
 
 1.0.5 (2017-11-02)
 ------------------
 
 **CHANGE**
 
- - Remove `simplejson` from our dependencies.
+ - Remove ``simplejson`` from our dependencies.
 
 1.0.4 (2017-10-31)
 ------------------
@@ -491,14 +491,14 @@ Changes
 
 **CHANGES**
 
- - The `run` command now prints the build status in the batch mode.
+ - The ``run`` command now prints the build status in the batch mode.
 
 0.9.3 (2017-06-29)
 ------------------
 
 **NEW**
 
- - The command-line interface.  Try `python -m sorna.cli run` command.
+ - The command-line interface.  Try ``python -m sorna.cli run`` command.
 
  - It supports the batch-mode API with source file uploads.
 
