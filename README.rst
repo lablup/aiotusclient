@@ -55,15 +55,16 @@ the ``backend.ai`` command:
    set BACKEND_ACCESS_KEY=...
    set BACKEND_SECRET_KEY=...
    set BACKEND_ENDPOINT=https://my-precious-cluster
+   set BACKEND_ENDPOINT_TYPE=api
 
-Note that it switches to the UTF-8 codepage for correct display of
+Note that you need to switch to the UTF-8 codepage for correct display of
 special characters used in the console logs.
 
 
 Usage (Session mode)
 --------------------
 
-Set ``BACKEND_ENDPOINT_TYPE`` to "session" and set the endpoint to the URL of your console server.
+Change ``BACKEND_ENDPOINT_TYPE`` to "session" and set the endpoint to the URL of your console server.
 
 .. code-block:: sh
 
