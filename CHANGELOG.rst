@@ -1,6 +1,11 @@
 Changes
 =======
 
+19.09.0b6 (2019-08-27)
+----------------------
+
+ - NEW: Add ``--allowed-docker-registries`` option to ``backend.ai admin domain add`` command
+
 19.09.0b5 (2019-08-21)
 ----------------------
 
