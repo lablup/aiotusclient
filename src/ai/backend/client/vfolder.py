@@ -235,16 +235,23 @@ class VFolder:
 
     @api_function
     @classmethod
-    async def mount_host(cls, name: str, fs_location: str):
+    async def mount_host(cls, name: str, fs_location: str, edit_fstab: bool = False):
         rqst = Request(cls.session, 'POST', '/folders/_/mounts')
-        rqst.set_json({'name': name, 'fs_location': fs_location})
+        rqst.set_json({
+            'name': name,
+            'fs_location': fs_location,
+            'edit_fstab': edit_fstab,
+        })
         async with rqst.fetch() as resp:
             return await resp.json()
 
     @api_function
     @classmethod
-    async def umount_host(cls, name: str):
+    async def umount_host(cls, name: str, edit_fstab: bool = False):
         rqst = Request(cls.session, 'DELETE', '/folders/_/mounts')
-        rqst.set_json({'name': name})
+        rqst.set_json({
+            'name': name,
+            'edit_fstab': edit_fstab,
+        })
         async with rqst.fetch() as resp:
             return await resp.json()
