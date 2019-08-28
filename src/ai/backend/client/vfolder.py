@@ -225,3 +225,26 @@ class VFolder:
         rqst.set_json({'inv_id': inv_id})
         async with rqst.fetch() as resp:
             return await resp.json()
+
+    @api_function
+    @classmethod
+    async def list_mounts(cls):
+        rqst = Request(cls.session, 'GET', '/folders/_/mounts')
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
+    @classmethod
+    async def mount_host(cls, name: str, fs_location: str):
+        rqst = Request(cls.session, 'POST', '/folders/_/mounts')
+        rqst.set_json({'name': name, 'fs_location': fs_location})
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
+    @classmethod
+    async def umount_host(cls, name: str):
+        rqst = Request(cls.session, 'DELETE', '/folders/_/mounts')
+        rqst.set_json({'name': name})
+        async with rqst.fetch() as resp:
+            return await resp.json()

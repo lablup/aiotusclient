@@ -8,14 +8,18 @@ from ...session import Session
 from ..pretty import print_error
 
 
-@admin.command()
+@admin.group(invoke_without_command=True)
+@click.pass_context
 @click.option('--access-key', type=str, default=None,
               help='Get vfolders for the given access key '
                    '(only works if you are a super-admin)')
-def vfolders(access_key):
+def vfolders(ctx, access_key):
     '''
     List and manage virtual folders.
     '''
+    if ctx.invoked_subcommand is not None:
+        return
+
     fields = [
         ('Name', 'name'),
         ('Created At', 'created_at'),
@@ -37,3 +41,79 @@ def vfolders(access_key):
             sys.exit(1)
         print(tabulate((item.values() for item in resp['vfolders']),
                        headers=(item[0] for item in fields)))
+
+
+@vfolders.command()
+def list_mounts():
+    '''
+    List all mounted hosts in virtual folder root.
+    (superadmin privilege required)
+    '''
+    with Session() as session:
+        try:
+            resp = session.VFolder.list_mounts()
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        print('manager')
+        for k, v in resp['manager'].items():
+            print(' ', k, ':', v)
+        print('\nagents')
+        for aid, data in resp['agents'].items():
+            print(' ', aid)
+            for k, v in data.items():
+                print('   ', k, ':', v)
+
+
+@vfolders.command()
+@click.argument('fs-location', type=str)
+@click.argument('name', type=str)
+def mount_host(fs_location, name):
+    '''
+    Mount a host in virtual folder root.
+    (superadmin privilege required)
+
+    \b
+    FS-LOCATION: Location of file system to be mounted.
+    NAME: Name of mounted host.
+    '''
+    with Session() as session:
+        try:
+            resp = session.VFolder.mount_host(name, fs_location)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        print('manager')
+        for k, v in resp['manager'].items():
+            print(' ', k, ':', v)
+        print('agents')
+        for aid, data in resp['agents'].items():
+            print(' ', aid)
+            for k, v in data.items():
+                print('   ', k, ':', v)
+
+
+@vfolders.command()
+@click.argument('name', type=str)
+def umount_host(name):
+    '''
+    Unmount a host from virtual folder root.
+    (superadmin privilege required)
+
+    \b
+    NAME: Name of mounted host.
+    '''
+    with Session() as session:
+        try:
+            resp = session.VFolder.umount_host(name)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        print('manager')
+        for k, v in resp['manager'].items():
+            print(' ', k, ':', v)
+        print('agents')
+        for aid, data in resp['agents'].items():
+            print(' ', aid)
+            for k, v in data.items():
+                print('   ', k, ':', v)
