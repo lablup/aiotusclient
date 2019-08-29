@@ -1,6 +1,13 @@
 Changes
 =======
 
+19.09.0b7 (2019-08-30)
+----------------------
+
+ - NEW: Add vfolder host/mount admin commands under ``backend.ai admin vfolders``
+
+ - FIX: Clean up output of ``backend.ai ls``
+
 19.09.0b6 (2019-08-27)
 ----------------------
 
