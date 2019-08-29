@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 
 import click
+from humanize import naturalsize
 from tabulate import tabulate
 
 from . import main
@@ -85,14 +86,14 @@ def ls(sess_id_or_alias, path):
 
             files = json.loads(result['files'])
             table = []
-            headers = ['file name', 'size', 'modified', 'mode']
+            headers = ['File name', 'Size', 'Modified', 'Mode']
             for file in files:
                 mdt = datetime.fromtimestamp(file['mtime'])
+                fsize = naturalsize(file['size'], binary=True)
                 mtime = mdt.strftime('%b %d %Y %H:%M:%S')
-                row = [file['filename'], file['size'], mtime, file['mode']]
+                row = [file['filename'], fsize, mtime, file['mode']]
                 table.append(row)
             print_done('Retrived.')
-            print('Path in container:', result['abspath'], end='')
             print(tabulate(table, headers=headers))
         except Exception as e:
             print_error(e)
