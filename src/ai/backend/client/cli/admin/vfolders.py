@@ -44,6 +44,25 @@ def vfolders(ctx, access_key):
 
 
 @vfolders.command()
+@click.option('-a', '--agent-id', type=str, default=None,
+              help='Target agent to fetch fstab contents.')
+def get_fstab_contents(agent_id):
+    '''
+    Get contents of fstab file from a node.
+    (superadmin privilege required)
+
+    If agent-id is not specified, manager's fstab contents will be returned.
+    '''
+    with Session() as session:
+        try:
+            resp = session.VFolder.get_fstab_contents()
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        print(resp)
+
+
+@vfolders.command()
 def list_mounts():
     '''
     List all mounted hosts in virtual folder root.

@@ -228,6 +228,13 @@ class VFolder:
 
     @api_function
     @classmethod
+    async def get_fstab_contents(cls):
+        rqst = Request(cls.session, 'GET', '/folders/_/fstab')
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
+    @classmethod
     async def list_mounts(cls):
         rqst = Request(cls.session, 'GET', '/folders/_/mounts')
         async with rqst.fetch() as resp:
