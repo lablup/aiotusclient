@@ -55,7 +55,7 @@ def get_fstab_contents(agent_id):
     '''
     with Session() as session:
         try:
-            resp = session.VFolder.get_fstab_contents()
+            resp = session.VFolder.get_fstab_contents(agent_id)
         except Exception as e:
             print_error(e)
             sys.exit(1)

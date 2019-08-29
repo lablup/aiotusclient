@@ -228,8 +228,11 @@ class VFolder:
 
     @api_function
     @classmethod
-    async def get_fstab_contents(cls):
+    async def get_fstab_contents(cls, agent_id=None):
         rqst = Request(cls.session, 'GET', '/folders/_/fstab')
+        rqst.set_json({
+            'agent_id': agent_id,
+        })
         async with rqst.fetch() as resp:
             return await resp.json()
 
