@@ -87,9 +87,10 @@ def list_mounts():
 @vfolders.command()
 @click.argument('fs-location', type=str)
 @click.argument('name', type=str)
+@click.option('-o', '--options', type=str, default=None, help='Mount options.')
 @click.option('--edit-fstab', is_flag=True,
               help='Edit fstab file to mount permanently.')
-def mount_host(fs_location, name, edit_fstab):
+def mount_host(fs_location, name, options, edit_fstab):
     '''
     Mount a host in virtual folder root.
     (superadmin privilege required)
@@ -100,7 +101,7 @@ def mount_host(fs_location, name, edit_fstab):
     '''
     with Session() as session:
         try:
-            resp = session.VFolder.mount_host(name, fs_location, edit_fstab)
+            resp = session.VFolder.mount_host(name, fs_location, options, edit_fstab)
         except Exception as e:
             print_error(e)
             sys.exit(1)

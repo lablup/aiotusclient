@@ -245,11 +245,13 @@ class VFolder:
 
     @api_function
     @classmethod
-    async def mount_host(cls, name: str, fs_location: str, edit_fstab: bool = False):
+    async def mount_host(cls, name: str, fs_location: str, options=None,
+                         edit_fstab: bool = False):
         rqst = Request(cls.session, 'POST', '/folders/_/mounts')
         rqst.set_json({
             'name': name,
             'fs_location': fs_location,
+            'options': options,
             'edit_fstab': edit_fstab,
         })
         async with rqst.fetch() as resp:
