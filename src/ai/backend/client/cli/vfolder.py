@@ -72,8 +72,8 @@ def list_allowed_types():
 @vfolder.command()
 @click.argument('name', type=str)
 @click.argument('host', type=str, default=None)
-@click.option('-g', '--group', metavar='GROUP_ID', type=str, default=None,
-              help='Group ID. Specify this option if you want to create a group folder.')
+@click.option('-g', '--group', metavar='GROUP', type=str, default=None,
+              help='Group ID or NAME. Specify this option if you want to create a group folder.')
 def create(name, host, group):
     '''Create a new virtual folder.
 
