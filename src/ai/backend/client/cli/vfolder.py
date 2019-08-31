@@ -58,6 +58,18 @@ def list_hosts():
 
 
 @vfolder.command()
+def list_allowed_types():
+    '''List allowed vfolder types.'''
+    with Session() as session:
+        try:
+            resp = session.VFolder.list_allowed_types()
+            print(resp)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+
+
+@vfolder.command()
 @click.argument('name', type=str)
 @click.argument('host', type=str, default=None)
 @click.option('-g', '--group', metavar='GROUP_ID', type=str, default=None,

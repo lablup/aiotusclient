@@ -52,6 +52,13 @@ class VFolder:
             return await resp.json()
 
     @api_function
+    @classmethod
+    async def list_allowed_types(cls):
+        rqst = Request(cls.session, 'GET', '/folders/_/allowed_types')
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
     async def info(self):
         rqst = Request(self.session, 'GET', '/folders/{0}'.format(self.name))
         async with rqst.fetch() as resp:
