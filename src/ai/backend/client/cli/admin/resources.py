@@ -1,3 +1,5 @@
+import click
+
 from . import admin
 from ...session import Session
 from ..pretty import print_error
@@ -53,3 +55,78 @@ def recalculate_usage():
             print('Resource allocation is re-calculated.')
         except Exception as e:
             print_error(e)
+
+
+@resources.command()
+@click.argument('month', metavar='MONTH')
+@click.argument('groups', metavar='GROUP_IDS', nargs=-1)
+def usage_per_month(month, groups):
+    """
+    Get session usage stats of target groups for specific month.
+
+    \b
+    MONTH: Target month to get usage (yyyymm).
+    GROUP_IDS: IDs of target groups to get usage (UUID).
+    """
+    with Session() as session:
+        ret = session.Resource.usage_per_month(month, list(groups))
+        for item in ret:
+            print('Group:', item['g_name'] + ' (' + item['g_id'] + ')')
+            print('  Domain:', item['domain_name'])
+            print('  Total Allocated:', item['g_smp'], 'core(s)', '/',
+                  item['g_mem_allocated'], 'mem (bytes)')
+            print('  Total CPU / Memory Used:', item['g_cpu_used'], '(s)', '/',
+                  item['g_mem_used'], '(bytes)')
+            print('  Total I/O Read / Write:', item['g_io_read'], '/',
+                  item['g_io_write'], '(bytes)')
+            print('  GPU Devices:', item['g_device_type'])
+            print('  Containers (' + str(len(item['c_infos'])) + '):')
+            for cinfo in item['c_infos']:
+                print('    Identity:', cinfo['name'], '/', cinfo['access_key'])
+                print('    Image:', cinfo['image_name'])
+                print('    Duration:', cinfo['used_days'], 'day(s)',
+                      '(' + cinfo['created_at'] + ' ~ ' + cinfo['terminated_at']  + ')')
+                print('    Allocated:', cinfo['smp'], 'core(s)', '/',
+                      cinfo['mem_allocated'], 'mem (bytes)')
+                print('    CPU / Memory Used:', cinfo['io_read'], '/', cinfo['io_write'], '(bytes)')
+                print('    I/O Read / Write:', cinfo['io_read'], '/', cinfo['io_write'], '(bytes)')
+                print('    NFS mounted:', cinfo['nfs'])
+                print('    GPU Device:', cinfo['device_type'])
+                print('    ----------------------------------------')
+            print()
+
+
+
+@resources.command()
+@click.argument('group')
+@click.argument('start_date')
+@click.argument('end_date')
+def usage_per_period(group, start_date, end_date):
+    with Session() as session:
+        item = session.Resource.usage_per_period(group, start_date, end_date)
+        if 'g_id' in item:
+            print('Group:', item['g_name'] + ' (' + item['g_id'] + ')')
+            print('  Domain:', item['domain_name'])
+            print('  Total Allocated:', item['g_smp'], 'core(s)', '/',
+                item['g_mem_allocated'], 'mem (bytes)')
+            print('  Total CPU / Memory Used:', item['g_cpu_used'], '(s)', '/',
+                item['g_mem_used'], '(bytes)')
+            print('  Total I/O Read / Write:', item['g_io_read'], '/',
+                item['g_io_write'], '(bytes)')
+            print('  GPU Devices:', item['g_device_type'])
+            print('  Containers (' + str(len(item['c_infos'])) + '):')
+            for cinfo in item['c_infos']:
+                print('    Identity:', cinfo['name'], '/', cinfo['access_key'])
+                print('    Image:', cinfo['image_name'])
+                print('    Duration:', cinfo['used_days'], 'day(s)',
+                    '(' + cinfo['created_at'] + ' ~ ' + cinfo['terminated_at']  + ')')
+                print('    Allocated:', cinfo['smp'], 'core(s)', '/',
+                    cinfo['mem_allocated'], 'mem (bytes)')
+                print('    CPU / Memory Used:', cinfo['io_read'], '/', cinfo['io_write'], '(bytes)')
+                print('    I/O Read / Write:', cinfo['io_read'], '/', cinfo['io_write'], '(bytes)')
+                print('    NFS mounted:', cinfo['nfs'])
+                print('    GPU Device:', cinfo['device_type'])
+                print('    ----------------------------------------')
+            print()
+        else:
+            print('No usage information during the period.')
