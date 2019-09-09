@@ -504,7 +504,7 @@ def run(image, files, session_id,                          # base args
                 mounts=mount,
                 envs=envs,
                 resources=resources,
-                resource_opts=resources_opts,
+                resource_opts=resource_opts,
                 domain_name=domain,
                 group_name=group,
                 scaling_group=scaling_group,
