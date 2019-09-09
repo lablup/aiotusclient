@@ -96,7 +96,6 @@ def usage_per_month(month, groups):
             print()
 
 
-
 @resources.command()
 @click.argument('group')
 @click.argument('start_date')

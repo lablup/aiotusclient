@@ -1,6 +1,22 @@
 Changes
 =======
 
+19.09.0b8 (2019-09-09)
+----------------------
+
+ - NEW: Add ``--resource-opts shmem=BINARY_SIZE`` to specify shared memory size when launching kernels.
+   You can use humanized sizes such as "1g" or "128m". (#67)
+
+ - NEW: Add ``backend.ai admin resource usage-*`` commands to query usage data related for billing.
+
+ - NEW: Add ``backend.ai admin vfolders list-mounts`` command.
+
+ - IMPROVE: Show user's full name in ``backend.ai admin user`` and ``backend.ai admin users`` commands.
+
+ - IMPROVE: Group vfolder can now be created with group name as well as UUID.
+
+ - IMPROVE: Allow admins to set options when mounting vfolder hosts.
+
 19.09.0b7 (2019-08-30)
 ----------------------
 
