@@ -3,12 +3,12 @@ from pathlib import Path
 import re
 
 setup_requires = [
-    'setuptools>=40.2.0',
+    'setuptools>=41.2.0',
 ]
 install_requires = [
     'multidict>=4.0',
     'appdirs~=1.4.3',
-    'aiohttp~=3.5.0',
+    'aiohttp~=3.6.0',
     'async_timeout~=3.0',  # to avoid pip10 resolver issue
     'attrs>=18.0',       # to avoid pip10 resolver issue
     'python-dateutil>=2.5',
@@ -19,18 +19,18 @@ install_requires = [
     'Click>=7.0',
 ]
 build_requires = [
-    'wheel>=0.31.0',
-    'twine>=1.11.0',
+    'wheel>=0.33.6',
+    'twine>=1.14.0',
 ]
 test_requires = [
-    'pytest~=3.9.0',
+    'pytest~=5.0.1',
     'pytest-cov',
     'pytest-mock',
-    'pytest-asyncio>=0.9.0',
+    'pytest-asyncio>=0.10.0',
     'aioresponses>=0.4.2',
-    'asynctest>=0.12.2',
+    'asynctest>=0.13',
     'codecov',
-    'flake8>=3.6',
+    'flake8>=3.7.8',
 ]
 ci_requires = [
 ] + build_requires + test_requires
