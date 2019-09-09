@@ -325,7 +325,7 @@ def _prepare_mount_arg(mount):
               help='The size of cluster in number of containers.')
 @click.option('--resource-opts', metavar='KEY=VAL', type=str, multiple=True,
               help='Resource options for creating compute session. '
-                   '(e.g: shm-size=64m)')
+                   '(e.g: shmem=64m)')
 # resource grouping
 @click.option('-d', '--domain', metavar='DOMAIN_NAME', default=None,
               help='Domain name where the session will be spawned. '
@@ -691,7 +691,7 @@ def run(image, files, session_id,                          # base args
               help='The size of cluster in number of containers.')
 @click.option('--resource-opts', metavar='KEY=VAL', type=str, multiple=True,
               help='Resource options for creating compute session '
-                   '(e.g: shm-size=64m)')
+                   '(e.g: shmem=64m)')
 # resource grouping
 @click.option('-d', '--domain', metavar='DOMAIN_NAME', default=None,
               help='Domain name where the session will be spawned. '
