@@ -1,4 +1,5 @@
 import getpass
+import json
 import sys
 
 import click
@@ -29,6 +30,11 @@ def config():
         print('Access key: (this is an anonymous session)')
     elif config.endpoint_type == 'docker':
         pass
+    elif config.endpoint_type == 'session':
+        if (local_state_path / 'cookie.dat').exists() and \
+                (local_state_path / 'config.json').exists():
+            sess_config = json.loads((local_state_path / 'config.json').read_text())
+            print('Username: "{0}"'.format(click.style(sess_config.get('username', ''), bold=True)))
     else:
         print('Access key: "{0}"'.format(click.style(config.access_key, bold=True)))
         masked_skey = config.secret_key[:6] + ('*' * 24) + config.secret_key[-10:]
@@ -63,6 +69,7 @@ def login():
             local_state_path.mkdir(parents=True, exist_ok=True)
             session.aiohttp_session.cookie_jar.update_cookies(result['cookies'])
             session.aiohttp_session.cookie_jar.save(local_state_path / 'cookie.dat')
+            (local_state_path / 'config.json').write_text(json.dumps(result.get('config', {})))
         except Exception as e:
             print_error(e)
 
@@ -83,6 +90,7 @@ def logout():
             print_done('Logout done.')
             try:
                 (local_state_path / 'cookie.dat').unlink()
+                (local_state_path / 'config.json').unlink()
             except (IOError, PermissionError):
                 pass
         except Exception as e:
