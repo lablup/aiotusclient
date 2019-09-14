@@ -44,6 +44,22 @@ def vfolders(ctx, access_key):
 
 
 @vfolders.command()
+def list_hosts():
+    '''
+    List all mounted hosts from virtual folder root.
+    (superadmin privilege required)
+    '''
+    with Session() as session:
+        try:
+            resp = session.VFolder.list_all_hosts()
+            print("Default vfolder host: {}".format(resp['default']))
+            print("Mounted hosts: {}".format(', '.join(resp['allowed'])))
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+
+
+@vfolders.command()
 @click.option('-a', '--agent-id', type=str, default=None,
               help='Target agent to fetch fstab contents.')
 def get_fstab_contents(agent_id):

@@ -53,6 +53,13 @@ class VFolder:
 
     @api_function
     @classmethod
+    async def list_all_hosts(cls):
+        rqst = Request(cls.session, 'GET', '/folders/_/all_hosts')
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
+    @classmethod
     async def list_allowed_types(cls):
         rqst = Request(cls.session, 'GET', '/folders/_/allowed_types')
         async with rqst.fetch() as resp:

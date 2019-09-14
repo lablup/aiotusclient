@@ -41,6 +41,16 @@ class Resource:
 
     @api_function
     @classmethod
+    async def get_docker_registries(cls):
+        '''
+        Lists all registered docker registries.
+        '''
+        rqst = Request(cls.session, 'GET', '/config/docker-registries')
+        async with rqst.fetch() as resp:
+            return await resp.json()
+
+    @api_function
+    @classmethod
     async def usage_per_month(cls, month: str, group_ids: Sequence[str]):
         '''
         Get usage statistics for groups specified by `group_ids` at specific `month`.

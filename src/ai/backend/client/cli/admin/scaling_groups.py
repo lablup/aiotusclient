@@ -9,6 +9,21 @@ from ...session import Session
 
 
 @admin.command()
+@click.argument('group', type=str, metavar='GROUP_NAME')
+def list_scaling_groups(group):
+    with Session() as session:
+        try:
+            resp = session.ScalingGroup.list_available(group)
+        except Exception as e:
+            print_error(e)
+            sys.exit(1)
+        if len(resp) < 1:
+            print('There is no scaling group available.')
+            return
+        print(resp)
+
+
+@admin.command()
 @click.option('-n', '--name', type=str, default=None,
               help="Name of a scaling group.")
 def scaling_group(name):

@@ -42,6 +42,20 @@ def vfolder_types():
 
 
 @resources.command()
+def docker_registries():
+    """
+    Get registered docker registries.
+    """
+    with Session() as session:
+        try:
+            ret = session.Resource.get_docker_registries()
+            for t in ret:
+                print(t)
+        except Exception as e:
+            print_error(e)
+
+
+@resources.command()
 def recalculate_usage():
     """
     Re-calculate resource occupation by sessions.
