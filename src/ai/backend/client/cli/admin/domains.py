@@ -77,11 +77,11 @@ def domains(ctx):
               help='Description of new domain')
 @click.option('-i', '--inactive', is_flag=True,
               help='New domain will be inactive.')
-@click.option('--total_resource_slots', type=str, default='{}',
+@click.option('--total-resource-slots', type=str, default='{}',
               help='Set total resource slots.')
-@click.option('--allowed_vfolder_hosts', type=str, multiple=True,
+@click.option('--allowed-vfolder-hosts', type=str, multiple=True,
               help='Allowed virtual folder hosts.')
-@click.option('--allowed_docker_registries', type=str, multiple=True,
+@click.option('--allowed-docker-registries', type=str, multiple=True,
               help='Allowed docker registries.')
 def add(name, description, inactive, total_resource_slots,
         allowed_vfolder_hosts, allowed_docker_registries):
@@ -115,12 +115,14 @@ def add(name, description, inactive, total_resource_slots,
 @click.option('--new-name', type=str, help='New name of the domain')
 @click.option('--description', type=str, help='Description of the domain')
 @click.option('--is-active', type=bool, help='Set domain inactive.')
-@click.option('--total_resource_slots', type=str,
+@click.option('--total-resource-slots', type=str,
               help='Update total resource slots.')
-@click.option('--allowed_vfolder_hosts', type=str, multiple=True,
+@click.option('--allowed-vfolder-hosts', type=str, multiple=True,
               help='Allowed virtual folder hosts.')
+@click.option('--allowed-docker-registries', type=str, multiple=True,
+              help='Allowed docker registries.')
 def update(name, new_name, description, is_active, total_resource_slots,
-           allowed_vfolder_hosts):
+           allowed_vfolder_hosts, allowed_docker_registries):
     '''
     Update an existing domain.
 
@@ -135,6 +137,7 @@ def update(name, new_name, description, is_active, total_resource_slots,
                 is_active=is_active,
                 total_resource_slots=total_resource_slots,
                 allowed_vfolder_hosts=allowed_vfolder_hosts,
+                allowed_docker_registries=allowed_docker_registries,
             )
         except Exception as e:
             print_error(e)

@@ -87,9 +87,9 @@ def groups(ctx, domain_name):
               help='Description of new group.')
 @click.option('-i', '--inactive', is_flag=True,
               help='New group will be inactive.')
-@click.option('--total_resource_slots', type=str, default='{}',
+@click.option('--total-resource-slots', type=str, default='{}',
               help='Set total resource slots.')
-@click.option('--allowed_vfolder_hosts', type=str, multiple=True,
+@click.option('--allowed-vfolder-hosts', type=str, multiple=True,
               help='Allowed virtual folder hosts.')
 def add(domain_name, name, description, inactive, total_resource_slots,
         allowed_vfolder_hosts):
@@ -124,8 +124,8 @@ def add(domain_name, name, description, inactive, total_resource_slots,
 @click.option('-n', '--name', type=str, help='New name of the group')
 @click.option('-d', '--description', type=str, help='Description of the group')
 @click.option('--is-active', type=bool, help='Set group inactive.')
-@click.option('--total_resource_slots', type=str, help='Update total resource slots.')
-@click.option('--allowed_vfolder_hosts', type=str, multiple=True,
+@click.option('--total-resource-slots', type=str, help='Update total resource slots.')
+@click.option('--allowed-vfolder-hosts', type=str, multiple=True,
               help='Allowed virtual folder hosts.')
 def update(gid, name, description, is_active, total_resource_slots,
            allowed_vfolder_hosts):
