@@ -1,6 +1,19 @@
 Changes
 =======
 
+19.09.0b9 (2019-09-17)
+----------------------
+
+ - NEW: Add admin commands to list all vfolder hosts, docker registries, and scaling groups.
+
+ - IMPROVE: In the session mode, show the username in ``backend.ai config`` command. (#68)
+
+ - IMPROVE: ``backend.ai admin users update`` command now has ``-d`` / ``--domain-name`` option to
+   change a user's domain.
+
+ - FIX: CLI's optional argument names use dashes consistently.  Some recently added commands had
+   underscore argument names by mistake.
+
 19.09.0b8 (2019-09-09)
 ----------------------
 
