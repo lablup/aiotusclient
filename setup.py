@@ -38,7 +38,7 @@ dev_requires = [
     'pytest-sugar>=0.9.1',
 ] + build_requires + test_requires
 docs_requires = [
-    'sphinx~=2.0',
+    'sphinx~=2.2',
     'sphinx-intl',
     'sphinx_rtd_theme>=0.4.3',
     'sphinxcontrib-trio~=1.0.2',
