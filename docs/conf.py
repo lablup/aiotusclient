@@ -148,6 +148,7 @@ latex_elements = {
     # Additional stuff for the LaTeX preamble.
     'preamble': r'''
     \usepackage{kotex}
+    \setcounter{tocdepth}{3}
     ''',
 
     # Latex figure (float) alignment
