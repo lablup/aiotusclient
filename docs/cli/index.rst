@@ -5,4 +5,8 @@ Command-line Interface
    :maxdepth: 1
    :caption: Table of contents
 
-   examples
+   config
+   sessions
+   apps
+   storage
+   code-execution

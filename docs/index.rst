@@ -57,7 +57,7 @@ And then try the first commands:
    ...
 
 Check out more details about :doc:`client configuration <gsg/config>`, :doc:`command-line
-examples <cli/examples>`, and :doc:`code examples <gsg/examples>`.
+examples <cli/index>`, and :doc:`code examples <gsg/examples>`.
 
 
 .. toctree::
