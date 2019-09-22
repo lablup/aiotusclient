@@ -9,8 +9,8 @@ Backend.AI Client SDK for Python
 This is the documentation for the Python Client SDK which implements
 :doc:`the Backend.AI API <backendai:index>`.
 
-Requirements
-------------
+Quickstart
+----------
 
 Python 3.6 or higher is required.
 
@@ -19,10 +19,6 @@ You can download `its official installer from python.org
 such as `homebrew <http://brew.sh/index_ko.html>`_, `miniconda
 <http://conda.pydata.org/miniconda.html>`_, or `pyenv
 <https://github.com/pyenv/pyenv>`_.  It works on Linux, macOS, and Windows.
-
-
-Getting Started
----------------
 
 We recommend to create a virtual environment for isolated, unobtrusive installation
 of the client SDK library and tools.
@@ -59,13 +55,30 @@ And then try the first commands:
 Check out more details about :doc:`client configuration <gsg/config>`, :doc:`command-line
 examples <cli/index>`, and :doc:`SDK code examples <dev/examples>`.
 
+Getting Started
+---------------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Table of contents
+   :caption: Getting Started
 
    gsg/index
+
+Command-line Interface
+----------------------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: CLI
+
    cli/index
+
+Developer Reference
+-------------------
+.. toctree::
+   :maxdepth: 2
+   :caption: Development
+
    dev/index
    func/index
    lowlevel/index
