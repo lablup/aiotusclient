@@ -1,6 +1,22 @@
 Changes
 =======
 
+19.09.0rc1 (2019-09-23)
+-----------------------
+
+ - NEW: Support for high availability setup of managers (#70) via client-side
+   load balancing and automatic fail-over against multiple endpoints.
+
+ - NEW: Support for job queueing options such as parameters to ``backend.ai run`` and ``backend.ai
+   start`` commands to set scheduling waiting time (#70).
+
+ - NEW: ``backend.ai events`` command to monitor session lifecycle events.
+
+ - CHANGE: Now Python 3.6 or higher is required.
+
+ - Updated documentation and made it easier to read in order.
+   Furhter docs update will follow in the next few releases.
+
 19.09.0b9 (2019-09-17)
 ----------------------
 
