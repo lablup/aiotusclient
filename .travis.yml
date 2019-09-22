@@ -21,7 +21,8 @@ env:
 
 matrix:
   allow_failures:
-    python: "3.8-dev"
+    - python: "3.8-dev"
+      env: BACKEND_CLIENT_CLOUD_TEST=1
   fast_finish: true
 
 # test stage
@@ -36,7 +37,6 @@ after_success:
 
 # other stages
 jobs:
-  fast_finish: true
   include:
     - stage: deploy
       python: "3.6"
