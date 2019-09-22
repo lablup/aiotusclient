@@ -1,7 +1,11 @@
 import os
 from pathlib import Path
+import random
 from yarl import URL
-from typing import Any, Callable, Iterable, Tuple, Union
+from typing import (
+    Any, Callable, Iterable, Union,
+    List, Tuple, Sequence,
+)
 
 import appdirs
 
@@ -53,11 +57,17 @@ def bool_env(v: str) -> bool:
     raise ValueError('Unrecognized value of boolean environment variable', v)
 
 
-def _clean_url(v):
-    v = v if isinstance(v, URL) else URL(v)
-    if not v.is_absolute():
-        raise ValueError('URL must be absolute.')
-    return v
+def _clean_urls(v: str) -> List[URL]:
+    if isinstance(v, URL):
+        return [v]
+    if isinstance(v, str):
+        urls = []
+        for entry in v.split(','):
+            url = URL(entry)
+            if not url.is_absolute():
+                raise ValueError('URL {} is not absolute.'.format(url))
+            urls.append(url)
+    return urls
 
 
 def _clean_tokens(v):
@@ -92,7 +102,7 @@ class APIConfig:
     DEFAULTS = {
         'endpoint': 'https://api.backend.ai',
         'endpoint_type': 'api',
-        'version': 'v4.20190315',
+        'version': 'v4.20190615',
         'hash_type': 'sha256',
         'domain': 'default',
         'group': 'default',
@@ -114,9 +124,10 @@ class APIConfig:
                  vfolder_mounts: Iterable[str] = None,
                  skip_sslcert_validation: bool = None) -> None:
         from . import get_user_agent  # noqa; to avoid circular imports
-        self._endpoint = (
-            _clean_url(endpoint) if endpoint else
-            get_env('ENDPOINT', self.DEFAULTS['endpoint'], clean=_clean_url))
+        self._endpoints = (
+            _clean_urls(endpoint) if endpoint else
+            get_env('ENDPOINT', self.DEFAULTS['endpoint'], clean=_clean_urls))
+        random.shuffle(self._endpoints)
         self._endpoint_type = endpoint_type if endpoint_type \
                               else get_env('ENDPOINT_TYPE', self.DEFAULTS['endpoint_type'])
         self._domain = domain if domain else get_env('DOMAIN', self.DEFAULTS['domain'])
@@ -147,12 +158,28 @@ class APIConfig:
 
     @property
     def endpoint(self) -> URL:
-        '''The configured endpoint URL prefix.'''
-        return self._endpoint
+        '''
+        The currently active endpoint URL.
+        This may change if there are multiple configured endpoints
+        and the current one is not accessible.
+        '''
+        return self._endpoints[0]
+
+    @property
+    def endpoints(self) -> Sequence[URL]:
+        '''All configured endpoint URLs.'''
+        return self._endpoints
+
+    def rotate_endpoints(self):
+        if len(self._endpoints) > 1:
+            item = self._endpoints.pop(0)
+            self._endpoints.append(item)
 
     @property
     def endpoint_type(self) -> str:
-        '''The configured endpoint URL prefix.'''
+        '''
+        The configured endpoint type.
+        '''
         return self._endpoint_type
 
     @property
