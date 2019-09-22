@@ -79,6 +79,25 @@ class Kernel:
             new API).
         :param client_token: A client-side identifier to seamlessly reuse the compute
             session already created.
+        :param type\_: Either ``"interactive"`` (default) or ``"batch"``.
+
+            .. versionadded:: 19.09.0
+        :param enqueue_only: Just enqueue the session creation request and return immediately,
+            without waiting for its startup. (default: ``false`` to preserve the legacy
+            behavior)
+
+            .. versionadded:: 19.09.0
+        :param max_wait: The time to wait for session startup. If the cluster resource
+            is being fully utilized, this waiting time can be arbitrarily long due to
+            job queueing.  If the timeout reaches, the returned *status* field becomes
+            ``"TIMEOUT"``.  Still in this case, the session may start in the future.
+
+            .. versionadded:: 19.09.0
+        :param no_reuse: Raises an explicit error if a session with the same *image* and
+            the same *client_token* already exists instead of returning the information
+            of it.
+
+            .. versionadded:: 19.09.0
         :param mounts: The list of vfolder names that belongs to the currrent API
             access key.
         :param envs: The environment variables which always bypasses the jail policy.
@@ -476,6 +495,7 @@ class Kernel:
     def stream_events(self) -> SSEResponse:
         '''
         Opens the stream of the kernel lifecycle events.
+        Only the master kernel of each session is monitored.
 
         :returns: a :class:`StreamEvents` object.
         '''
