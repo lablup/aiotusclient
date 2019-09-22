@@ -10,7 +10,7 @@ Backend.AI Client
    :alt: Python Versions
 
 .. image:: https://readthedocs.org/projects/backendai-client-sdk-for-python/badge/?version=latest
-   :target: https://docs.client-py.backend.ai/en/latest/?badge=latest
+   :target: https://client-py.docs.backend.ai/en/latest/?badge=latest
    :alt: SDK Documentation
 
 .. image:: https://travis-ci.com/lablup/backend.ai-client-py.svg?branch=master
