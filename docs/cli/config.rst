@@ -6,7 +6,7 @@ Configuration
    Please consult the detailed usage in the help of each command
    (use ``-h`` or ``--help`` argument to display the manual).
 
-Check out :ref:`gsg/config` for configurations via environment variables.
+Check out :doc:`the client configuration </gsg/config>` for configurations via environment variables.
 
 Session Mode
 ------------
@@ -35,3 +35,13 @@ After setting up the environment variables, just run any command:
 .. code-block:: console
 
    $ backend.ai ...
+
+
+Checking out the current configuration
+--------------------------------------
+
+Run the following command to list your current active configurations.
+
+.. code-block:: console
+
+   $ backend.ai config
