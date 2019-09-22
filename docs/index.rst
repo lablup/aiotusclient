@@ -62,7 +62,8 @@ Getting Started
    :maxdepth: 2
    :caption: Getting Started
 
-   gsg/index
+   gsg/installation
+   gsg/config
 
 Command-line Interface
 ----------------------
@@ -71,7 +72,11 @@ Command-line Interface
    :maxdepth: 2
    :caption: CLI
 
-   cli/index
+   cli/config
+   cli/sessions
+   cli/apps
+   cli/storage
+   cli/code-execution
 
 Developer Reference
 -------------------
