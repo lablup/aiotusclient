@@ -6,7 +6,4 @@ Getting Started
    :caption: Table of contents
 
    installation
-   examples
-   session
    config
-   testing

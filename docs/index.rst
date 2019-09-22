@@ -57,7 +57,7 @@ And then try the first commands:
    ...
 
 Check out more details about :doc:`client configuration <gsg/config>`, :doc:`command-line
-examples <cli/index>`, and :doc:`code examples <gsg/examples>`.
+examples <cli/index>`, and :doc:`SDK code examples <dev/examples>`.
 
 
 .. toctree::
@@ -66,6 +66,7 @@ examples <cli/index>`, and :doc:`code examples <gsg/examples>`.
 
    gsg/index
    cli/index
+   dev/index
    func/index
    lowlevel/index
 
