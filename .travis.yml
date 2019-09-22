@@ -9,9 +9,9 @@ stages:
 
 # build matrix for test stage
 python:
-  - "3.5"
   - "3.6"
   - "3.7"
+  - "3.8-dev"
 os:
   - linux
   # - osx  # not supported yet
@@ -46,6 +46,8 @@ jobs:
         user: "__token__"
         password:
           secure: "pypi-AgEIcHlwaS5vcmcCJDkyM2QzNjkxLTU5MWUtNDc4YS05YWU3LTg0MTUwZjlhZDRjNwACQnsicGVybWlzc2lvbnMiOiB7InByb2plY3RzIjogWyJiYWNrZW5kLWFpLWNsaWVudCJdfSwgInZlcnNpb24iOiAxfQAABiDYwYfQxE_mRlq1N1eBd6qYKViBiAqtlV0p5QVx4_h8iw"
+  allow_failures:
+    python: "3.8-dev"
 
 notifications:
   webhooks:
