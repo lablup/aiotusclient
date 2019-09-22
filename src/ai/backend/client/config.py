@@ -85,6 +85,22 @@ class APIConfig:
     environment variables or as the explicit arguments.
 
     :param endpoint: The URL prefix to make API requests via HTTP/HTTPS.
+        If this is given as ``str`` and contains multiple URLs separated by comma,
+        the underlying HTTP request-response facility will perform client-side
+        load balancing and automatic fail-over using them, assuming that all those
+        URLs indicates a single, same cluster.
+        The users of the API and CLI will get network connection errors only when
+        all of the given endpoints fail -- intermittent failures of a subset of endpoints
+        will be hidden with a little increased latency.
+    :param endpoint_type: Either ``"api"`` or ``"session"``.
+        If the endpoint type is ``"api"`` (the default if unspecified), it uses the access key and
+        secret key in the configuration to access the manager API server directly.
+        If the endpoint type is ``"session"``, it assumes the endpoint is a Backend.AI console server
+        which provides cookie-based authentication with username and password.
+        In the latter, users need to use ``backend.ai login`` and ``backend.ai logout`` to
+        manage their sign-in status, or the API equivalent in
+        :meth:`~ai.backend.client.auth.Auth.login` and
+        :meth:`~ai.backend.client.auth.Auth.logout` methods.
     :param version: The API protocol version.
     :param user_agent: A custom user-agent string which is sent to the API
         server as a ``User-Agent`` HTTP header.

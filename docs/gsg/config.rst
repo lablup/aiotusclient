@@ -15,6 +15,7 @@ There are two ways to set the configuration:
 The list of supported environment variables are:
 
 * ``BACKEND_ENDPOINT``
+* ``BACKEND_ENDPOINT_TYPE``
 * ``BACKEND_ACCESS_KEY``
 * ``BACKEND_SECRET_KEY``
 * ``BACKEND_VFOLDER_MOUNTS``

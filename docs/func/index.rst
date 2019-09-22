@@ -6,6 +6,7 @@ High-level Function Reference
    :caption: Table of contents
 
    admin
+   auth
    agent
    kernel
    keypair

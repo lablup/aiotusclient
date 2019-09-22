@@ -73,7 +73,13 @@ class Auth:
 
     @api_function
     @classmethod
-    async def login(cls, user_id: str, password: str):
+    async def login(cls, user_id: str, password: str) -> dict:
+        '''
+        Log-in into the endpoint with the given user ID and password.
+        It creates a server-side web session and return
+        a dictionary with ``"authenticated"`` boolean field and
+        JSON-encoded raw cookie data.
+        '''
         from .request import Request
         rqst = Request(cls.session, 'POST', '/server/login')
         rqst.set_json({
@@ -90,7 +96,11 @@ class Auth:
 
     @api_function
     @classmethod
-    async def logout(cls):
+    async def logout(cls) -> None:
+        '''
+        Log-out from the endpoint.
+        It clears the server-side web session.
+        '''
         from .request import Request
         rqst = Request(cls.session, 'POST', '/server/logout')
         async with rqst.fetch() as resp:

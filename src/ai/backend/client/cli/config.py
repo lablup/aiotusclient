@@ -49,6 +49,8 @@ def config():
 def login():
     '''
     Log-in to the console API proxy.
+    It stores the current session cookie in the OS-default
+    local application data location.
     '''
     user_id = input('User ID: ')
     password = getpass.getpass()
@@ -77,7 +79,7 @@ def login():
 @main.command()
 def logout():
     '''
-    Log-in to the console API proxy.
+    Log-out from the console API proxy and clears the local cookie data.
     '''
     config = get_config()
     if config.endpoint_type != 'session':
