@@ -137,18 +137,25 @@ htmlhelp_basename = 'BackendAIClientSDKforPythonDocumentationdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
-
 latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
     'papersize': 'a4paper',
+    'pointsize': '11pt',
+    'fontpkg': '',
 
-    # The font size ('10pt', '11pt' or '12pt').
-    'pointsize': '10pt',
-
-    # Additional stuff for the LaTeX preamble.
     'preamble': r'''
     \usepackage{kotex}
+
+    \usepackage{bera}
+    \usepackage{beramono}
+
+    \usepackage{setspace}
+    \onehalfspacing
+    %% \doublespacing
+    %% \singlespacing
+
     \setcounter{tocdepth}{3}
+
+    %% \nonstopmode
     ''',
 
     # Latex figure (float) alignment
