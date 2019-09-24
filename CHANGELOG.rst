@@ -1,6 +1,12 @@
 Changes
 =======
 
+19.09.0rc2 (2019-09-24)
+-----------------------
+
+ - IMPROVE: Refine the result and options of "backend.ai ps" command, so that it shows PENDING,
+   PREPARING, PULLING, TERMINATING, CANCELLED sessions appropriately.
+
 19.09.0rc1 (2019-09-23)
 -----------------------
 

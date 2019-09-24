@@ -7,18 +7,43 @@ Compute Sessions
    (use ``-h`` or ``--help`` argument to display the manual).
 
 
-Listing currently running sessions
-----------------------------------
+Listing sessions
+----------------
+
+List the session owned by you with various status filters.
+The most recently status-changed sessions are listed first.
 
 .. code-block:: shell
 
   backend.ai ps
 
-This command is an alias of the following command:
+The ``ps`` command is an alias of the following ``admin sessions`` command.
+If you have the administrator privilege, you can list sessions owned by
+other users by adding ``--access-key`` option.
 
 .. code-block:: shell
 
   backend.ai admin sessions
+
+Both commands offers options to set the status filter as follows.
+For other options, please consult the output of ``--help``.
+
+.. list-table::
+   :widths: 15 85
+   :header-rows: 1
+
+   * - Option
+     - Effect
+
+   * - (no option)
+     - Include ``PENDING``, ``PREPARING``, ``RUNNING``, ``RESTARTING``,
+       ``TERMINATING``, ``RESIZING``, ``SUSPENDED``, and ``ERROR``.
+
+   * - ``--running``
+     - Include only ``PREPARING``, ``PULLING``, and ``RUNNING``.
+
+   * - ``--dead``
+     - Include only ``CANCELLED`` and ``TERMINATED``.
 
 
 Running simple sessions
