@@ -11,17 +11,27 @@ from ..pretty import print_error
 
 
 @admin.command()
-@click.option('--status', default='RUNNING',
-              type=click.Choice(['PREPARING', 'BUILDING', 'RUNNING', 'RESTARTING',
-                                 'RESIZING', 'SUSPENDED', 'TERMINATING',
-                                 'TERMINATED', 'ERROR', 'ALL']),
+@click.option('-s', '--status', default=None,
+              type=click.Choice([
+                  'PENDING',
+                  'PREPARING', 'BUILDING', 'RUNNING', 'RESTARTING',
+                  'RESIZING', 'SUSPENDED', 'TERMINATING',
+                  'TERMINATED', 'ERROR', 'CANCELLED',
+                  'ALL',  # special case
+              ]),
               help='Filter by the given status')
 @click.option('--access-key', type=str, default=None,
               help='Get sessions for a specific access key '
                    '(only works if you are a super-admin)')
 @click.option('--id-only', is_flag=True, help='Display session ids only.')
-@click.option('--all', is_flag=True, help='Display all sessions.')
-def sessions(status, access_key, id_only, all):
+@click.option('--dead', is_flag=True,
+              help='Filter only dead sessions. Ignores --status option.')
+@click.option('--running', is_flag=True,
+              help='Filter only scheduled and running sessions. Ignores --status option.')
+@click.option('-a', '--all', is_flag=True,
+              help='Display all sessions matching the condition using pagination.')
+@click.option('--detail', is_flag=True, help='Show more details using more columns.')
+def sessions(status, access_key, id_only, dead, running, all, detail):
     '''
     List and manage compute sessions.
     '''
@@ -30,7 +40,7 @@ def sessions(status, access_key, id_only, all):
     ]
     try:
         with Session() as session:
-            if is_admin(session):
+            if is_admin(session) and not is_legacy_server():
                 fields.append(('Owner', 'access_key'))
     except Exception as e:
         print_error(e)
@@ -38,17 +48,36 @@ def sessions(status, access_key, id_only, all):
     if not id_only:
         fields.extend([
             ('Image', 'image'),
-            ('Tag', 'tag'),
-            ('Created At', 'created_at',),
-            ('Terminated At', 'terminated_at'),
             ('Status', 'status'),
-            ('Occupied Resource', 'occupied_slots'),
-            ('Used Memory (MiB)', 'mem_cur_bytes'),
-            ('Max Used Memory (MiB)', 'mem_max_bytes'),
-            ('CPU Using (%)', 'cpu_using'),
+            ('Status Info', 'status_info'),
+            ('Last updated', 'status_changed'),
         ])
-        if is_legacy_server():
-            del fields[2]
+        if detail:
+            fields.extend([
+                ('Tag', 'tag'),
+                ('Created At', 'created_at',),
+                ('Occupied Resource', 'occupied_slots'),
+                ('Used Memory (MiB)', 'mem_cur_bytes'),
+                ('Max Used Memory (MiB)', 'mem_max_bytes'),
+                ('CPU Using (%)', 'cpu_using'),
+            ])
+
+    no_match_name = None
+    if status is None:
+        status = 'PENDING,PREPARING,PULLING,RUNNING,RESTARTING,TERMINATING,RESIZING,SUSPENDED,ERROR'
+        no_match_name = 'active'
+    if running:
+        status = 'PREPARING,PULLING,RUNNING'
+        no_match_name = 'running'
+    if dead:
+        status = 'CANCELLED,TERMINATED'
+        no_match_name = 'dead'
+    if status == 'ALL':
+        status = ('PENDING,PREPARING,PULLING,RUNNING,RESTARTING,TERMINATING,RESIZING,SUSPENDED,ERROR,'
+                  'CANCELLED,TERMINATED')
+        no_match_name = 'in any status'
+    if no_match_name is None:
+        no_match_name = status.lower()
 
     def execute_paginated_query(limit, offset):
         q = '''
@@ -64,7 +93,7 @@ def sessions(status, access_key, id_only, all):
         v = {
             'limit': limit,
             'offset': offset,
-            'status': status if status != 'ALL' else None,
+            'status': status,
             'ak': access_key,
         }
         try:
@@ -102,8 +131,10 @@ def sessions(status, access_key, id_only, all):
             if id_only:
                 yield '\n'.join([item['sess_id'] for item in items]) + '\n'
             else:
-                table = tabulate([item.values() for item in items],
-                                    headers=(item[0] for item in fields))
+                table = tabulate(
+                    [item.values() for item in items],
+                    headers=(item[0] for item in fields)
+                )
                 if not is_first:
                     table_rows = table.split('\n')
                     table = '\n'.join(table_rows[2:])
@@ -124,7 +155,7 @@ def sessions(status, access_key, id_only, all):
                 total_count = result['total_count']
                 if total_count == 0:
                     print('There are no compute sessions currently {0}.'
-                          .format(status.lower()))
+                          .format(no_match_name))
                     return
                 items = result['items']
                 items = round_mem(items)
@@ -135,8 +166,7 @@ def sessions(status, access_key, id_only, all):
                     print(tabulate([item.values() for item in items],
                                     headers=(item[0] for item in fields)))
                 if total_count > paginating_interval:
-                    print("More sessions can be displayed "
-                          "by using --all option.")
+                    print("More sessions can be displayed by using -a/--all option.")
         except Exception as e:
             print_error(e)
             sys.exit(1)
