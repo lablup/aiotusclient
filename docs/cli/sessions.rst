@@ -12,6 +12,8 @@ Listing sessions
 
 List the session owned by you with various status filters.
 The most recently status-changed sessions are listed first.
+To prevent overloading the server, the result is limited to the first 10 sessions and
+it provides a separate ``--all`` option to paginate further sessions.
 
 .. code-block:: shell
 
@@ -19,7 +21,7 @@ The most recently status-changed sessions are listed first.
 
 The ``ps`` command is an alias of the following ``admin sessions`` command.
 If you have the administrator privilege, you can list sessions owned by
-other users by adding ``--access-key`` option.
+other users by adding ``--access-key`` option here.
 
 .. code-block:: shell
 
@@ -33,18 +35,20 @@ For other options, please consult the output of ``--help``.
    :header-rows: 1
 
    * - Option
-     - Effect
+     - Included Session Status
 
    * - (no option)
-     - Include ``PENDING``, ``PREPARING``, ``RUNNING``, ``RESTARTING``,
+     - ``PENDING``, ``PREPARING``, ``RUNNING``, ``RESTARTING``,
        ``TERMINATING``, ``RESIZING``, ``SUSPENDED``, and ``ERROR``.
 
    * - ``--running``
-     - Include only ``PREPARING``, ``PULLING``, and ``RUNNING``.
+     - ``PREPARING``, ``PULLING``, and ``RUNNING``.
 
    * - ``--dead``
-     - Include only ``CANCELLED`` and ``TERMINATED``.
+     - ``CANCELLED`` and ``TERMINATED``.
 
+
+.. _simple-execution:
 
 Running simple sessions
 -----------------------
@@ -76,6 +80,28 @@ specified in the ``--exec`` option.
              python:3.6-ubuntu18.04 ./myscript.py
 
 
+Please note that your ``run`` command may hang up for a very long time
+due to queueing when the cluster resource is not sufficiently available.
+
+To avoid indefinite waiting, you may add ``--enqueue-only`` to return
+immediately after posting the session creation request.
+
+.. note::
+
+   When using ``--enqueue-only``, the codes are *NOT* executed and relevant
+   options are ignored.
+   This makes the ``run`` command to the same of the ``start`` command.
+
+Or, you may use ``--max-wait`` option to limit the maximum waiting time.
+If the session starts within the given ``--max-wait`` seconds, it works
+normally, but if not, it returns without code execution like when used
+``--enqueue-only``.
+
+To watch what is happening behind the scene until the session starts,
+try ``backend.ai events <sessionID>`` to receive the lifecycle events
+such as its scheduling and preparation steps.
+
+
 Running sessions with accelerators
 ----------------------------------
 
@@ -99,4 +125,6 @@ IDs.  You may specifcy multiple session IDs to terminate them at once.
 
 .. code-block:: shell
 
-  backend.ai rm <sessionID>
+  backend.ai rm <sessionID> [<sessionID>...]
+
+If you terminate ``PENDING`` sessions, they will be cancelled.

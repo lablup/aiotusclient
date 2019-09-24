@@ -8,6 +8,7 @@ High-level Function Reference
    admin
    auth
    agent
+   config
    kernel
    keypair
    manager

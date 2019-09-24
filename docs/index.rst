@@ -52,8 +52,8 @@ And then try the first commands:
    (venv-backend-ai) $ backend.ai ps
    ...
 
-Check out more details about :doc:`client configuration <gsg/config>`, :doc:`command-line
-examples <cli/index>`, and :doc:`SDK code examples <dev/examples>`.
+Check out more details about :doc:`client configuration <gsg/config>`, the command-line
+examples, and :doc:`SDK code examples <dev/examples>`.
 
 Getting Started
 ---------------
