@@ -114,8 +114,8 @@ of virtual GPU device and executes ``./mygpucode.py`` file inside it.
              python-tensorflow:1.12-py36 ./mygpucode.py
 
 
-Terminating running sessions
-----------------------------
+Terminating or cancelling sessions
+----------------------------------
 
 Without ``--rm`` option, your session remains alive for a configured
 amount of idle timeout (default is 30 minutes).
@@ -127,4 +127,4 @@ IDs.  You may specifcy multiple session IDs to terminate them at once.
 
   backend.ai rm <sessionID> [<sessionID>...]
 
-If you terminate ``PENDING`` sessions, they will be cancelled.
+If you terminate ``PENDING`` sessions which are not scheduled yet, they are cancelled.

@@ -7,8 +7,8 @@ Advanced Code Execution
    (use ``-h`` or ``--help`` argument to display the manual).
 
 
-Running parallel experiment sessions
-------------------------------------
+Running concurrent experiment sessions
+--------------------------------------
 
 In addition to single-shot code execution as described in :ref:`simple-execution`,
 the ``run`` command offers concurrent execution of multiple sessions with different
