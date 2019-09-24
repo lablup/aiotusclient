@@ -6,11 +6,11 @@ setup_requires = [
     'setuptools>=41.2.0',
 ]
 install_requires = [
-    'multidict>=4.0',
+    'multidict>=4.5',
     'appdirs~=1.4.3',
-    'aiohttp~=3.6.0',
+    'aiohttp~=3.6.1',
     'async_timeout~=3.0',  # to avoid pip10 resolver issue
-    'attrs>=18.0',       # to avoid pip10 resolver issue
+    'attrs>=19.1',       # to avoid pip10 resolver issue
     'python-dateutil>=2.5',
     'tabulate>=0.7.7',
     'tqdm~=4.21',
