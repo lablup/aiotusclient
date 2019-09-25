@@ -185,7 +185,9 @@ class VFolder:
                             chunk = await part.read_chunk()
                             if not chunk:
                                 break
-                            raw_chunk = decompressor.decompress(chunk)
+                            # raw_chunk = decompressor.decompress(chunk)
+                            raw_chunk = chunk  # TODO: refactor.
+                                               # download now doesn't send compressed content
                             fp.write(raw_chunk)
                             acc_bytes += len(raw_chunk)
                             pbar.update(len(raw_chunk))
