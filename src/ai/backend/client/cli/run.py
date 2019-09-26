@@ -199,6 +199,7 @@ def _noop(*args, **kwargs):
 def _format_stats(stats):
     formatted = []
     version = stats.pop('version', 1)
+    stats.pop('status')
     if version == 1:
         stats.pop('precpu_used', None)
         stats.pop('precpu_system_used', None)
