@@ -102,6 +102,7 @@ class ScalingGroup:
     async def create(cls, name: str, description: str = '', is_active: bool = True,
                      driver: str = None, driver_opts: Mapping[str, str] = None,
                      scheduler: str = None, scheduler_opts: Mapping[str, str] = None,
+                     total_resource_slots: str = None,
                      fields: Iterable[str] = None) -> dict:
         '''
         Creates a new scaling group with the given options.
@@ -125,6 +126,7 @@ class ScalingGroup:
                 'driver_opts': json.dumps(driver_opts),
                 'scheduler': scheduler,
                 'scheduler_opts': json.dumps(scheduler_opts),
+                'total_resource_slots': total_resource_slots,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')
@@ -141,6 +143,7 @@ class ScalingGroup:
     async def update(cls, name: str, description: str = '', is_active: bool = True,
                      driver: str = None, driver_opts: Mapping[str, str] = None,
                      scheduler: str = None, scheduler_opts: Mapping[str, str] = None,
+                     total_resource_slots: str = None,
                      fields: Iterable[str] = None) -> dict:
         '''
         Update existing scaling group.
@@ -164,6 +167,7 @@ class ScalingGroup:
                 'driver_opts': json.dumps(driver_opts),
                 'scheduler': scheduler,
                 'scheduler_opts': json.dumps(scheduler_opts),
+                'total_resource_slots': total_resource_slots,
             },
         }
         rqst = Request(cls.session, 'POST', '/admin/graphql')

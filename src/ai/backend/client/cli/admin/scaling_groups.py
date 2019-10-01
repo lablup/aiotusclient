@@ -102,8 +102,11 @@ def scaling_groups(ctx):
               help='Set scheduler.')
 @click.option('--scheduler_opts', type=str, default={},
               help='Set scheduler options.')
+@click.option('--total-resource-slots', type=str, default='{}',
+              help='Set total resource slots.')
 def add(name, description, inactive,
-        driver, driver_opts, scheduler, scheduler_opts):
+        driver, driver_opts, scheduler, scheduler_opts,
+        total_resource_slots):
     '''
     Add a new scaling group.
 
@@ -119,6 +122,7 @@ def add(name, description, inactive,
                 driver_opts=driver_opts,
                 scheduler=scheduler,
                 scheduler_opts=scheduler_opts,
+                total_resource_slots=total_resource_slots,
             )
         except Exception as e:
             print_error(e)
@@ -144,8 +148,11 @@ def add(name, description, inactive,
               help='Set scheduler.')
 @click.option('--scheduler_opts', type=str, default={},
               help='Set scheduler options.')
+@click.option('--total-resource-slots', type=str, default='{}',
+              help='Set total resource slots.')
 def update(name, description, inactive,
-           driver, driver_opts, scheduler, scheduler_opts):
+           driver, driver_opts, scheduler, scheduler_opts,
+           total_resource_slots):
     '''
     Update existing scaling group.
 
@@ -161,6 +168,7 @@ def update(name, description, inactive,
                 driver_opts=driver_opts,
                 scheduler=scheduler,
                 scheduler_opts=scheduler_opts,
+                total_resource_slots=total_resource_slots,
             )
         except Exception as e:
             print_error(e)
