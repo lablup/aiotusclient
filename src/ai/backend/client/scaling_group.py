@@ -200,7 +200,7 @@ class ScalingGroup:
 
     @api_function
     @classmethod
-    async def associate_domain(cls, scaling_group: str, domain: str):
+    async def associate_domain(cls, scaling_group: str, domain: str, total_resource_slots: str):
         '''
         Associate scaling_group with domain.
 
@@ -208,9 +208,11 @@ class ScalingGroup:
         :param domain: The name of a domain.
         '''
         query = textwrap.dedent('''\
-            mutation($scaling_group: String!, $domain: String!) {
+            mutation($scaling_group: String!, $domain: String!, $total_resource_slots: String) {
                 associate_scaling_group_with_domain(
-                        scaling_group: $scaling_group, domain: $domain) {
+                        scaling_group: $scaling_group,
+                        domain: $domain,
+                        total_resource_slots: $total_resource_slots) {
                     ok msg
                 }
             }
@@ -276,3 +278,59 @@ class ScalingGroup:
         async with rqst.fetch() as resp:
             data = await resp.json()
             return data['disassociate_all_scaling_groups_with_domain']
+
+    @api_function
+    @classmethod
+    async def associate_group(cls, scaling_group: str, group_id: str, total_resource_slots: str):
+        '''
+        Associate scaling_group with group.
+
+        :param scaling_group: The name of a scaling group.
+        :param group_id: The ID of a group.
+        '''
+        query = textwrap.dedent('''\
+            mutation($scaling_group: String!, $user_group: String!, $total_resource_slots: String) {
+                associate_scaling_group_with_user_group(
+                        scaling_group: $scaling_group,
+                        user_group: $user_group,
+                        total_resource_slots: $total_resource_slots) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {'scaling_group': scaling_group, 'user_group': group_id}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['associate_scaling_group_with_user_group']
+
+    @api_function
+    @classmethod
+    async def dissociate_group(cls, scaling_group: str, group_id: str):
+        '''
+        Dissociate scaling_group from group.
+
+        :param scaling_group: The name of a scaling group.
+        :param group_id: The ID of a group.
+        '''
+        query = textwrap.dedent('''\
+            mutation($scaling_group: String!, $user_group: String!) {
+                disassociate_scaling_group_with_user_group(
+                        scaling_group: $scaling_group, user_group: $user_group) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {'scaling_group': scaling_group, 'user_group': group_id}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['disassociate_scaling_group_with_user_group']
