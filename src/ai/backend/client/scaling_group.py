@@ -200,7 +200,7 @@ class ScalingGroup:
 
     @api_function
     @classmethod
-    async def associate_domain(cls, scaling_group: str, domain: str, total_resource_slots: str = None):
+    async def associate_domain(cls, scaling_group: str, domain: str):
         '''
         Associate scaling_group with domain.
 
@@ -208,22 +208,14 @@ class ScalingGroup:
         :param domain: The name of a domain.
         '''
         query = textwrap.dedent('''\
-            mutation($scaling_group: String!, $domain: String!, $input: AssociateScalingGroupWithDomain) {
+            mutation($scaling_group: String!, $domain: String!) {
                 associate_scaling_group_with_domain(
-                        scaling_group: $scaling_group,
-                        domain: $domain,
-                        props: $input) {
+                        scaling_group: $scaling_group, domain: $domain) {
                     ok msg
                 }
             }
         ''')
-        variables = {
-            'scaling_group': scaling_group,
-            'domain': domain,
-            'input': {
-                'total_resource_slots': total_resource_slots,
-            }
-        }
+        variables = {'scaling_group': scaling_group, 'domain': domain}
         rqst = Request(cls.session, 'POST', '/admin/graphql')
         rqst.set_json({
             'query': query,
@@ -287,7 +279,7 @@ class ScalingGroup:
 
     @api_function
     @classmethod
-    async def associate_group(cls, scaling_group: str, group_id: str, total_resource_slots: str = None):
+    async def associate_group(cls, scaling_group: str, group_id: str):
         '''
         Associate scaling_group with group.
 
@@ -295,22 +287,14 @@ class ScalingGroup:
         :param group_id: The ID of a group.
         '''
         query = textwrap.dedent('''\
-            mutation($scaling_group: String!, $user_group: String!, $input: AssociateScalingGroupWithUserGroup) {
+            mutation($scaling_group: String!, $user_group: String!) {
                 associate_scaling_group_with_user_group(
-                        scaling_group: $scaling_group,
-                        user_group: $user_group,
-                        props: $input) {
+                        scaling_group: $scaling_group, user_group: $user_group) {
                     ok msg
                 }
             }
         ''')
-        variables = {
-            'scaling_group': scaling_group,
-            'user_group': group_id,
-            'input': {
-                'total_resource_slots': total_resource_slots,
-            }
-        }
+        variables = {'scaling_group': scaling_group, 'user_group': group_id}
         rqst = Request(cls.session, 'POST', '/admin/graphql')
         rqst.set_json({
             'query': query,
