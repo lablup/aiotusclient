@@ -134,11 +134,11 @@ class ProxyRunner:
 @main.command()
 @click.argument('session_id', type=str, metavar='SESSID')
 @click.argument('app', type=str)
-@click.option('--bind', type=str, default='127.0.0.1',
-              help='The IP/host address to bind this proxy.')
-@click.option('-p', '--port', type=int, default=8080,
-              help='The port number to listen user connections.')
-def app(session_id, app, bind, port):
+@click.option('-p', '--protocol', type=click.Choice(['http', 'tcp']), default='http',
+              help='The application-level protocol to use.')
+@click.option('-b', '--bind', type=str, default='127.0.0.1:8080', metavar='[HOST:]PORT',
+              help='The IP/host address and the port number to bind this proxy.')
+def app(session_id, app, protocol, bind):
     """
     Run a local proxy to a service provided by Backend.AI compute sessions.
 
@@ -151,21 +151,27 @@ def app(session_id, app, bind, port):
     api_session = None
     runner = None
 
+    bind_parts = bind.rsplit(':', maxsplit=1)
+    if len(bind_parts) == 1:
+        host = '127.0.0.1'
+        port = int(bind_parts[0])
+    elif len(bind_parts) == 2:
+        host = bind_parts[0]
+        port = int(bind_parts[1])
+
     async def app_setup():
         nonlocal api_session, runner
         loop = current_loop()
         api_session = AsyncSession()
-        # TODO: generalize protocol using service ports metadata
-        protocol = 'http'
         runner = ProxyRunner(api_session, session_id, app,
-                             protocol, bind, port,
+                             protocol, host, port,
                              loop=loop)
         await runner.ready()
         print_info(
             "A local proxy to the application \"{0}\" ".format(app) +
             "provided by the session \"{0}\" ".format(session_id) +
             "is available at: {0}://{1}:{2}"
-            .format(protocol, bind, port)
+            .format(protocol, host, port)
         )
 
     async def app_shutdown():
