@@ -44,7 +44,7 @@ def rescan_images(registry):
     '''Update the kernel image metadata from all configured docker registries.'''
     with Session() as session:
         try:
-            result = session.Image.rescanImages(registry)
+            result = session.Image.rescan_images(registry)
         except Exception as e:
             print_error(e)
             sys.exit(1)
@@ -61,7 +61,7 @@ def alias_image(alias, target):
     '''Add an image alias.'''
     with Session() as session:
         try:
-            result = session.Image.aliasImage(alias, target)
+            result = session.Image.alias_image(alias, target)
         except Exception as e:
             print_error(e)
             sys.exit(1)
@@ -77,7 +77,7 @@ def dealias_image(alias):
     '''Remove an image alias.'''
     with Session() as session:
         try:
-            result = session.Image.dealiasImage(alias)
+            result = session.Image.dealias_image(alias)
         except Exception as e:
             print_error(e)
             sys.exit(1)

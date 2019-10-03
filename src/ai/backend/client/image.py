@@ -53,7 +53,7 @@ class Image:
 
     @api_function
     @classmethod
-    async def rescanImages(cls, registry: str):
+    async def rescan_images(cls, registry: str):
         q = 'mutation($registry: String) {' \
             '  rescan_images(registry:$registry) {' \
             '   ok msg' \
@@ -73,7 +73,7 @@ class Image:
 
     @api_function
     @classmethod
-    async def aliasImage(cls, alias: str, target: str) -> dict:
+    async def alias_image(cls, alias: str, target: str) -> dict:
         q = 'mutation($alias: String!, $target: String!) {' \
             '  alias_image(alias: $alias, target: $target) {' \
             '   ok msg' \
@@ -94,7 +94,7 @@ class Image:
 
     @api_function
     @classmethod
-    async def dealiasImage(cls, alias: str) -> dict:
+    async def dealias_image(cls, alias: str) -> dict:
         q = 'mutation($alias: String!) {' \
             '  dealias_image(alias: $alias) {' \
             '   ok msg' \
