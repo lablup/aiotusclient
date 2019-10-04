@@ -1,6 +1,28 @@
 Changes
 =======
 
+19.09.0rc3 (2019-10-04)
+-----------------------
+
+* NEW: Batch tasks options at "backend.ai start" command, includingthe type and startup command
+  arguments.
+
+* NEW: Download and print batch task logs via "backend.ai task-logs" command
+
+* IMPROVE: New "--show-tid" option in "backend.ai ps" command
+
+* NEW: Add support for native TCP service ports by refactoring "backend.ai app" command arguments.
+
+* IMPROVE: Support owner-access-key parameter to launch sessions on behalf of other users
+
+* NEW: API wrapper for image import function (#74)
+
+* FIX: underscore/camel-case inconsistency in image-related admin commands and function interfaces
+
+* IMPROVE: Move the composition of vfolder invitation command messages to the client from the server.
+
+* Other fixes and improvements.
+
 19.09.0rc2 (2019-09-24)
 -----------------------
 
