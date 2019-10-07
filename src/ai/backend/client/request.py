@@ -53,12 +53,6 @@ A struct that represents an attached file to the API request.
 '''
 
 
-_default_request_timeout = aiohttp.ClientTimeout(
-    total=None, connect=None,
-    sock_connect=10.0, sock_read=None,
-)
-
-
 class ExtendedJSONEncoder(modjson.JSONEncoder):
 
     def default(self, obj):
@@ -263,6 +257,11 @@ class Request:
         force_anonymous = kwargs.pop('anonymous', False)
 
         def _rqst_ctx_builder():
+            timeout_config = aiohttp.ClientTimeout(
+                total=None, connect=None,
+                sock_connect=self.config.connection_timeout,
+                sock_read=self.config.read_timeout,
+            )
             full_url = self._build_url()
             if not self.config.is_anonymous and not force_anonymous:
                 self._sign(full_url.relative())
@@ -270,7 +269,7 @@ class Request:
                 self.method,
                 str(full_url),
                 data=self._pack_content(),
-                timeout=_default_request_timeout,
+                timeout=timeout_config,
                 headers=self.headers)
 
         return FetchContextManager(self.session, _rqst_ctx_builder, **kwargs)
@@ -320,13 +319,18 @@ class Request:
         self.content_type = 'application/octet-stream'
 
         def _rqst_ctx_builder():
+            timeout_config = aiohttp.ClientTimeout(
+                total=None, connect=None,
+                sock_connect=self.config.connection_timeout,
+                sock_read=self.config.read_timeout,
+            )
             full_url = self._build_url()
             if not self.config.is_anonymous:
                 self._sign(full_url.relative())
             return self.session.aiohttp_session.request(
                 self.method,
                 str(full_url),
-                timeout=_default_request_timeout,
+                timeout=timeout_config,
                 headers=self.headers)
 
         return SSEContextManager(self.session, _rqst_ctx_builder, **kwargs)

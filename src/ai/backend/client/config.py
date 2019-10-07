@@ -122,6 +122,8 @@ class APIConfig:
         'hash_type': 'sha256',
         'domain': 'default',
         'group': 'default',
+        'connection_timeout': 10.0,
+        'read_timeout': 3.0,
     }
     '''
     The default values except the access and secret keys.
@@ -138,7 +140,9 @@ class APIConfig:
                  secret_key: str = None,
                  hash_type: str = None,
                  vfolder_mounts: Iterable[str] = None,
-                 skip_sslcert_validation: bool = None) -> None:
+                 skip_sslcert_validation: bool = None,
+                 connection_timeout: float = None,
+                 read_timeout: float = None) -> None:
         from . import get_user_agent  # noqa; to avoid circular imports
         self._endpoints = (
             _clean_urls(endpoint) if endpoint else
@@ -167,6 +171,10 @@ class APIConfig:
         self._skip_sslcert_validation = (skip_sslcert_validation
              if skip_sslcert_validation else
              get_env('SKIP_SSLCERT_VALIDATION', 'no', clean=bool_env))
+        self._connection_timeout = connection_timeout if connection_timeout else \
+            get_env('CONNECTION_TIMEOUT', self.DEFAULTS['connection_timeout'])
+        self._read_timeout = read_timeout if read_timeout else \
+            get_env('READ_TIMEOUT', self.DEFAULTS['read_timeout'])
 
     @property
     def is_anonymous(self) -> bool:
@@ -242,6 +250,16 @@ class APIConfig:
     def skip_sslcert_validation(self) -> bool:
         '''Whether to skip SSL certificate validation for the API gateway.'''
         return self._skip_sslcert_validation
+
+    @property
+    def connection_timeout(self) -> float:
+        '''The maximum allowed duration for making TCP connections to the server.'''
+        return self._connection_timeout
+
+    @property
+    def read_timeout(self) -> float:
+        '''The maximum allowed waiting time for the first byte of the response from the server.'''
+        return self._read_timeout
 
 
 def get_config():
