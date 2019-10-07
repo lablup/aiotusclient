@@ -1,6 +1,13 @@
 Changes
 =======
 
+19.09.0 (2019-10-07)
+--------------------
+
+* NEW: Add read-timeout configuration (``BACKEND_READ_TIMEOUT``) to limit the time taken for waiting
+  server responses.  Its default is set to infinity for now because currently some core APIs require
+  indefinite waiting to get responses.
+
 19.09.0rc3 (2019-10-04)
 -----------------------
 
