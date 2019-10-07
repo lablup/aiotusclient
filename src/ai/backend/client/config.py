@@ -16,12 +16,13 @@ __all__ = [
 ]
 
 _config = None
+_undefined = object()
 
 local_state_path = Path(appdirs.user_state_dir('backend.ai', 'Lablup'))
 local_cache_path = Path(appdirs.user_cache_dir('backend.ai', 'Lablup'))
 
 
-def get_env(key: str, default: Any = None, *,
+def get_env(key: str, default: Any = _undefined, *,
             clean: Callable[[str], Any] = lambda v: v):
     '''
     Retrieves a configuration value from the environment variables.
@@ -42,7 +43,7 @@ def get_env(key: str, default: Any = None, *,
     if v is None:
         v = os.environ.get('SORNA_' + key)
     if v is None:
-        if default is None:
+        if default is _undefined:
             raise KeyError(key)
         v = default
     return clean(v)
@@ -123,7 +124,7 @@ class APIConfig:
         'domain': 'default',
         'group': 'default',
         'connection_timeout': 10.0,
-        'read_timeout': 3.0,
+        'read_timeout': None,
     }
     '''
     The default values except the access and secret keys.
