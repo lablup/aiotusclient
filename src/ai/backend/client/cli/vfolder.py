@@ -17,8 +17,8 @@ def vfolder():
 
 
 @vfolder.command()
-@click.option('-a', '--list-all', is_flag=True, default=None,
-              help='List all virtual folders (superadmin previlige is required).')
+@click.option('-a', '--list-all', is_flag=True,
+              help='List all virtual folders (superadmin privilege is required).')
 def list(list_all):
     '''List virtual folders that belongs to the current user.'''
     fields = [
