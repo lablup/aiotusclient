@@ -12,8 +12,9 @@ Listing sessions
 
 List the session owned by you with various status filters.
 The most recently status-changed sessions are listed first.
-To prevent overloading the server, the result is limited to the first 10 sessions and
-it provides a separate ``--all`` option to paginate further sessions.
+To prevent overloading the server, the result is limited to the first 10
+sessions and it provides a separate ``--all`` option to paginate further
+sessions.
 
 .. code-block:: shell
 
@@ -102,79 +103,20 @@ try ``backend.ai events <sessionID>`` to receive the lifecycle events
 such as its scheduling and preparation steps.
 
 
-Accessing sessions via SSH/SFTP
--------------------------------
-
-Backend.AI offers direct access to compute sessions (containers) via SSH and SFTP,
-by auto-generating host identity and user keypairs for all sessions.
-
-In a terminal, prepare your session and download an auto-generated SSH keypair named ``id_container``.
-Then start the service port proxy ("app" command) to open a local TCP port
-that proxies the SSH/SFTP traffic to the compute sessions:
-
-.. code-block:: console
-
-  $ backend.ai start -t mysess ...
-  $ backend.ai download mysess id_container
-  $ mv id_container ~/.ssh
-  $ backend.ai app mysess sshd -b 9922
-
-In another terminal on the same PC, run your ssh client like:
-
-.. code-block:: console
-
-  $ ssh -o StrictHostKeyChecking=no \
-  >     -o UserKnownHostsFile=/dev/null \
-  >     -i ~/.ssh/id_container \
-  >     work@localhost -p 9922
-  Warning: Permanently added '[127.0.0.1]:9922' (RSA) to the list of known hosts.
-  f310e8dbce83:~$
-
-This SSH port is also compatible with SFTP to browse the container's filesystem and to upload/download
-large-sized files.
-
-You could add the following to your ``~/.ssh/config`` to avoid type
-extra options every time.
-
-.. code-block:: text
-
-  Host localhost
-    User work
-    IdentityFile ~/.ssh/id_container
-    StrictHostKeyChecking no
-    UserKnownHostsFile /dev/null
-
-.. code-block:: console
-
-  $ ssh localhost -p 9922
-
-.. warning::
-
-   Since the SSH keypair is auto-generated every time when your launch a new compute session,
-   you need to download and keep it separately for each session.
-
-To use your own SSH private key across all your sessions without downloading the auto-generated one every
-time, create a vfolder named ``.ssh`` and put the ``authorized_keys`` file that includes the public key.
-The keypair and ``.ssh`` directory permissions will be automatically updated by Backend.AI when the
-session launches.
-
-.. code-block:: console
-
-  $ ssh-keygen -t rsa -b 2048 -f id_container
-  $ cat id_container.pub > authorized_keys
-  $ backend.ai vfolder create .ssh
-  $ backend.ai vfolder upload .ssh authorized_keys
-
-
 Running sessions with accelerators
 ----------------------------------
 
-The following command spawns a Python TensorFlow session using a half
-of virtual GPU device and executes ``./mygpucode.py`` file inside it.
+Use one or more ``-r`` options to specify resource requirements when
+using ``backend.ai run`` and ``backend.ai start`` commands.
+
+For instance, the following command spawns a Python TensorFlow session
+using a half of virtual GPU device, 4 CPU cores, and 8 GiB of the main
+memory to execute ``./mygpucode.py`` file inside it.
 
 .. code-block:: shell
 
-  backend.ai run --rm -r gpu=0.5 \
+  backend.ai run --rm \
+             -r cpu=4 -r mem=8g -r cuda.shares=2 \
              python-tensorflow:1.12-py36 ./mygpucode.py
 
 
@@ -191,4 +133,5 @@ IDs.  You may specifcy multiple session IDs to terminate them at once.
 
   backend.ai rm <sessionID> [<sessionID>...]
 
-If you terminate ``PENDING`` sessions which are not scheduled yet, they are cancelled.
+If you terminate ``PENDING`` sessions which are not scheduled yet,
+they are cancelled.
