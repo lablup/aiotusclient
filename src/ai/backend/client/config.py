@@ -18,6 +18,8 @@ __all__ = [
 _config = None
 _undefined = object()
 
+DEFAULT_CHUNK_SIZE = 256 * 1024  # 256 KiB
+
 local_state_path = Path(appdirs.user_state_dir('backend.ai', 'Lablup'))
 local_cache_path = Path(appdirs.user_cache_dir('backend.ai', 'Lablup'))
 

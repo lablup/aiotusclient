@@ -6,6 +6,7 @@ import click
 
 from . import main
 from .pretty import print_info, print_error
+from ..config import DEFAULT_CHUNK_SIZE
 from ..request import Request
 from ..session import AsyncSession
 from ..compat import asyncio_run_forever, current_loop
@@ -18,7 +19,6 @@ class WSProxy:
         'reader', 'writer',
         'down_task',
     )
-    BUFFER_SIZE = 8192
 
     def __init__(self, api_session: AsyncSession,
                  session_id: str,
@@ -71,7 +71,7 @@ class WSProxy:
             self.down_task = asyncio.ensure_future(downstream())
             try:
                 while True:
-                    chunk = await self.reader.read(self.BUFFER_SIZE)
+                    chunk = await self.reader.read(DEFAULT_CHUNK_SIZE)
                     if not chunk:
                         break
                     await ws.send_bytes(chunk)

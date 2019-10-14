@@ -1,12 +1,13 @@
 import asyncio
 from pathlib import Path
 from typing import Sequence, Union
-import zlib
 
 import aiohttp
+from aiohttp import hdrs
 from tqdm import tqdm
 
 from .base import api_function
+from .config import DEFAULT_CHUNK_SIZE
 from .exceptions import BackendAPIError, BackendClientError
 from .request import Request, AttachedFile
 from .cli.pretty import ProgressReportingReader
@@ -171,27 +172,18 @@ class VFolder:
                         part = await reader.next()
                         if part is None:
                             break
-                        # It seems like that there's no automatic
-                        # decompression steps in multipart reader for
-                        # chuncked encoding.
-                        encoding = part.headers['Content-Encoding']
-                        zlib_mode = (16 + zlib.MAX_WBITS
-                                         if encoding == 'gzip'
-                                         else -zlib.MAX_WBITS)
-                        decompressor = zlib.decompressobj(wbits=zlib_mode)
-                        fp = open(part.filename, 'wb')
-                        while True:
-                            # default chunk size: 8192
-                            chunk = await part.read_chunk()
-                            if not chunk:
-                                break
-                            # raw_chunk = decompressor.decompress(chunk)
-                            raw_chunk = chunk  # TODO: refactor.
-                                               # download now doesn't send compressed content
-                            fp.write(raw_chunk)
-                            acc_bytes += len(raw_chunk)
-                            pbar.update(len(raw_chunk))
-                        fp.close()
+                        assert part.headers.get(hdrs.CONTENT_ENCODING, 'identity').lower() == 'identity'
+                        assert part.headers.get(hdrs.CONTENT_TRANSFER_ENCODING, 'binary').lower() in (
+                            'binary', '8bit', '7bit',
+                        )
+                        with open(part.filename, 'wb') as fp:
+                            while True:
+                                chunk = await part.read_chunk(DEFAULT_CHUNK_SIZE)
+                                if not chunk:
+                                    break
+                                fp.write(chunk)
+                                acc_bytes += len(chunk)
+                                pbar.update(len(chunk))
                     pbar.update(total_bytes - acc_bytes)
         except (asyncio.CancelledError, asyncio.TimeoutError):
             # These exceptions must be bubbled up.
