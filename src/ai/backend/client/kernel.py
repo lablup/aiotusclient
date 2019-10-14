@@ -9,9 +9,13 @@ from typing import (
 from pathlib import Path
 import uuid
 
+import aiohttp
+from aiohttp import hdrs
 from tqdm import tqdm
 
 from .base import api_function
+from .compat import current_loop
+from .config import DEFAULT_CHUNK_SIZE
 from .exceptions import BackendClientError
 from .request import (
     Request, AttachedFile,
@@ -457,40 +461,37 @@ class Kernel:
         rqst.set_json({
             'files': [*map(str, files)],
         })
+        file_names = []
         async with rqst.fetch() as resp:
-            chunk_size = 1 * 1024
-            file_names = None
+            loop = current_loop()
             tqdm_obj = tqdm(desc='Downloading files',
                             unit='bytes', unit_scale=True,
                             total=resp.content.total_bytes,
                             disable=not show_progress)
+            reader = aiohttp.MultipartReader.from_response(resp.raw_response)
             with tqdm_obj as pbar:
-                fp = None
                 while True:
-                    chunk = await resp.aread(chunk_size)
-                    if not chunk:
+                    part = await reader.next()
+                    if part is None:
                         break
-                    pbar.update(len(chunk))
-                    # TODO: more elegant parsing of multipart response?
-                    for part in chunk.split(b'\r\n'):
-                        if part.startswith(b'--'):
-                            if fp:
-                                fp.close()
-                                with tarfile.open(fp.name) as tarf:
-                                    tarf.extractall(path=dest)
-                                    file_names = tarf.getnames()
-                                os.unlink(fp.name)
-                            fp = tempfile.NamedTemporaryFile(suffix='.tar',
-                                                             delete=False)
-                        elif part.startswith(b'Content-') or part == b'':
-                            continue
-                        else:
-                            fp.write(part)
-                if fp:
+                    assert part.headers.get(hdrs.CONTENT_ENCODING, 'identity').lower() == 'identity'
+                    assert part.headers.get(hdrs.CONTENT_TRANSFER_ENCODING, 'binary').lower() in (
+                        'binary', '8bit', '7bit',
+                    )
+                    fp = tempfile.NamedTemporaryFile(suffix='.tar',
+                                                     delete=False)
+                    while True:
+                        chunk = await part.read_chunk(DEFAULT_CHUNK_SIZE)
+                        if not chunk:
+                            break
+                        await loop.run_in_executor(None, lambda: fp.write(chunk))
+                        pbar.update(len(chunk))
                     fp.close()
+                    with tarfile.open(fp.name) as tarf:
+                        tarf.extractall(path=dest)
+                        file_names.extend(tarf.getnames())
                     os.unlink(fp.name)
-            result = {'file_names': file_names}
-            return result
+        return {'file_names': file_names}
 
     @api_function
     async def list_files(self, path: Union[str, Path] = '.'):

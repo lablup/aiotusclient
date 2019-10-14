@@ -1,4 +1,3 @@
-import asyncio
 from pathlib import Path
 from typing import Sequence, Union
 
@@ -7,8 +6,9 @@ from aiohttp import hdrs
 from tqdm import tqdm
 
 from .base import api_function
+from .compat import current_loop
 from .config import DEFAULT_CHUNK_SIZE
-from .exceptions import BackendAPIError, BackendClientError
+from .exceptions import BackendAPIError
 from .request import Request, AttachedFile
 from .cli.pretty import ProgressReportingReader
 
@@ -155,43 +155,42 @@ class VFolder:
         rqst.set_json({
             'files': files,
         })
-        try:
-            async with rqst.fetch() as resp:
-                if resp.status // 100 != 2:
-                    raise BackendAPIError(resp.status, resp.reason,
-                                          await resp.text())
-                total_bytes = int(resp.headers['X-TOTAL-PAYLOADS-LENGTH'])
-                tqdm_obj = tqdm(desc='Downloading files',
-                                unit='bytes', unit_scale=True,
-                                total=total_bytes,
-                                disable=not show_progress)
-                reader = aiohttp.MultipartReader.from_response(resp.raw_response)
-                with tqdm_obj as pbar:
-                    acc_bytes = 0
-                    while True:
-                        part = await reader.next()
-                        if part is None:
-                            break
-                        assert part.headers.get(hdrs.CONTENT_ENCODING, 'identity').lower() == 'identity'
-                        assert part.headers.get(hdrs.CONTENT_TRANSFER_ENCODING, 'binary').lower() in (
-                            'binary', '8bit', '7bit',
-                        )
-                        with open(part.filename, 'wb') as fp:
-                            while True:
-                                chunk = await part.read_chunk(DEFAULT_CHUNK_SIZE)
-                                if not chunk:
-                                    break
-                                fp.write(chunk)
-                                acc_bytes += len(chunk)
-                                pbar.update(len(chunk))
-                    pbar.update(total_bytes - acc_bytes)
-        except (asyncio.CancelledError, asyncio.TimeoutError):
-            # These exceptions must be bubbled up.
-            raise
-        except aiohttp.ClientError as e:
-            msg = 'Request to the API endpoint has failed.\n' \
-                  'Check your network connection and/or the server status.'
-            raise BackendClientError(msg) from e
+        file_names = []
+        async with rqst.fetch() as resp:
+            if resp.status // 100 != 2:
+                raise BackendAPIError(resp.status, resp.reason,
+                                      await resp.text())
+            total_bytes = int(resp.headers['X-TOTAL-PAYLOADS-LENGTH'])
+            tqdm_obj = tqdm(desc='Downloading files',
+                            unit='bytes', unit_scale=True,
+                            total=total_bytes,
+                            disable=not show_progress)
+            reader = aiohttp.MultipartReader.from_response(resp.raw_response)
+            with tqdm_obj as pbar:
+                loop = current_loop()
+                acc_bytes = 0
+                while True:
+                    part = await reader.next()
+                    if part is None:
+                        break
+                    assert part.headers.get(hdrs.CONTENT_ENCODING, 'identity').lower() in (
+                        'identity',
+                        'gzip',       # Prior to v19.09.4, the server had a bug to set this incorrectly.
+                                      # This legacy handling will be removed in v19.12 release.
+                    )
+                    assert part.headers.get(hdrs.CONTENT_TRANSFER_ENCODING, 'binary').lower() in (
+                        'binary', '8bit', '7bit',
+                    )
+                    with open(part.filename, 'wb') as fp:
+                        while True:
+                            chunk = await part.read_chunk(DEFAULT_CHUNK_SIZE)
+                            if not chunk:
+                                break
+                            await loop.run_in_executor(None, lambda: fp.write(chunk))
+                            acc_bytes += len(chunk)
+                            pbar.update(len(chunk))
+                pbar.update(total_bytes - acc_bytes)
+        return {'file_names': file_names}
 
     @api_function
     async def list_files(self, path: Union[str, Path] = '.'):
