@@ -175,8 +175,6 @@ class VFolder:
                         break
                     assert part.headers.get(hdrs.CONTENT_ENCODING, 'identity').lower() in (
                         'identity',
-                        'gzip',       # Prior to v19.09.4, the server had a bug to set this incorrectly.
-                                      # This legacy handling will be removed in v19.12 release.
                     )
                     assert part.headers.get(hdrs.CONTENT_TRANSFER_ENCODING, 'binary').lower() in (
                         'binary', '8bit', '7bit',
