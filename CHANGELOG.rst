@@ -1,6 +1,19 @@
 Changes
 =======
 
+19.09.1 (2019-10-15)
+--------------------
+
+* OPTIMIZE: vfolder downloads and application proxies are faster to transfer large files due to increased
+  network buffer sizes.
+
+* FIX: The kernel/vfolder download APIs now uses the default event loop executor for file write
+  operations which reduces latency jitters in user async applications that embeds this SDK.
+
+* FIX: Remove a wrong default for the ``--list-all`` option of the ``backend.ai vfolder list`` command.
+
+* DOCS: Add manuals for SSH/SFTP usage.
+
 19.09.0 (2019-10-07)
 --------------------
 
