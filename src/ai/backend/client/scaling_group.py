@@ -340,8 +340,8 @@ class ScalingGroup:
         :param group_id: The ID of a group.
         '''
         query = textwrap.dedent('''\
-            mutation($domain: String!) {
-                disassociate_all_scaling_groups_with_group(group_id: $group_id) {
+            mutation($group_id: String!) {
+                disassociate_all_scaling_groups_with_group(user_group: $group_id) {
                     ok msg
                 }
             }
