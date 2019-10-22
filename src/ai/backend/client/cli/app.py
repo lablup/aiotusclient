@@ -167,7 +167,7 @@ def app(session_id, app, protocol, bind):
                              protocol, host, port,
                              loop=loop)
         await runner.ready()
-        if app == 'vnc':
+        if app == 'vnc-web':
             user_url_template = \
                 "{protocol}://{host}:{port}/vnc.html" \
                 "?host={host}&port={port}&password=backendai&autoconnect=true"
@@ -179,7 +179,7 @@ def app(session_id, app, protocol, bind):
             "provided by the session \"{0}\" ".format(session_id) +
             "is available at:\n{0}".format(user_url)
         )
-        if app == 'vnc' and host == '0.0.0.0':
+        if host == '0.0.0.0':
             print_warn('NOTE: Replace "0.0.0.0" with the actual hostname you use '
                        'to connect with the CLI app proxy.')
 
