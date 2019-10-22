@@ -13,7 +13,7 @@ from ..exceptions import BackendAPIError
 
 __all__ = (
     'PrintStatus', 'print_pretty', 'print_info', 'print_wait',
-    'print_done', 'print_fail',
+    'print_done', 'print_warn', 'print_fail',
 )
 
 

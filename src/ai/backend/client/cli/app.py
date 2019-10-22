@@ -5,7 +5,7 @@ import aiohttp
 import click
 
 from . import main
-from .pretty import print_info, print_error
+from .pretty import print_info, print_warn, print_error
 from ..config import DEFAULT_CHUNK_SIZE
 from ..request import Request
 from ..session import AsyncSession
@@ -167,12 +167,21 @@ def app(session_id, app, protocol, bind):
                              protocol, host, port,
                              loop=loop)
         await runner.ready()
+        if app == 'vnc':
+            user_url_template = \
+                "{protocol}://{host}:{port}/vnc.html" \
+                "?host={host}&port={port}&password=backendai&autoconnect=true"
+        else:
+            user_url_template = "{protocol}://{host}:{port}"
+        user_url = user_url_template.format(protocol=protocol, host=host, port=port)
         print_info(
             "A local proxy to the application \"{0}\" ".format(app) +
             "provided by the session \"{0}\" ".format(session_id) +
-            "is available at: {0}://{1}:{2}"
-            .format(protocol, host, port)
+            "is available at:\n{0}".format(user_url)
         )
+        if app == 'vnc' and host == '0.0.0.0':
+            print_warn('NOTE: Replace "0.0.0.0" with the actual hostname you use '
+                       'to connect with the CLI app proxy.')
 
     async def app_shutdown():
         nonlocal api_session, runner
