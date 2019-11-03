@@ -1,6 +1,13 @@
 Changes
 =======
 
+19.09.2 (2019-11-04)
+--------------------
+
+* NEW: API for disassociating scaling groups from a user group
+
+* FIX: Regression in "admin keypairs" command due to code/server changes
+
 19.09.1 (2019-10-15)
 --------------------
 
