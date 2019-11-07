@@ -73,8 +73,10 @@ class VFolder:
             return await resp.json()
 
     @api_function
-    async def delete(self):
+    async def delete(self, oid=None):
         rqst = Request(self.session, 'DELETE', '/folders/{0}'.format(self.name))
+        if oid is not None:
+            rqst.set_json({'id': oid})
         async with rqst.fetch():
             return {}
 
