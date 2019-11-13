@@ -3,7 +3,7 @@ from unittest import mock
 import asynctest
 
 from ai.backend.client.session import Session
-from tests import ContextMagicMock
+from ai.backend.client.test_utils import ContextMagicMock
 
 
 def test_status(self, mocker):

@@ -12,7 +12,7 @@ stages:
 python:
   - "3.6"
   - "3.7"
-  - "3.8-dev"
+  - "3.8"
 os:
   - linux
   # - osx  # Travis CI does not officially support Python on macOS.
@@ -21,9 +21,6 @@ env:
     - BACKEND_CLIENT_CLOUD_TEST=1  # use beta server for integration tests
 
 matrix:
-  allow_failures:
-    - python: "3.8-dev"
-      os: linux
   fast_finish: true
 
 # test stage

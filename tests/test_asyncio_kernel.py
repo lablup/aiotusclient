@@ -3,7 +3,7 @@ import pytest
 
 from ai.backend.client.compat import token_hex
 from ai.backend.client.session import AsyncSession
-from tests import ContextMagicMock
+from ai.backend.client.test_utils import ContextMagicMock
 
 
 @pytest.mark.asyncio
