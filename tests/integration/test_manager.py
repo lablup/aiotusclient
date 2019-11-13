@@ -7,7 +7,7 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.mark.asyncio
-async def test_get_manager_status(self):
+async def test_get_manager_status():
     with Session() as sess:
         resp = sess.Manager.status()
     assert resp['status'] == 'running'

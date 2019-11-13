@@ -7,14 +7,14 @@ from ai.backend.client.session import Session, AsyncSession
 pytestmark = pytest.mark.integration
 
 
-def test_connection(self):
+def test_connection():
     with Session() as sess:
         request = Request(sess, 'GET', '/')
         with request.fetch() as resp:
             assert 'version' in resp.json()
 
 
-def test_not_found(self):
+def test_not_found():
     with Session() as sess:
         request = Request(sess, 'GET', '/invalid-url-wow')
         with pytest.raises(BackendAPIError) as e:
@@ -29,7 +29,7 @@ def test_not_found(self):
 
 
 @pytest.mark.asyncio
-async def test_async_connection(self):
+async def test_async_connection():
     async with AsyncSession() as sess:
         request = Request(sess, 'GET', '/')
         async with request.fetch() as resp:

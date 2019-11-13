@@ -8,7 +8,7 @@ from ai.backend.client.session import Session
 from ai.backend.client.test_utils import ContextMagicMock
 
 
-def test_create_with_config(self, mocker):
+def test_create_with_config(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = ContextMagicMock(
         status=201, json=asynctest.CoroutineMock())
@@ -31,7 +31,7 @@ def test_create_with_config(self, mocker):
         assert k.session.config.secret_key == 'asdf'
 
 
-def test_create_kernel_url(self, mocker):
+def test_create_kernel_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = ContextMagicMock(
         status=201, json=asynctest.CoroutineMock())
@@ -45,7 +45,7 @@ def test_create_kernel_url(self, mocker):
         mock_req_obj.fetch.return_value.json.assert_called_once_with()
 
 
-def test_create_kernel_return_id_only(self, mocker):
+def test_create_kernel_return_id_only(mocker):
     return_value = {'kernelId': 'mock_kernel_id'}
     mock_json_coro = asynctest.CoroutineMock(return_value=return_value)
     mock_req_obj = mock.Mock()
@@ -58,7 +58,7 @@ def test_create_kernel_return_id_only(self, mocker):
         assert k.kernel_id == return_value['kernelId']
 
 
-def test_destroy_kernel_url(self, mocker):
+def test_destroy_kernel_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = ContextMagicMock(status=204)
     mock_req = mocker.patch('ai.backend.client.kernel.Request',
@@ -75,7 +75,7 @@ def test_destroy_kernel_url(self, mocker):
     mock_req_obj.fetch.assert_called_once_with()
 
 
-def test_restart_kernel_url(self, mocker):
+def test_restart_kernel_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = ContextMagicMock(status=204)
     mock_req = mocker.patch('ai.backend.client.kernel.Request',
@@ -92,7 +92,7 @@ def test_restart_kernel_url(self, mocker):
         mock_req_obj.fetch.assert_called_once_with()
 
 
-def test_get_kernel_info_url(self, mocker):
+def test_get_kernel_info_url(mocker):
     return_value = {}
     mock_json_coro = asynctest.CoroutineMock(return_value=return_value)
     mock_req_obj = mock.Mock()
@@ -113,7 +113,7 @@ def test_get_kernel_info_url(self, mocker):
         mock_req_obj.fetch.return_value.json.assert_called_once_with()
 
 
-def test_execute_code_url(self, mocker):
+def test_execute_code_url(mocker):
     return_value = {'result': 'hi'}
     mock_json_coro = asynctest.CoroutineMock(return_value=return_value)
     mock_req_obj = mock.Mock()

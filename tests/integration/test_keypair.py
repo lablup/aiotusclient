@@ -10,7 +10,7 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.mark.asyncio
-async def test_keypair_manipulation_operations(self):
+async def test_keypair_manipulation_operations():
     email = 'testion' + uuid.uuid4().hex + '@test.mars'
     access_key = None
     with Session() as sess:
@@ -53,7 +53,7 @@ async def test_keypair_manipulation_operations(self):
 
 
 @pytest.mark.asyncio
-async def test_user_cannot_create_keypair(self, userconfig):
+async def test_user_cannot_create_keypair(userconfig):
     email = 'testion' + uuid.uuid4().hex + '@test.mars'
     with Session() as sess:
         with pytest.raises(BackendAPIError):
@@ -63,7 +63,7 @@ async def test_user_cannot_create_keypair(self, userconfig):
 
 
 @pytest.mark.asyncio
-async def test_keypair_info(self):
+async def test_keypair_info():
     current_config = get_config()
     with Session() as sess:
         result = sess.KeyPair(current_config.access_key).info()

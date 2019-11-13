@@ -30,7 +30,7 @@ def mock_request_params(session):
     }
 
 
-def test_request_initialization(self, mock_request_params):
+def test_request_initialization(mock_request_params):
     rqst = Request(**mock_request_params)
 
     assert rqst.session == mock_request_params['session']
@@ -41,7 +41,7 @@ def test_request_initialization(self, mock_request_params):
     assert 'X-BackendAI-Version' in rqst.headers
 
 
-def test_request_set_content_none(self, mock_request_params):
+def test_request_set_content_none(mock_request_params):
     mock_request_params = mock_request_params.copy()
     mock_request_params['content'] = None
     rqst = Request(**mock_request_params)
@@ -49,7 +49,7 @@ def test_request_set_content_none(self, mock_request_params):
     assert rqst._pack_content() is rqst.content
 
 
-def test_request_set_content(self, mock_request_params):
+def test_request_set_content(mock_request_params):
     rqst = Request(**mock_request_params)
     assert rqst.content == mock_request_params['content']
     assert rqst.content_type == 'application/json'
@@ -70,7 +70,7 @@ def test_request_set_content(self, mock_request_params):
     assert rqst._pack_content() is rqst.content
 
 
-def test_request_attach_files(self, mock_request_params):
+def test_request_attach_files(mock_request_params):
     files = [
         AttachedFile('test1.txt', io.BytesIO(), 'application/octet-stream'),
         AttachedFile('test2.txt', io.BytesIO(), 'application/octet-stream'),
@@ -91,7 +91,7 @@ def test_request_attach_files(self, mock_request_params):
     assert packed_content.is_multipart
 
 
-def test_build_correct_url(self, mock_request_params):
+def test_build_correct_url(mock_request_params):
     config = get_config()
     canonical_url = str(config.endpoint).rstrip('/') + '/function?app=999'
 
@@ -104,7 +104,7 @@ def test_build_correct_url(self, mock_request_params):
     assert str(rqst._build_url()) == canonical_url
 
 
-def test_fetch_invalid_method(self, mock_request_params):
+def test_fetch_invalid_method(mock_request_params):
     mock_request_params['method'] = 'STRANGE'
     rqst = Request(**mock_request_params)
 
@@ -113,7 +113,7 @@ def test_fetch_invalid_method(self, mock_request_params):
             pass
 
 
-def test_fetch(self, dummy_endpoint):
+def test_fetch(dummy_endpoint):
     with aioresponses() as m, Session() as session:
         body = b'hello world'
         m.post(
@@ -146,7 +146,7 @@ def test_fetch(self, dummy_endpoint):
             assert resp.content_length == len(body)
 
 
-def test_streaming_fetch(self, dummy_endpoint):
+def test_streaming_fetch(dummy_endpoint):
     # Read content by chunks.
     with aioresponses() as m, Session() as session:
         body = b'hello world'
@@ -166,7 +166,7 @@ def test_streaming_fetch(self, dummy_endpoint):
                 assert resp.text()
 
 
-def test_invalid_requests(self, dummy_endpoint):
+def test_invalid_requests(dummy_endpoint):
     with aioresponses() as m, Session() as session:
         body = json.dumps({
             'type': 'https://api.backend.ai/probs/kernel-not-found',
@@ -188,7 +188,7 @@ def test_invalid_requests(self, dummy_endpoint):
 
 
 @pytest.mark.asyncio
-async def test_fetch_invalid_method_async(self):
+async def test_fetch_invalid_method_async():
     async with AsyncSession() as session:
         rqst = Request(session, 'STRANGE', '/')
         with pytest.raises(AssertionError):
@@ -197,7 +197,7 @@ async def test_fetch_invalid_method_async(self):
 
 
 @pytest.mark.asyncio
-async def test_fetch_client_error_async(self, dummy_endpoint):
+async def test_fetch_client_error_async(dummy_endpoint):
     with aioresponses() as m:
         async with AsyncSession() as session:
             m.post(dummy_endpoint,
@@ -209,7 +209,7 @@ async def test_fetch_client_error_async(self, dummy_endpoint):
 
 
 @pytest.mark.asyncio
-async def test_fetch_cancellation_async(self, dummy_endpoint):
+async def test_fetch_cancellation_async(dummy_endpoint):
     with aioresponses() as m:
         async with AsyncSession() as session:
             m.post(dummy_endpoint,
@@ -221,7 +221,7 @@ async def test_fetch_cancellation_async(self, dummy_endpoint):
 
 
 @pytest.mark.asyncio
-async def test_fetch_timeout_async(self, dummy_endpoint):
+async def test_fetch_timeout_async(dummy_endpoint):
     with aioresponses() as m:
         async with AsyncSession() as session:
             m.post(dummy_endpoint,
@@ -232,7 +232,7 @@ async def test_fetch_timeout_async(self, dummy_endpoint):
                     pass
 
 
-def test_response_sync(self, defconfig, dummy_endpoint):
+def test_response_sync(defconfig, dummy_endpoint):
     body = b'{"test": 1234}'
     with aioresponses() as m:
         m.post(
@@ -248,7 +248,7 @@ def test_response_sync(self, defconfig, dummy_endpoint):
 
 
 @pytest.mark.asyncio
-async def test_response_async(self, defconfig, dummy_endpoint):
+async def test_response_async(defconfig, dummy_endpoint):
     body = b'{"test": 5678}'
     with aioresponses() as m:
         m.post(

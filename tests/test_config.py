@@ -61,39 +61,38 @@ def test_bool_env():
         bool_env('other')
 
 
-class TestAPIConfig:
+def test_api_config_initialization(cfg_params):
+    params = cfg_params
+    cfg = APIConfig(**params)
 
-    def test_api_config_initialization(self, cfg_params):
-        params = cfg_params
-        cfg = APIConfig(**params)
+    assert str(cfg.endpoint) == params['endpoint']
+    assert str(cfg.endpoint) == params['endpoint']
+    assert cfg.user_agent == params['user_agent']
+    assert cfg.access_key == params['access_key']
+    assert cfg.secret_key == params['secret_key']
+    assert cfg.version == params['version']
+    assert cfg.hash_type == params['hash_type']
+    assert set(cfg.vfolder_mounts) == set(params['vfolder_mounts'])
 
-        assert str(cfg.endpoint) == params['endpoint']
-        assert str(cfg.endpoint) == params['endpoint']
-        assert cfg.user_agent == params['user_agent']
-        assert cfg.access_key == params['access_key']
-        assert cfg.secret_key == params['secret_key']
-        assert cfg.version == params['version']
-        assert cfg.hash_type == params['hash_type']
-        assert set(cfg.vfolder_mounts) == set(params['vfolder_mounts'])
+    assert isinstance(cfg.endpoint, URL)
+    assert isinstance(cfg.version, str)
+    assert isinstance(cfg.user_agent, str)
+    assert isinstance(cfg.access_key, str)
+    assert isinstance(cfg.secret_key, str)
+    assert isinstance(cfg.hash_type, str)
+    assert isinstance(cfg.vfolder_mounts, list)
 
-        assert isinstance(cfg.endpoint, URL)
-        assert isinstance(cfg.version, str)
-        assert isinstance(cfg.user_agent, str)
-        assert isinstance(cfg.access_key, str)
-        assert isinstance(cfg.secret_key, str)
-        assert isinstance(cfg.hash_type, str)
-        assert isinstance(cfg.vfolder_mounts, list)
 
-    def test_validation(self):
-        mandatory_args = {'access_key': 'a', 'secret_key': 's'}
-        with pytest.raises(ValueError):
-            APIConfig(endpoint='/mylocalpath', **mandatory_args)
-        cfg = APIConfig(vfolder_mounts=['abc'], **mandatory_args)
-        assert cfg.vfolder_mounts == ['abc']
-        cfg = APIConfig(vfolder_mounts='', **mandatory_args)
-        assert cfg.vfolder_mounts == []
-        cfg = APIConfig(vfolder_mounts=['abc', 'def'], **mandatory_args)
-        assert set(cfg.vfolder_mounts) == set(['abc', 'def'])
+def test_validation():
+    mandatory_args = {'access_key': 'a', 'secret_key': 's'}
+    with pytest.raises(ValueError):
+        APIConfig(endpoint='/mylocalpath', **mandatory_args)
+    cfg = APIConfig(vfolder_mounts=['abc'], **mandatory_args)
+    assert cfg.vfolder_mounts == ['abc']
+    cfg = APIConfig(vfolder_mounts='', **mandatory_args)
+    assert cfg.vfolder_mounts == []
+    cfg = APIConfig(vfolder_mounts=['abc', 'def'], **mandatory_args)
+    assert set(cfg.vfolder_mounts) == set(['abc', 'def'])
 
 
 def test_set_and_get_config(mocker, cfg_params):

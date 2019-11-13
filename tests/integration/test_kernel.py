@@ -51,20 +51,20 @@ def exec_loop(kernel, mode, code, opts=None, user_inputs=None):
 
 
 @pytest.yield_fixture
-def py3_kernel(self):
+def py3_kernel():
     with Session() as sess:
         kernel = sess.Kernel.get_or_create('python:3.6-ubuntu18.04')
         yield kernel
         kernel.destroy()
 
 
-def test_hello(self):
+def test_hello():
     with Session() as sess:
         result = sess.Kernel.hello()
     assert 'version' in result
 
 
-def test_kernel_lifecycles(self):
+def test_kernel_lifecycles():
     with Session() as sess:
         kernel = sess.Kernel.get_or_create('python:3.6-ubuntu18.04')
         kernel_id = kernel.kernel_id
@@ -83,7 +83,7 @@ def test_kernel_lifecycles(self):
         assert e.value.status == 404
 
 
-def test_kernel_execution_query_mode(self, py3_kernel):
+def test_kernel_execution_query_mode(py3_kernel):
     code = 'print("hello world"); x = 1 / 0'
     console, n = exec_loop(py3_kernel, 'query', code, None)
     assert 'hello world' in console['stdout']
@@ -93,7 +93,7 @@ def test_kernel_execution_query_mode(self, py3_kernel):
     assert info['numQueriesExecuted'] == n + 1
 
 
-def test_kernel_execution_query_mode_user_input(self, py3_kernel):
+def test_kernel_execution_query_mode_user_input(py3_kernel):
     name = token_hex(8)
     code = 'name = input("your name? "); print(f"hello, {name}!")'
     console, n = exec_loop(py3_kernel, 'query', code, None, user_inputs=[name])
@@ -101,7 +101,7 @@ def test_kernel_execution_query_mode_user_input(self, py3_kernel):
     assert 'hello, {}!'.format(name) in console['stdout']
 
 
-def test_kernel_get_or_create_reuse(self):
+def test_kernel_get_or_create_reuse():
     with Session() as sess:
         try:
             # Sessions with same token and same language must be reused.
@@ -115,7 +115,7 @@ def test_kernel_get_or_create_reuse(self):
             kernel1.destroy()
 
 
-def test_kernel_execution_batch_mode(self, py3_kernel):
+def test_kernel_execution_batch_mode(py3_kernel):
     with tempfile.NamedTemporaryFile('w', suffix='.py', dir=Path.cwd()) as f:
         f.write('print("hello world")\nx = 1 / 0\n')
         f.flush()
@@ -130,7 +130,7 @@ def test_kernel_execution_batch_mode(self, py3_kernel):
     assert len(console['media']) == 0
 
 
-def test_kernel_execution_batch_mode_user_input(self, py3_kernel):
+def test_kernel_execution_batch_mode_user_input(py3_kernel):
     name = token_hex(8)
     with tempfile.NamedTemporaryFile('w', suffix='.py', dir=Path.cwd()) as f:
         f.write('name = input("your name? "); print(f"hello, {name}!")')
@@ -145,7 +145,7 @@ def test_kernel_execution_batch_mode_user_input(self, py3_kernel):
     assert 'hello, {}!'.format(name) in console['stdout']
 
 
-def test_kernel_execution_with_vfolder_mounts(self):
+def test_kernel_execution_with_vfolder_mounts():
     with Session() as sess:
         vfname = 'vftest-' + token_hex(4)
         sess.VFolder.create(vfname)
@@ -173,7 +173,7 @@ def test_kernel_execution_with_vfolder_mounts(self):
             vfolder.delete()
 
 
-def test_kernel_restart(self, py3_kernel):
+def test_kernel_restart(py3_kernel):
     num_queries = 1  # first query is done by py3_kernel fixture (creation)
     first_code = textwrap.dedent('''
     a = "first"
@@ -209,7 +209,7 @@ def test_kernel_restart(self, py3_kernel):
     assert info['numQueriesExecuted'] == num_queries
 
 
-def test_admin_api(self, py3_kernel):
+def test_admin_api(py3_kernel):
     sess = py3_kernel.session
     q = '''
     query($ak: String!) {

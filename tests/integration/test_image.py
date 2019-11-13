@@ -8,7 +8,7 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.mark.asyncio
-async def test_list_images_by_admin(self):
+async def test_list_images_by_admin():
     with Session() as sess:
         images = sess.Image.list()
         image = images[0]
@@ -19,7 +19,7 @@ async def test_list_images_by_admin(self):
 
 
 @pytest.mark.asyncio
-async def test_list_images_by_user(self, userconfig):
+async def test_list_images_by_user(userconfig):
     with Session() as sess:
         images = sess.Image.list()
         image = images[0]
@@ -29,12 +29,12 @@ async def test_list_images_by_user(self, userconfig):
     assert 'hash' in image
 
 # This is invasive...
-# async def test_rescan_images(self):
+# async def test_rescan_images():
 #     pass
 
 
 @pytest.mark.asyncio
-async def test_alias_dealias_image_by_admin(self):
+async def test_alias_dealias_image_by_admin():
     with Session() as sess:
         def get_test_image_info():
             items = sess.Image.list(
@@ -55,7 +55,7 @@ async def test_alias_dealias_image_by_admin(self):
 
 
 @pytest.mark.asyncio
-async def test_user_cannot_mutate_alias_dealias(self, userconfig):
+async def test_user_cannot_mutate_alias_dealias(userconfig):
     with Session() as sess:
         test_alias = 'testalias-b9f1ce136f584ca892d5fef3e78dd11d'
         with pytest.raises(BackendAPIError):

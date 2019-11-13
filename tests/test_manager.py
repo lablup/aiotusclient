@@ -6,7 +6,7 @@ from ai.backend.client.session import Session
 from ai.backend.client.test_utils import ContextMagicMock
 
 
-def test_status(self, mocker):
+def test_status(mocker):
     return_value = {'status': 'running', 'active_sessions': 3}
     mock_json_coro = asynctest.CoroutineMock(return_value=return_value)
     mock_req_obj = mocker.Mock()
@@ -21,7 +21,7 @@ def test_status(self, mocker):
         assert resp['active_sessions'] == return_value['active_sessions']
 
 
-def test_freeze(self, mocker):
+def test_freeze(mocker):
     mock_req_obj = mocker.Mock()
     mock_req_obj.fetch.return_value = ContextMagicMock(status=204)
     mocker.patch('ai.backend.client.manager.Request', return_value=mock_req_obj)
@@ -31,7 +31,7 @@ def test_freeze(self, mocker):
         mock_req_obj.fetch.assert_called_once_with()
 
 
-def test_freeze_opt_force_kill(self, mocker):
+def test_freeze_opt_force_kill(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = ContextMagicMock(status=204)
     mocker.patch('ai.backend.client.manager.Request', return_value=mock_req_obj)
@@ -41,7 +41,7 @@ def test_freeze_opt_force_kill(self, mocker):
         mock_req_obj.fetch.assert_called_once_with()
 
 
-def test_unfreeze(self, mocker):
+def test_unfreeze(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = ContextMagicMock(status=204)
     mocker.patch('ai.backend.client.manager.Request', return_value=mock_req_obj)
