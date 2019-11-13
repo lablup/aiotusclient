@@ -14,6 +14,9 @@ import pytest
 from ai.backend.client.compat import token_hex
 from ai.backend.client.kernel import Kernel
 
+# module-level marker
+pytestmark = pytest.mark.integration
+
 log = logging.getLogger('ai.backend.client.test.load')
 
 sample_code = '''
@@ -158,7 +161,6 @@ def destroy_kernels(kernel_ids, parallel=False):
     print_stat('destroy_kernel', times_taken)
 
 
-@pytest.mark.integration
 @pytest.mark.parametrize('concurrency,parallel,restart', [
     (5, False, False),
     (5, True,  False),
