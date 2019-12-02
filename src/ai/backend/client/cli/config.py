@@ -97,3 +97,24 @@ def logout():
                 pass
         except Exception as e:
             print_error(e)
+
+
+@main.command()
+@click.argument('old_password', metavar='OLD_PASSWORD')
+@click.argument('new_password', metavar='NEW_PASSWORD')
+@click.argument('new_password2', metavar='NEW_PASSWORD2')
+def update_password(old_password, new_password, new_password2):
+    '''
+    Update user's password.
+    '''
+    config = get_config()
+    if config.endpoint_type != 'session':
+        print_warn('To update password, your endpoint type must be "session".')
+        raise click.Abort()
+
+    with Session() as session:
+        try:
+            session.Auth.update_password(old_password, new_password, new_password2)
+            print_done('Password updated.')
+        except Exception as e:
+            print_error(e)
