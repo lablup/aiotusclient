@@ -330,3 +330,28 @@ class ScalingGroup:
         async with rqst.fetch() as resp:
             data = await resp.json()
             return data['disassociate_scaling_group_with_user_group']
+
+    @api_function
+    @classmethod
+    async def dissociate_all_group(cls, group_id: str):
+        '''
+        Dissociate all scaling_groups from group.
+
+        :param group_id: The ID of a group.
+        '''
+        query = textwrap.dedent('''\
+            mutation($group_id: String!) {
+                disassociate_all_scaling_groups_with_group(user_group: $group_id) {
+                    ok msg
+                }
+            }
+        ''')
+        variables = {'group_id': group_id}
+        rqst = Request(cls.session, 'POST', '/admin/graphql')
+        rqst.set_json({
+            'query': query,
+            'variables': variables,
+        })
+        async with rqst.fetch() as resp:
+            data = await resp.json()
+            return data['disassociate_all_scaling_groups_with_group']

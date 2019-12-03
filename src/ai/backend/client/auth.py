@@ -105,3 +105,19 @@ class Auth:
         rqst = Request(cls.session, 'POST', '/server/logout')
         async with rqst.fetch() as resp:
             resp.raw_response.raise_for_status()
+
+    @api_function
+    @classmethod
+    async def update_password(cls, old_password: str, new_password: str, new_password2: str) -> dict:
+        """
+        Update user's password. This API works only for account owner.
+        """
+        from .request import Request
+        rqst = Request(cls.session, 'POST', '/auth/update-password')
+        rqst.set_json({
+            'old_password': old_password,
+            'new_password': new_password,
+            'new_password2': new_password2,
+        })
+        async with rqst.fetch() as resp:
+            return await resp.json()

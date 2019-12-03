@@ -1,6 +1,35 @@
 Changes
 =======
 
+19.09.3 (2019-12-03)
+--------------------
+
+* NEW: SDK API (``Auth.update_password()``) and CLI command (``backend.ai update-password``)
+  to allow changing the password by the users themselves.
+
+* NEW: SDK API (``VFolder.delete_by_id()``) so that superadmins can delete
+  a vfolder owned by arbitrary user/group.
+
+19.09.2 (2019-11-04)
+--------------------
+
+* NEW: API for disassociating scaling groups from a user group
+
+* FIX: Regression in "admin keypairs" command due to code/server changes
+
+19.09.1 (2019-10-15)
+--------------------
+
+* OPTIMIZE: vfolder downloads and application proxies are faster to transfer large files due to increased
+  network buffer sizes.
+
+* FIX: The kernel/vfolder download APIs now uses the default event loop executor for file write
+  operations which reduces latency jitters in user async applications that embeds this SDK.
+
+* FIX: Remove a wrong default for the ``--list-all`` option of the ``backend.ai vfolder list`` command.
+
+* DOCS: Add manuals for SSH/SFTP usage.
+
 19.09.0 (2019-10-07)
 --------------------
 

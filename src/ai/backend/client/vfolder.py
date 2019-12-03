@@ -39,6 +39,14 @@ class VFolder:
 
     @api_function
     @classmethod
+    async def delete_by_id(cls, oid):
+        rqst = Request(cls.session, 'DELETE', '/folders')
+        rqst.set_json({'id': oid})
+        async with rqst.fetch():
+            return {}
+
+    @api_function
+    @classmethod
     async def list(cls, list_all=False):
         rqst = Request(cls.session, 'GET', '/folders')
         rqst.set_json({'all': list_all})

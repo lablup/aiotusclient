@@ -137,8 +137,8 @@ class KeyPair:
                 '}'
         else:
             uid_type = 'Int!' if isinstance(user_id, int) else 'String!'
-            q = 'query($user_id: {0}, $is_active: Boolean) {{'.format(uid_type) + \
-                '  keypairs(user_id: $user_id, is_active: $is_active) {' \
+            q = 'query($email: {0}, $is_active: Boolean) {{'.format(uid_type) + \
+                '  keypairs(email: $email, is_active: $is_active) {' \
                 '    $fields' \
                 '  }' \
                 '}'
@@ -147,7 +147,7 @@ class KeyPair:
             'is_active': is_active,
         }
         if user_id is not None:
-            variables['user_id'] = user_id
+            variables['email'] = user_id
         rqst = Request(cls.session, 'POST', '/admin/graphql')
         rqst.set_json({
             'query': q,
