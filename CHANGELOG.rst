@@ -1,6 +1,15 @@
 Changes
 =======
 
+19.09.3 (2019-12-03)
+--------------------
+
+* NEW: SDK API (``Auth.update_password()``) and CLI command (``backend.ai update-password``)
+  to allow changing the password by the users themselves.
+
+* NEW: SDK API (``VFolder.delete_by_id()``) so that superadmins can delete
+  a vfolder owned by arbitrary user/group.
+
 19.09.2 (2019-11-04)
 --------------------
 
