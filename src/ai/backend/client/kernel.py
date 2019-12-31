@@ -186,7 +186,7 @@ class Kernel:
                 'reuseIfExists': not no_reuse,
                 'startupCommand': startup_command,
             })
-        if cls.session.config.version >= 'v4.20181215':
+        if cls.session.config.version > 'v4.20181215':
             params['image'] = image
         else:
             params['lang'] = image
@@ -530,7 +530,7 @@ class Kernel:
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
 
-        api_rqst = Request(self.session, "GET", path, 
+        api_rqst = Request(self.session, "GET", path,
                            params='/stream/kernel/{0}/apps'.format(self.kernel_id))
         async with api_rqst.fetch() as resp:
             return await resp.json()
