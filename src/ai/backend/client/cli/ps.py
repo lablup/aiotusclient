@@ -23,8 +23,10 @@ from .admin.sessions import sessions
 @click.option('-a', '--all', is_flag=True,
               help='Display all sessions matching the condition using pagination.')
 @click.option('--detail', is_flag=True, help='Show more details using more columns.')
+@click.option('-f', '--format', default=None,  help='Display only specified fields.')
+@click.option('--plain', is_flag=True, help='Display the session list without decorative line drawings and the header.')
 @click.pass_context
-def ps(ctx, status, id_only, show_tid, dead, running, all, detail):
+def ps(ctx, status, id_only, show_tid, dead, running, all, detail, plain, format):
     '''
     Lists the current running compute sessions for the current keypair.
     This is an alias of the "admin sessions --status=RUNNING" command.

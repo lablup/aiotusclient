@@ -28,7 +28,7 @@ other users by adding ``--access-key`` option here.
 
   backend.ai admin sessions
 
-Both commands offers options to set the status filter as follows.
+Both commands offer options to set the status filter as follows.
 For other options, please consult the output of ``--help``.
 
 .. list-table::
@@ -48,6 +48,45 @@ For other options, please consult the output of ``--help``.
    * - ``--dead``
      - ``CANCELLED`` and ``TERMINATED``.
 
+Both commands offer options to specify which fields of sessions should be printed as follows.
+
+.. list-table::
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Option
+     - Included Session Fields
+
+   * - (no option)
+     - ``Session ID``, ``Owner``, ``Image``, ``Type``,
+
+       ``Status``, ``Status Info``, ``Last updated``, and ``Result``.
+
+   * - ``--id-only``
+     - ``Session ID``.
+
+   * - ``--detail``
+     - ``Session ID``, ``Owner``, ``Image``, ``Type``,
+
+       ``Status``, ``Status Info``, ``Last updated``, ``Result``,
+
+       ``Tag``, ``Created At``, ``Occupied Resource``, ``Used Memory (MiB)``,
+
+       ``Max Used Memory (MiB)``, and ``CPU Using (%)``.
+
+   * - ``-f``, ``--format``
+     - Specified fields by user.
+
+.. note::
+    Fields for ``-f/--format`` option can be displayed by specifying comma-separated parameters.
+
+    Available parameters for this option are: ``id``, ``status``, ``status_info``, ``created_at``, ``last_updated``, ``result``, ``image``, ``type``, ``task_id``, ``tag``, ``occupied_slots``, ``used_memory``, ``max_used_memory``, ``cpu_using``.
+
+    For example:
+
+    .. code-block:: shell
+
+        backend.ai admin session --format id,status,cpu_using
 
 .. _simple-execution:
 
