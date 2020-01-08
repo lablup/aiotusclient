@@ -3,7 +3,6 @@ import json
 import sys
 
 import click
-import colorama
 
 from . import main
 from .pretty import print_done, print_error, print_fail, print_warn
@@ -32,7 +31,7 @@ def config():
                 click.echo('Server version: (failed to fetch)')
             else:
                 click.echo('Server version: {0} (API: {1})'.format(
-                    versions.get('manager', '(unavailable)'),
+                    versions.get('manager', 'pre-19.03'),
                     versions['version'],
                 ))
     nrows = 1
@@ -82,7 +81,7 @@ def config():
                 ))
             else:
                 click.echo('Server version: {0} (API: {1})'.format(
-                    click.style(versions.get('manager', '(unavailable)'), bold=True),
+                    click.style(versions.get('manager', 'pre-19.03'), bold=True),
                     click.style(versions['version'], bold=True),
                 ))
             click.echo('\u001b[{0}B'.format(nrows), nl=False)
