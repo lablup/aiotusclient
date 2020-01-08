@@ -46,7 +46,7 @@ class BackendAPIError(BackendError):
 class BackendClientError(BackendError):
     '''
     Exceptions from the client library, such as argument validation
-    errors.
+    errors and connection failures.
     '''
 
     pass

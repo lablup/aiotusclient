@@ -3,11 +3,13 @@ import json
 import sys
 
 import click
+import colorama
 
 from . import main
 from .pretty import print_done, print_error, print_fail, print_warn
 from .. import __version__
 from ..config import get_config, local_state_path
+from ..exceptions import BackendClientError
 from ..session import Session
 
 
@@ -17,32 +19,73 @@ def config():
     Shows the current configuration.
     '''
     config = get_config()
-    print('Client version: {0}'.format(click.style(__version__, bold=True)))
-    print('API endpoint: {0} ({1})'.format(
-          click.style(str(config.endpoint), bold=True),
-          click.style(str(config.endpoint_type), fg='cyan', bold=True)))
-    print('API version: {0}'.format(click.style(config.version, bold=True)))
+    click.echo('API endpoint: {0} (mode: {1})'.format(
+        click.style(str(config.endpoint), bold=True),
+        click.style(str(config.endpoint_type), fg='cyan', bold=True)))
+    if sys.stdout.isatty():
+        click.echo('Server version: ...')
+    else:
+        with Session() as sess:
+            try:
+                versions = sess.System.get_versions()
+            except BackendClientError:
+                click.echo('Server version: (failed to fetch)')
+            else:
+                click.echo('Server version: {0} (API: {1})'.format(
+                    versions['manager'], versions['version'],
+                ))
+    nrows = 1
+    click.echo('Client version: {0} (API: {1})'.format(
+        click.style(__version__, bold=True),
+        click.style(config.version, bold=True),
+    ))
+    nrows += 1
     if config.domain:
-        print('Domain name: "{0}"'.format(click.style(config.domain, bold=True)))
+        click.echo('Domain name: "{0}"'.format(click.style(config.domain, bold=True)))
+        nrows += 1
     if config.group:
-        print('Group name: "{0}"'.format(click.style(config.group, bold=True)))
+        click.echo('Group name: "{0}"'.format(click.style(config.group, bold=True)))
+        nrows += 1
     if config.is_anonymous:
-        print('Access key: (this is an anonymous session)')
+        click.echo('Access key: (this is an anonymous session)')
+        nrows += 1
     elif config.endpoint_type == 'docker':
         pass
     elif config.endpoint_type == 'session':
         if (local_state_path / 'cookie.dat').exists() and \
                 (local_state_path / 'config.json').exists():
             sess_config = json.loads((local_state_path / 'config.json').read_text())
-            print('Username: "{0}"'.format(click.style(sess_config.get('username', ''), bold=True)))
+            click.echo('Username: "{0}"'.format(click.style(sess_config.get('username', ''), bold=True)))
+            nrows += 1
     else:
-        print('Access key: "{0}"'.format(click.style(config.access_key, bold=True)))
+        click.echo('Access key: "{0}"'.format(click.style(config.access_key, bold=True)))
+        nrows += 1
         masked_skey = config.secret_key[:6] + ('*' * 24) + config.secret_key[-10:]
-        print('Secret key: "{0}"'.format(click.style(masked_skey, bold=True)))
-    print('Signature hash type: {0}'.format(
+        click.echo('Secret key: "{0}"'.format(click.style(masked_skey, bold=True)))
+        nrows += 1
+    click.echo('Signature hash type: {0}'.format(
         click.style(config.hash_type, bold=True)))
-    print('Skip SSL certificate validation? {0}'.format(
+    nrows += 1
+    click.echo('Skip SSL certificate validation? {0}'.format(
         click.style(str(config.skip_sslcert_validation), bold=True)))
+    nrows += 1
+    if sys.stdout.isatty():
+        sys.stdout.flush()
+        with Session() as sess:
+            click.echo('\u001b[{0}A\u001b[2K'.format(nrows), nl=False)
+            try:
+                versions = sess.System.get_versions()
+            except BackendClientError:
+                click.echo('Server version: {0}'.format(
+                    click.style('(failed to fetch)', fg='red', bold=True),
+                ))
+            else:
+                click.echo('Server version: {0} (API: {1})'.format(
+                    click.style(versions['manager'], bold=True),
+                    click.style(versions['version'], bold=True),
+                ))
+            click.echo('\u001b[{0}B'.format(nrows), nl=False)
+            sys.stdout.flush()
 
 
 @main.command()

@@ -6,25 +6,26 @@ setup_requires = [
     'setuptools>=41.2.0',
 ]
 install_requires = [
-    'multidict>=4.5',
-    'appdirs~=1.4.3',
-    'aiohttp~=3.6.1',
-    'async_timeout~=3.0',  # to avoid pip10 resolver issue
-    'attrs>=19.1',       # to avoid pip10 resolver issue
-    'python-dateutil>=2.5',
-    'tabulate>=0.7.7',
-    'tqdm~=4.21',
-    'humanize>=0.5.1',
-    'yarl>=1.1.1',
     'Click>=7.0',
-    'PyYAML~=5.1.2'
+    'PyYAML~=5.1.2',
+    'appdirs~=1.4.3',
+    'aiohttp~=3.6.2',
+    'async_timeout~=3.0',  # to avoid pip10 resolver issue
+    'attrs>=19.3',         # to avoid pip10 resolver issue
+    'colorama~=0.4.3',
+    'humanize>=0.5.1',
+    'multidict~=4.7.3',
+    'python-dateutil>=2.8',
+    'tabulate>=0.8.6',
+    'tqdm~=4.41',
+    'yarl~=1.4.2',
 ]
 build_requires = [
     'wheel>=0.33.6',
     'twine>=1.14.0',
 ]
 test_requires = [
-    'pytest~=5.2.4',
+    'pytest~=5.3.2',
     'pytest-cov',
     'pytest-mock',
     'pytest-asyncio>=0.10.0',

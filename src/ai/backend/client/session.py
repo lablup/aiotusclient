@@ -72,6 +72,7 @@ class BaseSession(metaclass=abc.ABCMeta):
 
     __slots__ = (
         '_config', '_closed', 'aiohttp_session',
+        'System',
         'Admin', 'Agent', 'AgentWathcer', 'Auth', 'Domain', 'Group', 'ScalingGroup',
         'Admin', 'Agent', 'AgentWatcher', 'Domain', 'Group', 'ScalingGroup',
         'Image', 'Kernel', 'KeyPair', 'Manager', 'Resource',
@@ -131,6 +132,7 @@ class Session(BaseSession):
         self.aiohttp_session = self.worker_thread.execute(_create_aiohttp_session())
 
         from .base import BaseFunction
+        from .system import System
         from .admin import Admin
         from .agent import Agent, AgentWatcher
         from .auth import Auth
@@ -146,6 +148,15 @@ class Session(BaseSession):
         from .session_template import SessionTemplate
         from .user import User
         from .vfolder import VFolder
+
+        self.System = type('System', (BaseFunction, ), {
+            **System.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.system.System` function proxy
+        bound to this session.
+        '''
 
         self.Admin = type('Admin', (BaseFunction, ), {
             **Admin.__dict__,
@@ -342,6 +353,7 @@ class AsyncSession(BaseSession):
         self.aiohttp_session = aiohttp.ClientSession(connector=connector)
 
         from .base import BaseFunction
+        from .system import System
         from .admin import Admin
         from .agent import Agent, AgentWatcher
         from .auth import Auth
@@ -356,6 +368,15 @@ class AsyncSession(BaseSession):
         from .session_template import SessionTemplate
         from .user import User
         from .vfolder import VFolder
+
+        self.System = type('System', (BaseFunction, ), {
+            **System.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.system.System` function proxy
+        bound to this session.
+        '''
 
         self.Admin = type('Admin', (BaseFunction, ), {
             **Admin.__dict__,
