@@ -32,7 +32,8 @@ def config():
                 click.echo('Server version: (failed to fetch)')
             else:
                 click.echo('Server version: {0} (API: {1})'.format(
-                    versions['manager'], versions['version'],
+                    versions.get('manager', '(unavailable)'),
+                    versions['version'],
                 ))
     nrows = 1
     click.echo('Client version: {0} (API: {1})'.format(
@@ -81,7 +82,7 @@ def config():
                 ))
             else:
                 click.echo('Server version: {0} (API: {1})'.format(
-                    click.style(versions['manager'], bold=True),
+                    click.style(versions.get('manager', '(unavailable)'), bold=True),
                     click.style(versions['version'], bold=True),
                 ))
             click.echo('\u001b[{0}B'.format(nrows), nl=False)
