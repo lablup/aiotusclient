@@ -1024,12 +1024,12 @@ def start_template(template_id, session_id, owner,        # base args
 
 
 @main.command(aliases=['rm', 'kill'])
-@click.argument('sess_id_or_alias', metavar='SESSID', nargs=-1)
+@click.argument('session_id', metavar='SESSID', nargs=-1)
 @click.option('-o', '--owner', '--owner-access-key', metavar='ACCESS_KEY',
               help='Specify the owner of the target session explicitly.')
 @click.option('-s', '--stats', is_flag=True,
               help='Show resource usage statistics after termination')
-def terminate(sess_id_or_alias, owner, stats):
+def terminate(session_id, owner, stats):
     '''
     Terminate the given session.
 
@@ -1038,7 +1038,7 @@ def terminate(sess_id_or_alias, owner, stats):
     print_wait('Terminating the session(s)...')
     with Session() as session:
         has_failure = False
-        for sess in sess_id_or_alias:
+        for sess in session_id:
             try:
                 compute_session = session.ComputeSession(sess, owner)
                 ret = compute_session.destroy()
@@ -1065,11 +1065,11 @@ def terminate(sess_id_or_alias, owner, stats):
 
 
 @main.command()
-@click.argument('sess_id_or_alias', metavar='NAME')
+@click.argument('session_id', metavar='NAME')
 @click.option('-o', '--owner', '--owner-access-key', 'owner_access_key', metavar='ACCESS_KEY',
               help='Specify the owner of the target session explicitly.')
 @click.pass_context
-def info(ctx, sess_id_or_alias, owner_access_key):
+def info(ctx, session_id, owner_access_key):
     '''
     Show detailed information for a running compute session.
     This is an alias of the "admin session <sess_id>" command.
@@ -1080,10 +1080,10 @@ def info(ctx, sess_id_or_alias, owner_access_key):
 
 
 @main.command()
-@click.argument('sess_id_or_alias', metavar='SESSID')
+@click.argument('session_id', metavar='SESSID')
 @click.option('-o', '--owner', '--owner-access-key', 'owner_access_key', metavar='ACCESS_KEY',
               help='Specify the owner of the target session explicitly.')
-def events(sess_id_or_alias, owner_access_key):
+def events(session_id, owner_access_key):
     '''
     Monitor the lifecycle events of a compute session.
 
@@ -1092,7 +1092,7 @@ def events(sess_id_or_alias, owner_access_key):
 
     async def _run_events():
         async with AsyncSession() as session:
-            compute_session = session.ComputeSession(sess_id_or_alias, owner_access_key)
+            compute_session = session.ComputeSession(session_id, owner_access_key)
             async with compute_session.stream_events() as sse_response:
                 async for ev in sse_response.fetch_events():
                     print(click.style(ev['event'], fg='cyan', bold=True), json.loads(ev['data']))

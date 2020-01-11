@@ -215,8 +215,8 @@ def sessions(status, access_key, id_only, show_tid, dead, running, all, detail, 
 
 
 @admin.command()
-@click.argument('sess_id_or_alias', metavar='SESSID')
-def session(sess_id_or_alias):
+@click.argument('session_id', metavar='SESSID')
+def session(session_id):
     '''
     Show detailed information for a running compute session.
 
@@ -251,7 +251,7 @@ def session(sess_id_or_alias):
         '  compute_session(sess_id: $sess_id) { $fields }' \
         '}'
     q = q.replace('$fields', ' '.join(item[1] for item in fields))
-    v = {'sess_id': sess_id_or_alias}
+    v = {'sess_id': session_id}
     with Session() as session:
         try:
             resp = session.Admin.query(q, v)
