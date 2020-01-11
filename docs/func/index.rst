@@ -6,12 +6,12 @@ High-level Function Reference
    :caption: Table of contents
 
    admin
-   auth
    agent
+   auth
    config
-   kernel
    keypair
    manager
-   vfolder
    scaling-group
+   session
    session-template
+   vfolder
