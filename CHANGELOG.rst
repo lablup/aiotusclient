@@ -7,8 +7,14 @@ Changes
 * BREAKING CHANGE: All functional API classes are moved into the
   ``ai.backend.client.func`` sub-package. (#82)
 
-  - This would not introduce big changes in the SDK user codes since
-    they use ``AsyncSession`` and ``Session`` in the
+  - ``Kernel`` is changed to ``Session``.
+
+  - The session ID field name in the response of
+    ``Session.get_or_create()`` is now ``sessionId`` instead of
+    ``kernelId``.
+
+  - Except above, this would not introduce big changes in the SDK user
+    codes since they use ``AsyncSession`` and ``Session`` in the
     ``ai.backend.client.session`` module.
 
 * NEW: Automatic API version negotiation when entering session contexts.
