@@ -9,9 +9,8 @@ Changes
 
   - ``Kernel`` is changed to ``Session``.
 
-  - The session ID field name in the response of
-    ``Session.get_or_create()`` is now ``sessionId`` instead of
-    ``kernelId``.
+  - The session ID field name in the response of ``Session`` objects
+    is now ``session_id`` instead of ``kernel_id``.
 
   - Except above, this would not introduce big changes in the SDK user
     codes since they use ``AsyncSession`` and ``Session`` in the
@@ -26,6 +25,9 @@ Changes
   - It supports both the v19.09 (API v4.20190615) and v19.12 (API
     v5.20191215) API gateways.
 
+    Regardless of the server API version, the client SDK users may use the
+    same ``Session`` function API.
+
   - It generates an explicit warning for when server-side version is higher
     to guide users to upgrade their packages.
 
@@ -39,7 +41,7 @@ Changes
 19.12.0a1 (2019-11-17)
 ----------------------
 
-* BREAKING CHANGE: Now the client SDK runs on Pytho 3.6, 3.7, and 3.8 and
+* BREAKING CHANGE: Now the client SDK runs on Python 3.6, 3.7, and 3.8 and
   dropped support for Python 3.5.
 
 19.09.3 (2019-12-03)
