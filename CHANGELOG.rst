@@ -1,6 +1,41 @@
 Changes
 =======
 
+19.12.0b1 (2020-01-11)
+----------------------
+
+* BREAKING CHANGE: All functional API classes are moved into the
+  ``ai.backend.client.func`` sub-package. (#82)
+
+  - This would not introduce big changes in the SDK user codes since
+    they use ``AsyncSession`` and ``Session`` in the
+    ``ai.backend.client.session`` module.
+
+* NEW: Automatic API version negotiation when entering session contexts.
+  (#79, #82)
+
+  - ``backend.ai config`` command now displays the server/client component
+    and API versions with negotiated API version if available.
+
+  - It supports both the v19.09 (API v4.20190615) and v19.12 (API
+    v5.20191215) API gateways.
+
+  - It generates an explicit warning for when server-side version is higher
+    to guide users to upgrade their packages.
+
+* NEW: ``--format`` and ``--plain`` options for ``backend.ai ps`` command
+  to customize the output table format (#80)
+
+* NEW: SDK API (``SessionTemplate``) and CLI command set (``backend.ai sesstpl``)
+
+* NEW: Support for unmanaged vfolders and token-based download API (#77)
+
+19.12.0a1 (2019-11-17)
+----------------------
+
+* BREAKING CHANGE: Now the client SDK runs on Pytho 3.6, 3.7, and 3.8 and
+  dropped support for Python 3.5.
+
 19.09.3 (2019-12-03)
 --------------------
 
