@@ -3,8 +3,11 @@ import os
 import tarfile
 import tempfile
 from typing import (
-    Iterable, Mapping, Sequence, Union,
+    Iterable, Union,
     AsyncGenerator,
+    Mapping,
+    Sequence,
+    Tuple,
 )
 from pathlib import Path
 import uuid
@@ -14,19 +17,19 @@ from aiohttp import hdrs
 from tqdm import tqdm
 
 from .base import api_function
-from .compat import current_loop
-from .config import DEFAULT_CHUNK_SIZE
-from .exceptions import BackendClientError
-from .request import (
+from ..compat import current_loop
+from ..config import DEFAULT_CHUNK_SIZE
+from ..exceptions import BackendClientError
+from ..request import (
     Request, AttachedFile,
     WebSocketResponse,
     SSEResponse,
 )
-from .cli.pretty import ProgressReportingReader
-from .utils import undefined
+from ..utils import undefined, ProgressReportingReader
 
 __all__ = (
-    'Kernel',
+    'ComputeSession',
+    'get_session_api_prefix',
 )
 
 
@@ -40,7 +43,13 @@ def drop(d, dropval):
     return newd
 
 
-class Kernel:
+def get_session_api_prefix(api_version: Tuple[int, str]) -> str:
+    if api_version[0] <= 4:
+        return 'kernel'
+    return 'session'
+
+
+class ComputeSession:
     '''
     Provides various interactions with compute sessions in Backend.AI.
 
@@ -67,10 +76,12 @@ class Kernel:
 
     @api_function
     @classmethod
-    async def get_task_logs(cls, task_id: str, *,
-                            chunk_size: int = 8192
-                            ) -> AsyncGenerator[bytes, None]:
-        rqst = Request(cls.session, 'GET', '/kernel/_/logs', params={
+    async def get_task_logs(
+        cls, task_id: str, *,
+        chunk_size: int = 8192
+    ) -> AsyncGenerator[bytes, None]:
+        prefix = get_session_api_prefix(cls.session.api_version)
+        rqst = Request(cls.session, 'GET', f'/{prefix}/_/logs', params={
             'taskId': task_id,
         })
         async with rqst.fetch() as resp:
@@ -100,7 +111,7 @@ class Kernel:
                             bootstrap_script: str = None,
                             tag: str = None,
                             scaling_group: str = None,
-                            owner_access_key: str = None) -> 'Kernel':
+                            owner_access_key: str = None) -> 'ComputeSession':
         '''
         Get-or-creates a compute session.
         If *client_token* is ``None``, it creates a new compute session as long as
@@ -170,7 +181,8 @@ class Kernel:
             group_name = cls.session.config.group
 
         mounts.extend(cls.session.config.vfolder_mounts)
-        rqst = Request(cls.session, 'POST', '/kernel/create')
+        prefix = get_session_api_prefix(cls.session.api_version)
+        rqst = Request(cls.session, 'POST', f'/{prefix}/create')
         params = {
             'tag': tag,
             'clientSessionToken': client_token,
@@ -183,14 +195,14 @@ class Kernel:
                 'scalingGroup': scaling_group,
             },
         }
-        if cls.session.config.version >= 'v5.20191215':
+        if cls.session.api_version >= (5, '20191215'):
             params['config'].update({
                 'mount_map': mount_map,
             })
             params.update({
                 'bootstrap_script': bootstrap_script,
             })
-        if cls.session.config.version >= 'v4.20190615':
+        if cls.session.api_version >= (4, '20190615'):
             params.update({
                 'owner_access_key': owner_access_key,
                 'domain': domain_name,
@@ -201,14 +213,14 @@ class Kernel:
                 'reuseIfExists': not no_reuse,
                 'startupCommand': startup_command,
             })
-        if cls.session.config.version > 'v4.20181215':
+        if cls.session.api_version > (4, '20181215'):
             params['image'] = image
         else:
             params['lang'] = image
         rqst.set_json(params)
         async with rqst.fetch() as resp:
             data = await resp.json()
-            o = cls(data['kernelId'], owner_access_key)  # type: ignore
+            o = cls(data[f'{prefix}Id'], owner_access_key)  # type: ignore
             o.created = data.get('created', True)     # True is for legacy
             o.status = data.get('status', 'RUNNING')
             o.service_ports = data.get('servicePorts', [])
@@ -237,7 +249,7 @@ class Kernel:
                                    bootstrap_script: str = undefined,
                                    tag: str = undefined,
                                    scaling_group: str = undefined,
-                                   owner_access_key: str = undefined) -> 'Kernel':
+                                   owner_access_key: str = undefined) -> 'ComputeSession':
         '''
         Get-or-creates a compute session from template.
         All other parameters provided  will be overwritten to template, including
@@ -303,7 +315,8 @@ class Kernel:
             group_name = cls.session.config.group
         if cls.session.config.vfolder_mounts:
             mounts.extend(cls.session.config.vfolder_mounts)
-        rqst = Request(cls.session, 'POST', '/kernel/from-template')
+        prefix = get_session_api_prefix(cls.session.api_version)
+        rqst = Request(cls.session, 'POST', f'/{prefix}/from-template')
         params = {
             'template_id': template_id,
             'tag': tag,
@@ -332,7 +345,7 @@ class Kernel:
         rqst.set_json(params)
         async with rqst.fetch() as resp:
             data = await resp.json()
-            o = cls(data['kernelId'], owner_access_key)  # type: ignore
+            o = cls(data[f'{prefix}Id'], owner_access_key)  # type: ignore
             o.created = data.get('created', True)     # True is for legacy
             o.status = data.get('status', 'RUNNING')
             o.service_ports = data.get('servicePorts', [])
@@ -340,8 +353,8 @@ class Kernel:
             o.group = group_name
             return o
 
-    def __init__(self, kernel_id: str, owner_access_key: str = None):
-        self.kernel_id = kernel_id
+    def __init__(self, session_id: str, owner_access_key: str = None):
+        self.session_id = session_id
         self.owner_access_key = owner_access_key
 
     @api_function
@@ -354,9 +367,12 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        rqst = Request(self.session,
-                       'DELETE', '/kernel/{}'.format(self.kernel_id),
-                       params=params)
+        prefix = get_session_api_prefix(self.session.api_version)
+        rqst = Request(
+            self.session,
+            'DELETE', f'/{prefix}/{self.session_id}',
+            params=params,
+        )
         async with rqst.fetch() as resp:
             if resp.status == 200:
                 return await resp.json()
@@ -371,9 +387,12 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        rqst = Request(self.session,
-                       'PATCH', '/kernel/{}'.format(self.kernel_id),
-                       params=params)
+        prefix = get_session_api_prefix(self.session.api_version)
+        rqst = Request(
+            self.session,
+            'PATCH', f'/{prefix}/{self.session_id}',
+            params=params,
+        )
         async with rqst.fetch():
             pass
 
@@ -387,9 +406,12 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        rqst = Request(self.session,
-                       'POST', '/kernel/{}/interrupt'.format(self.kernel_id),
-                       params=params)
+        prefix = get_session_api_prefix(self.session.api_version)
+        rqst = Request(
+            self.session,
+            'POST', f'/{prefix}/{self.session_id}/interrupt',
+            params=params,
+        )
         async with rqst.fetch():
             pass
 
@@ -413,9 +435,12 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        rqst = Request(self.session,
-            'POST', '/kernel/{}/complete'.format(self.kernel_id),
-            params=params)
+        prefix = get_session_api_prefix(self.session.api_version)
+        rqst = Request(
+            self.session,
+            'POST', f'/{prefix}/{self.session_id}/complete',
+            params=params,
+        )
         rqst.set_json({
             'code': code,
             'options': {
@@ -436,9 +461,12 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        rqst = Request(self.session,
-                       'GET', '/kernel/{}'.format(self.kernel_id),
-                       params=params)
+        prefix = get_session_api_prefix(self.session.api_version)
+        rqst = Request(
+            self.session,
+            'GET', f'/{prefix}/{self.session_id}',
+            params=params,
+        )
         async with rqst.fetch() as resp:
             return await resp.json()
 
@@ -450,9 +478,12 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        rqst = Request(self.session,
-                       'GET', '/kernel/{}/logs'.format(self.kernel_id),
-                       params=params)
+        prefix = get_session_api_prefix(self.session.api_version)
+        rqst = Request(
+            self.session,
+            'GET', f'/{prefix}/{self.session_id}/logs',
+            params=params,
+        )
         async with rqst.fetch() as resp:
             return await resp.json()
 
@@ -488,21 +519,26 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
+        prefix = get_session_api_prefix(self.session.api_version)
         if mode in {'query', 'continue', 'input'}:
             assert code is not None, \
                    'The code argument must be a valid string even when empty.'
-            rqst = Request(self.session,
-                'POST', '/kernel/{}'.format(self.kernel_id),
-                params=params)
+            rqst = Request(
+                self.session,
+                'POST', f'/{prefix}/{self.session_id}',
+                params=params,
+            )
             rqst.set_json({
                 'mode': mode,
                 'code': code,
                 'runId': run_id,
             })
         elif mode == 'batch':
-            rqst = Request(self.session,
-                'POST', '/kernel/{}'.format(self.kernel_id),
-                params=params)
+            rqst = Request(
+                self.session,
+                'POST', f'/{prefix}/{self.session_id}',
+                params=params,
+            )
             rqst.set_json({
                 'mode': mode,
                 'code': code,
@@ -515,9 +551,11 @@ class Kernel:
                 },
             })
         elif mode == 'complete':
-            rqst = Request(self.session,
-                'POST', '/kernel/{}/complete'.format(self.kernel_id),
-                params=params)
+            rqst = Request(
+                self.session,
+                'POST', f'/{prefix}/{self.session_id}',
+                params=params,
+            )
             rqst.set_json({
                 'code': code,
                 'options': {
@@ -557,8 +595,11 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        base_path = (Path.cwd() if basedir is None
-                     else Path(basedir).resolve())
+        prefix = get_session_api_prefix(self.session.api_version)
+        base_path = (
+            Path.cwd() if basedir is None
+            else Path(basedir).resolve()
+        )
         files = [Path(file).resolve() for file in files]
         total_size = 0
         for file_path in files:
@@ -582,9 +623,11 @@ class Kernel:
                           .format(file_path, base_path)
                     raise ValueError(msg) from None
 
-            rqst = Request(self.session,
-                           'POST', '/kernel/{}/upload'.format(self.kernel_id),
-                           params=params)
+            rqst = Request(
+                self.session,
+                'POST', f'/{prefix}/{self.session_id}/upload',
+                params=params,
+            )
             rqst.attach_files(attachments)
             async with rqst.fetch() as resp:
                 return resp
@@ -605,9 +648,12 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        rqst = Request(self.session,
-                       'GET', '/kernel/{}/download'.format(self.kernel_id),
-                       params=params)
+        prefix = get_session_api_prefix(self.session.api_version)
+        rqst = Request(
+            self.session,
+            'GET', f'/{prefix}/{self.session_id}/download',
+            params=params,
+        )
         rqst.set_json({
             'files': [*map(str, files)],
         })
@@ -654,9 +700,12 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        rqst = Request(self.session,
-                       'GET', '/kernel/{}/files'.format(self.kernel_id),
-                       params=params)
+        prefix = get_session_api_prefix(self.session.api_version)
+        rqst = Request(
+            self.session,
+            'GET', f'/{prefix}/{self.session_id}/files',
+            params=params,
+        )
         rqst.set_json({
             'path': path,
         })
@@ -668,10 +717,12 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-
-        api_rqst = Request(self.session,
-                           'GET', '/stream/kernel/{0}/apps'.format(self.kernel_id),
-                           params=params)
+        prefix = get_session_api_prefix(self.session.api_version)
+        api_rqst = Request(
+            self.session,
+            'GET', f'/stream/{prefix}/{self.session_id}/apps',
+            params=params,
+        )
         async with api_rqst.fetch() as resp:
             return await resp.json()
 
@@ -684,13 +735,16 @@ class Kernel:
         :returns: a :class:`StreamEvents` object.
         '''
         params = {
-            'sessionId': self.kernel_id,
+            'sessionId': self.session_id,
         }
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        request = Request(self.session,
-                          'GET', '/stream/kernel/_/events',
-                          params=params)
+        prefix = get_session_api_prefix(self.session.api_version)
+        request = Request(
+            self.session,
+            'GET', f'/stream/{prefix}/_/events',
+            params=params,
+        )
         return request.connect_events()
 
     # only supported in AsyncKernel
@@ -704,9 +758,12 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        request = Request(self.session,
-                          'GET', '/stream/kernel/{}/pty'.format(self.kernel_id),
-                          params=params)
+        prefix = get_session_api_prefix(self.session.api_version)
+        request = Request(
+            self.session,
+            'GET', f'/stream/{prefix}/{self.session_id}/pty',
+            params=params,
+        )
         return request.connect_websocket(response_cls=StreamPty)
 
     # only supported in AsyncKernel
@@ -721,6 +778,7 @@ class Kernel:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
+        prefix = get_session_api_prefix(self.session.api_version)
         opts = {} if opts is None else opts
         if mode == 'query':
             opts = {}
@@ -734,9 +792,11 @@ class Kernel:
         else:
             msg = 'Invalid stream-execution mode: {0}'.format(mode)
             raise BackendClientError(msg)
-        request = Request(self.session,
-                          'GET', '/stream/kernel/{}/execute'.format(self.kernel_id),
-                          params=params)
+        request = Request(
+            self.session,
+            'GET', f'/stream/{prefix}/{self.session_id}/execute',
+            params=params,
+        )
 
         async def send_code(ws):
             await ws.send_json({

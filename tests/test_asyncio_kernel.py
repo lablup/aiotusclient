@@ -4,7 +4,22 @@ import pytest
 
 from ai.backend.client.compat import token_hex
 from ai.backend.client.session import AsyncSession
+from ai.backend.client.func.session import get_session_api_prefix
 from ai.backend.client.test_utils import AsyncContextMock, AsyncMock
+
+
+simulated_api_versions = [
+    (4, '20190615'),
+    (5, '20191215'),
+]
+
+
+@pytest.fixture(scope='module', autouse=True, params=simulated_api_versions)
+def api_version(request):
+    mock_nego_func = AsyncMock()
+    mock_nego_func.return_value = request.param
+    with mock.patch('ai.backend.client.session._negotiate_api_version', mock_nego_func):
+        yield request.param
 
 
 @pytest.mark.asyncio
@@ -12,54 +27,61 @@ async def test_create_kernel_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = AsyncContextMock(
         status=201, json=AsyncMock())
-    mock_req_cls = mocker.patch('ai.backend.client.kernel.Request',
+    mock_req_cls = mocker.patch('ai.backend.client.func.session.Request',
                                 return_value=mock_req_obj)
     async with AsyncSession() as session:
-        await session.Kernel.get_or_create('python:3.6-ubuntu18.04')
+        await session.ComputeSession.get_or_create('python:3.6-ubuntu18.04')
+        prefix = get_session_api_prefix(session.api_version)
         mock_req_cls.assert_called_once_with(
-            session, 'POST', '/kernel/create')
+            session, 'POST', f'/{prefix}/create')
         mock_req_obj.fetch.assert_called_once_with()
         mock_req_obj.fetch.return_value.json.assert_awaited_once_with()
 
 
 @pytest.mark.asyncio
-async def test_create_kernel_return_id_only(mocker):
-    return_value = {'kernelId': 'mock_kernel_id'}
+async def test_create_kernel_return_id_only(mocker, api_version):
+    if api_version[0] == 4:
+        return_value = {'kernelId': 'mock_sess_id'}
+    else:
+        return_value = {'sessionId': 'mock_sess_id'}
     mock_json_coro = AsyncMock(return_value=return_value)
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = AsyncContextMock(
         status=201, json=mock_json_coro)
-    mocker.patch('ai.backend.client.kernel.Request',
+    mocker.patch('ai.backend.client.func.session.Request',
                  return_value=mock_req_obj)
     async with AsyncSession() as session:
-        k = await session.Kernel.get_or_create('python:3.6-ubuntu18.04')
-        assert k.kernel_id == return_value['kernelId']
+        prefix = get_session_api_prefix(session.api_version)
+        cs = await session.ComputeSession.get_or_create('python:3.6-ubuntu18.04')
+        assert cs.session_id == return_value[f'{prefix}Id']
 
 
 @pytest.mark.asyncio
 async def test_destroy_kernel_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = AsyncContextMock(status=204)
-    kernel_id = token_hex(12)
-    mock_req_cls = mocker.patch('ai.backend.client.kernel.Request',
+    session_id = token_hex(12)
+    mock_req_cls = mocker.patch('ai.backend.client.func.session.Request',
                                 return_value=mock_req_obj)
     async with AsyncSession() as session:
-        await session.Kernel(kernel_id).destroy()
+        prefix = get_session_api_prefix(session.api_version)
+        await session.ComputeSession(session_id).destroy()
         mock_req_cls.assert_called_once_with(
-            session, 'DELETE', '/kernel/{}'.format(kernel_id), params={})
+            session, 'DELETE', f'/{prefix}/{session_id}', params={})
 
 
 @pytest.mark.asyncio
 async def test_restart_kernel_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = AsyncContextMock(status=204)
-    kernel_id = token_hex(12)
-    mock_req_cls = mocker.patch('ai.backend.client.kernel.Request',
+    session_id = token_hex(12)
+    mock_req_cls = mocker.patch('ai.backend.client.func.session.Request',
                                 return_value=mock_req_obj)
     async with AsyncSession() as session:
-        await session.Kernel(kernel_id).restart()
+        prefix = get_session_api_prefix(session.api_version)
+        await session.ComputeSession(session_id).restart()
         mock_req_cls.assert_called_once_with(
-            session, 'PATCH', '/kernel/{}'.format(kernel_id), params={})
+            session, 'PATCH', f'/{prefix}/{session_id}', params={})
 
 
 @pytest.mark.asyncio
@@ -69,13 +91,14 @@ async def test_get_kernel_info_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = AsyncContextMock(
         status=200, json=mock_json_coro)
-    kernel_id = token_hex(12)
-    mock_req_cls = mocker.patch('ai.backend.client.kernel.Request',
+    session_id = token_hex(12)
+    mock_req_cls = mocker.patch('ai.backend.client.func.session.Request',
                                 return_value=mock_req_obj)
     async with AsyncSession() as session:
-        await session.Kernel(kernel_id).get_info()
+        prefix = get_session_api_prefix(session.api_version)
+        await session.ComputeSession(session_id).get_info()
         mock_req_cls.assert_called_once_with(
-            session, 'GET', '/kernel/{}'.format(kernel_id), params={})
+            session, 'GET', f'/{prefix}/{session_id}', params={})
 
 
 @pytest.mark.asyncio
@@ -85,12 +108,13 @@ async def test_execute_code_url(mocker):
     mock_req_obj = mock.Mock()
     mock_req_obj.fetch.return_value = AsyncContextMock(
         status=200, json=mock_json_coro)
-    kernel_id = token_hex(12)
+    session_id = token_hex(12)
     run_id = token_hex(8)
-    mock_req_cls = mocker.patch('ai.backend.client.kernel.Request',
+    mock_req_cls = mocker.patch('ai.backend.client.func.session.Request',
                                 return_value=mock_req_obj)
     async with AsyncSession() as session:
-        await session.Kernel(kernel_id).execute(run_id, 'hello')
+        prefix = get_session_api_prefix(session.api_version)
+        await session.ComputeSession(session_id).execute(run_id, 'hello')
         mock_req_cls.assert_called_once_with(
-            session, 'POST', '/kernel/{}'.format(kernel_id),
+            session, 'POST', f'/{prefix}/{session_id}',
             params={})

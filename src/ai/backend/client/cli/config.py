@@ -1,6 +1,7 @@
 import getpass
 import json
 import sys
+import warnings
 
 import click
 
@@ -21,8 +22,13 @@ def config():
     click.echo('API endpoint: {0} (mode: {1})'.format(
         click.style(str(config.endpoint), bold=True),
         click.style(str(config.endpoint_type), fg='cyan', bold=True)))
+    click.echo('Client version: {0} (API: {1})'.format(
+        click.style(__version__, bold=True),
+        click.style(config.version, bold=True),
+    ))
     if sys.stdout.isatty():
         click.echo('Server version: ...')
+        click.echo('Negotiated API version: ...')
     else:
         with Session() as sess:
             try:
@@ -34,12 +40,8 @@ def config():
                     versions.get('manager', 'pre-19.03'),
                     versions['version'],
                 ))
+            click.echo('Negotiated API version: {0}'.format(sess.api_version))
     nrows = 1
-    click.echo('Client version: {0} (API: {1})'.format(
-        click.style(__version__, bold=True),
-        click.style(config.version, bold=True),
-    ))
-    nrows += 1
     if config.domain:
         click.echo('Domain name: "{0}"'.format(click.style(config.domain, bold=True)))
         nrows += 1
@@ -71,8 +73,8 @@ def config():
     nrows += 1
     if sys.stdout.isatty():
         sys.stdout.flush()
-        with Session() as sess:
-            click.echo('\u001b[{0}A\u001b[2K'.format(nrows), nl=False)
+        with warnings.catch_warnings(record=True) as captured_warnings, Session() as sess:
+            click.echo('\u001b[{0}A\u001b[2K'.format(nrows + 1), nl=False)
             try:
                 versions = sess.System.get_versions()
             except BackendClientError:
@@ -84,8 +86,14 @@ def config():
                     click.style(versions.get('manager', 'pre-19.03'), bold=True),
                     click.style(versions['version'], bold=True),
                 ))
+            click.echo('\u001b[2K', nl=False)
+            click.echo('Negotiated API version: {0}'.format(
+                click.style('v{0[0]}.{0[1]}'.format(sess.api_version), bold=True),
+            ))
             click.echo('\u001b[{0}B'.format(nrows), nl=False)
             sys.stdout.flush()
+        for w in captured_warnings:
+            warnings.showwarning(w.message, w.category, w.filename, w.lineno, w.line)
 
 
 @main.command()

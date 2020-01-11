@@ -1,11 +1,15 @@
 import abc
 import asyncio
 import threading
+from typing import Tuple
 import queue
+import warnings
 
 import aiohttp
+from multidict import CIMultiDict
 
-from .config import APIConfig, get_config
+from .config import APIConfig, get_config, parse_api_version
+from .exceptions import APIVersionWarning
 
 
 __all__ = (
@@ -16,15 +20,47 @@ __all__ = (
 
 
 def is_legacy_server():
-    '''Determine execution mode.
+    """
+    Determine execution mode.
 
     Legacy mode: <= v4.20181215
-    '''
+    """
     with Session() as session:
-        ret = session.Kernel.hello()
+        ret = session.ComputeSession.hello()
     bai_version = ret['version']
     legacy = True if bai_version <= 'v4.20181215' else False
     return legacy
+
+
+async def _negotiate_api_version(
+    http_session: aiohttp.ClientSession,
+    config: APIConfig,
+) -> Tuple[int, str]:
+    client_version = parse_api_version(config.version)
+    try:
+        timeout_config = aiohttp.ClientTimeout(
+            total=None, connect=None,
+            sock_connect=config.connection_timeout,
+            sock_read=config.read_timeout,
+        )
+        headers = CIMultiDict([
+            ('User-Agent', config.user_agent),
+        ])
+        probe_url = config.endpoint / 'func/' if config.endpoint_type == 'session' else config.endpoint
+        async with http_session.get(probe_url, timeout=timeout_config, headers=headers) as resp:
+            resp.raise_for_status()
+            server_info = await resp.json()
+            server_version = parse_api_version(server_info['version'])
+            if server_version > client_version:
+                warnings.warn(
+                    'The server API version is higher than the client. '
+                    'Please upgrade the client package.',
+                    category=APIVersionWarning,
+                )
+            return min(server_version, client_version)
+    except (asyncio.TimeoutError, aiohttp.ClientError):
+        # fallback to the configured API version
+        return client_version
 
 
 class _SyncWorkerThread(threading.Thread):
@@ -66,18 +102,23 @@ class _SyncWorkerThread(threading.Thread):
 
 
 class BaseSession(metaclass=abc.ABCMeta):
-    '''
+    """
     The base abstract class for sessions.
-    '''
+    """
 
     __slots__ = (
         '_config', '_closed', 'aiohttp_session',
-        'System',
-        'Admin', 'Agent', 'AgentWathcer', 'Auth', 'Domain', 'Group', 'ScalingGroup',
-        'Admin', 'Agent', 'AgentWatcher', 'Domain', 'Group', 'ScalingGroup',
-        'Image', 'Kernel', 'KeyPair', 'Manager', 'Resource',
-        'KeypairResourcePolicy', 'User', 'SessionTemplate', 'VFolder',
+        'api_version',
+        'System', 'Manager', 'Admin',
+        'Agent', 'AgentWatcher', 'ScalingGroup',
+        'Image', 'ComputeSession', 'SessionTemplate',
+        'Domain', 'Group', 'Auth', 'User', 'KeyPair',
+        'Resource', 'KeypairResourcePolicy',
+        'VFolder',
     )
+
+    aiohttp_session: aiohttp.ClientSession
+    api_version: Tuple[int, str]
 
     def __init__(self, *, config: APIConfig = None):
         self._closed = False
@@ -85,44 +126,44 @@ class BaseSession(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def close(self):
-        '''
+        """
         Terminates the session and releases underlying resources.
-        '''
+        """
         raise NotImplementedError
 
     @property
     def closed(self) -> bool:
-        '''
+        """
         Checks if the session is closed.
-        '''
+        """
         return self._closed
 
     @property
     def config(self):
-        '''
+        """
         The configuration used by this session object.
-        '''
+        """
         return self._config
 
 
 class Session(BaseSession):
-    '''
+    """
     An API client session that makes API requests synchronously.
     You may call (almost) all function proxy methods like a plain Python function.
     It provides a context manager interface to ensure closing of the session
     upon errors and scope exits.
-    '''
+    """
 
     __slots__ = BaseSession.__slots__ + (
         '_worker_thread',
     )
 
-    def __init__(self, *, config: APIConfig = None):
+    def __init__(self, *, config: APIConfig = None) -> None:
         super().__init__(config=config)
         self._worker_thread = _SyncWorkerThread()
         self._worker_thread.start()
 
-        async def _create_aiohttp_session():
+        async def _create_aiohttp_session() -> aiohttp.ClientSession:
             ssl = None
             if self._config.skip_sslcert_validation:
                 ssl = False
@@ -131,23 +172,23 @@ class Session(BaseSession):
 
         self.aiohttp_session = self.worker_thread.execute(_create_aiohttp_session())
 
-        from .base import BaseFunction
-        from .system import System
-        from .admin import Admin
-        from .agent import Agent, AgentWatcher
-        from .auth import Auth
-        from .domain import Domain
-        from .group import Group
-        from .image import Image
-        from .kernel import Kernel
-        from .keypair import KeyPair
-        from .manager import Manager
-        from .resource import Resource
-        from .keypair_resource_policy import KeypairResourcePolicy
-        from .scaling_group import ScalingGroup
-        from .session_template import SessionTemplate
-        from .user import User
-        from .vfolder import VFolder
+        from .func.base import BaseFunction
+        from .func.system import System
+        from .func.admin import Admin
+        from .func.agent import Agent, AgentWatcher
+        from .func.auth import Auth
+        from .func.domain import Domain
+        from .func.group import Group
+        from .func.image import Image
+        from .func.session import ComputeSession
+        from .func.keypair import KeyPair
+        from .func.manager import Manager
+        from .func.resource import Resource
+        from .func.keypair_resource_policy import KeypairResourcePolicy
+        from .func.scaling_group import ScalingGroup
+        from .func.session_template import SessionTemplate
+        from .func.user import User
+        from .func.vfolder import VFolder
 
         self.System = type('System', (BaseFunction, ), {
             **System.__dict__,
@@ -221,12 +262,12 @@ class Session(BaseSession):
         bound to this session.
         '''
 
-        self.Kernel = type('Kernel', (BaseFunction, ), {
-            **Kernel.__dict__,
+        self.ComputeSession = type('ComputeSession', (BaseFunction, ), {
+            **ComputeSession.__dict__,
             'session': self,
         })
         '''
-        The :class:`~ai.backend.client.kernel.Kernel` function proxy
+        The :class:`~ai.backend.client.kernel.ComputeSession` function proxy
         bound to this session.
         '''
 
@@ -326,6 +367,8 @@ class Session(BaseSession):
 
     def __enter__(self):
         assert not self.closed, 'Cannot reuse closed session'
+        self.api_version = self.worker_thread.execute(
+            _negotiate_api_version(self.aiohttp_session, self.config))
         return self
 
     def __exit__(self, exc_type, exc_obj, exc_tb):
@@ -352,22 +395,22 @@ class AsyncSession(BaseSession):
         connector = aiohttp.TCPConnector(ssl=ssl)
         self.aiohttp_session = aiohttp.ClientSession(connector=connector)
 
-        from .base import BaseFunction
-        from .system import System
-        from .admin import Admin
-        from .agent import Agent, AgentWatcher
-        from .auth import Auth
-        from .group import Group
-        from .image import Image
-        from .kernel import Kernel
-        from .keypair import KeyPair
-        from .manager import Manager
-        from .resource import Resource
-        from .keypair_resource_policy import KeypairResourcePolicy
-        from .scaling_group import ScalingGroup
-        from .session_template import SessionTemplate
-        from .user import User
-        from .vfolder import VFolder
+        from .func.base import BaseFunction
+        from .func.system import System
+        from .func.admin import Admin
+        from .func.agent import Agent, AgentWatcher
+        from .func.auth import Auth
+        from .func.group import Group
+        from .func.image import Image
+        from .func.session import ComputeSession
+        from .func.keypair import KeyPair
+        from .func.manager import Manager
+        from .func.resource import Resource
+        from .func.keypair_resource_policy import KeypairResourcePolicy
+        from .func.scaling_group import ScalingGroup
+        from .func.session_template import SessionTemplate
+        from .func.user import User
+        from .func.vfolder import VFolder
 
         self.System = type('System', (BaseFunction, ), {
             **System.__dict__,
@@ -432,12 +475,12 @@ class AsyncSession(BaseSession):
         bound to this session.
         '''
 
-        self.Kernel = type('Kernel', (BaseFunction, ), {
-            **Kernel.__dict__,
+        self.ComputeSession = type('ComputeSession', (BaseFunction, ), {
+            **ComputeSession.__dict__,
             'session': self,
         })
         '''
-        The :class:`~ai.backend.client.kernel.Kernel` function proxy
+        The :class:`~ai.backend.client.kernel.ComputeSession` function proxy
         bound to this session.
         '''
 
@@ -521,6 +564,7 @@ class AsyncSession(BaseSession):
 
     async def __aenter__(self):
         assert not self.closed, 'Cannot reuse closed session'
+        self.api_version = await _negotiate_api_version(self.aiohttp_session, self.config)
         return self
 
     async def __aexit__(self, exc_type, exc_obj, exc_tb):

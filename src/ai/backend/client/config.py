@@ -1,27 +1,40 @@
 import os
 from pathlib import Path
 import random
-from yarl import URL
+import re
 from typing import (
     Any, Callable, Iterable, Union,
     List, Tuple, Sequence,
 )
 
 import appdirs
+from yarl import URL
 
 __all__ = [
+    'parse_api_version',
     'get_config',
     'set_config',
     'APIConfig',
+    'API_VERSION',
+    'DEFAULT_CHUNK_SIZE',
 ]
 
 _config = None
 _undefined = object()
 
+API_VERSION = (5, '20191215')
+
 DEFAULT_CHUNK_SIZE = 256 * 1024  # 256 KiB
 
 local_state_path = Path(appdirs.user_state_dir('backend.ai', 'Lablup'))
 local_cache_path = Path(appdirs.user_cache_dir('backend.ai', 'Lablup'))
+
+
+def parse_api_version(value: str) -> Tuple[int, str]:
+    match = re.search(r'^v(?P<major>\d+)\.(?P<date>\d{8})$', value)
+    if match is not None:
+        return int(match.group(1)), match.group(2)
+    raise ValueError('Could not parse the given API version string', value)
 
 
 def get_env(key: str, default: Any = _undefined, *,
@@ -121,7 +134,7 @@ class APIConfig:
     DEFAULTS = {
         'endpoint': 'https://api.backend.ai',
         'endpoint_type': 'api',
-        'version': 'v5.20191215',
+        'version': f'v{API_VERSION[0]}.{API_VERSION[1]}',
         'hash_type': 'sha256',
         'domain': 'default',
         'group': 'default',
