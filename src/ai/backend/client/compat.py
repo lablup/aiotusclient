@@ -3,25 +3,7 @@ A compatibility module for backported codes from Python 3.6+ standard library.
 '''
 
 import asyncio
-import binascii
-import os
 import signal
-
-
-def token_bytes(nbytes=None):  # Python 3.6+
-    '''
-    Emulation of secrets.token_bytes()
-    '''
-    if nbytes is None:
-        nbytes = 32
-    return os.urandom(nbytes)
-
-
-def token_hex(nbytes=None):  # Python 3.6+
-    '''
-    Emulation of secrets.token_hex()
-    '''
-    return binascii.hexlify(token_bytes(nbytes)).decode('ascii')
 
 
 if hasattr(asyncio, 'get_running_loop'):  # Python 3.7+

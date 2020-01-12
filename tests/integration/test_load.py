@@ -6,12 +6,12 @@ as environment variables.
 
 import logging
 import multiprocessing
+import secrets
 from statistics import mean, median, stdev
 import time
 
 import pytest
 
-from ai.backend.client.compat import token_hex
 from ai.backend.client.func.session import ComputeSession
 
 # module-level marker
@@ -75,7 +75,7 @@ def run_execute_code(kid):
     if kid is not None:
         begin = time.monotonic()
         console = []
-        run_id = token_hex(8)
+        run_id = secrets.token_hex(8)
         while True:
             result = ComputeSession(kid).execute(run_id, sample_code)
             console.extend(result['console'])

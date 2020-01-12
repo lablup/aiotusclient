@@ -5,6 +5,7 @@ import getpass
 import itertools
 import json
 import re
+import secrets
 import string
 import sys
 import traceback
@@ -18,7 +19,7 @@ from tabulate import tabulate
 from . import main
 from .admin.sessions import session as cli_admin_session
 from ..config import local_cache_path
-from ..compat import asyncio_run, current_loop, token_hex
+from ..compat import asyncio_run, current_loop
 from ..exceptions import BackendError, BackendAPIError
 from ..session import Session, AsyncSession, is_legacy_server
 from ..utils import undefined
@@ -281,8 +282,8 @@ def _prepare_mount_arg(mount):
 @main.command()
 @click.argument('image', type=str)
 @click.argument('files', nargs=-1, type=click.Path())
-@click.option('-t', '--session-id', '--client-token', metavar='SESSID',
-              help='Specify a human-readable session ID or name. '
+@click.option('-t', '--name', '--client-token', metavar='NAME',
+              help='Specify a human-readable session name. '
                    'If not set, a random hex string is used.')
 # job scheduling options
 @click.option('--type', metavar='SESSTYPE',
@@ -356,7 +357,7 @@ def _prepare_mount_arg(mount):
 @click.option('-g', '--group', metavar='GROUP_NAME', default=None,
               help='Group name where the session is spawned. '
                    'User should be a member of the group to execute the code.')
-def run(image, files, session_id,                          # base args
+def run(image, files, name,                                # base args
         type, enqueue_only, max_wait, no_reuse,            # job scheduling options
         code, terminal,                                    # query-mode options
         clean, build, exec, basedir,                       # batch-mode options
@@ -449,12 +450,12 @@ def run(image, files, session_id,                          # base args
                 print('env = {!r}, build = {!r}, exec = {!r}'
                       .format(pretty_env, case[1], case[2]))
 
-    def _run_legacy(session, idx, session_id, envs,
+    def _run_legacy(session, idx, name, envs,
                     clean_cmd, build_cmd, exec_cmd):
         try:
             compute_session = session.ComputeSession.get_or_create(
                 image,
-                client_token=session_id,
+                name=name,
                 type_=type,
                 enqueue_only=enqueue_only,
                 max_wait=max_wait,
@@ -473,28 +474,28 @@ def run(image, files, session_id,                          # base args
             sys.exit(1)
         if compute_session.status == 'PENDING':
             print_info('Session ID {0} is enqueued for scheduling.'
-                       .format(session_id))
+                       .format(name))
             return
         elif compute_session.status == 'RUNNING':
             if compute_session.created:
                 vprint_done(
                     '[{0}] Session {1} is ready (domain={2}, group={3}).'
-                    .format(idx, compute_session.session_id,
+                    .format(idx, compute_session.name,
                             compute_session.domain, compute_session.group))
             else:
-                vprint_done('[{0}] Reusing session {1}...'.format(idx, compute_session.session_id))
+                vprint_done('[{0}] Reusing session {1}...'.format(idx, compute_session.name))
         elif compute_session.status == 'TERMINATED':
             print_warn('Session ID {0} is already terminated.\n'
                        'This may be an error in the compute_session image.'
-                       .format(session_id))
+                       .format(name))
             return
         elif compute_session.status == 'TIMEOUT':
             print_info('Session ID {0} is still on the job queue.'
-                       .format(session_id))
+                       .format(name))
             return
         elif compute_session.status in ('ERROR', 'CANCELLED'):
             print_fail('Session ID {0} has an error during scheduling/startup or cancelled.'
-                       .format(session_id))
+                       .format(name))
             return
 
         try:
@@ -540,13 +541,13 @@ def run(image, files, session_id,                          # base args
                     else:
                         print('[{0}] Statistics is not available.'.format(idx))
 
-    async def _run(session, idx, session_id, envs,
+    async def _run(session, idx, name, envs,
                    clean_cmd, build_cmd, exec_cmd,
                    is_multi=False):
         try:
             compute_session = await session.ComputeSession.get_or_create(
                 image,
-                client_token=session_id,
+                name=name,
                 type_=type,
                 enqueue_only=enqueue_only,
                 max_wait=max_wait,
@@ -566,28 +567,28 @@ def run(image, files, session_id,                          # base args
             return
         if compute_session.status == 'PENDING':
             print_info('Session ID {0} is enqueued for scheduling.'
-                       .format(session_id))
+                       .format(name))
             return
         elif compute_session.status == 'RUNNING':
             if compute_session.created:
                 vprint_done(
                     '[{0}] Session {1} is ready (domain={2}, group={3}).'
-                    .format(idx, compute_session.session_id,
+                    .format(idx, compute_session.name,
                             compute_session.domain, compute_session.group))
             else:
-                vprint_done('[{0}] Reusing session {1}...'.format(idx, compute_session.session_id))
+                vprint_done('[{0}] Reusing session {1}...'.format(idx, compute_session.name))
         elif compute_session.status == 'TERMINATED':
             print_warn('Session ID {0} is already terminated.\n'
                        'This may be an error in the compute_session image.'
-                       .format(session_id))
+                       .format(name))
             return
         elif compute_session.status == 'TIMEOUT':
             print_info('Session ID {0} is still on the job queue.'
-                       .format(session_id))
+                       .format(name))
             return
         elif compute_session.status in ('ERROR', 'CANCELLED'):
             print_fail('Session ID {0} has an error during scheduling/startup or cancelled.'
-                       .format(session_id))
+                       .format(name))
             return
 
         if not is_multi:
@@ -596,9 +597,9 @@ def run(image, files, session_id,                          # base args
         else:
             log_dir = local_cache_path / 'client-logs'
             log_dir.mkdir(parents=True, exist_ok=True)
-            stdout = open(log_dir / '{0}.stdout.log'.format(session_id),
+            stdout = open(log_dir / '{0}.stdout.log'.format(name),
                           'w', encoding='utf-8')
-            stderr = open(log_dir / '{0}.stderr.log'.format(session_id),
+            stderr = open(log_dir / '{0}.stderr.log'.format(name),
                           'w', encoding='utf-8')
 
         try:
@@ -670,32 +671,32 @@ def run(image, files, session_id,                          # base args
                     stderr.close()
 
     def _run_cases_legacy():
-        if session_id is None:
-            session_id_prefix = token_hex(5)
+        if name is None:
+            name_prefix = f'pysdk-{secrets.token_hex(5)}'
         else:
-            session_id_prefix = session_id
-        vprint_info('Session token prefix: {0}'.format(session_id_prefix))
+            name_prefix = name
+        vprint_info('Session token prefix: {0}'.format(name_prefix))
         vprint_info('In the legacy mode, all cases will run serially!')
         with Session() as session:
             for idx, case in enumerate(case_set.keys()):
                 if is_multi:
-                    _session_id = '{0}-{1}'.format(session_id_prefix, idx)
+                    _name = '{0}-{1}'.format(name_prefix, idx)
                 else:
-                    _session_id = session_id_prefix
+                    _name = name_prefix
                 envs = dict(case[0])
                 clean_cmd = clean if clean else '*'
                 build_cmd = case[1]
                 exec_cmd = case[2]
-                _run_legacy(session, idx, _session_id, envs,
+                _run_legacy(session, idx, _name, envs,
                             clean_cmd, build_cmd, exec_cmd)
 
     async def _run_cases():
         loop = current_loop()
-        if session_id is None:
-            session_id_prefix = token_hex(5)
+        if name is None:
+            name_prefix = f'pysdk-{secrets.token_hex(5)}'
         else:
-            session_id_prefix = session_id
-        vprint_info('Session token prefix: {0}'.format(session_id_prefix))
+            name_prefix = name
+        vprint_info('Session name prefix: {0}'.format(name_prefix))
         if is_multi:
             print_info('Check out the stdout/stderr logs stored in '
                        '~/.cache/backend.ai/client-logs directory.')
@@ -704,15 +705,15 @@ def run(image, files, session_id,                          # base args
             # TODO: limit max-parallelism using aiojobs
             for idx, case in enumerate(case_set.keys()):
                 if is_multi:
-                    _session_id = '{0}-{1}'.format(session_id_prefix, idx)
+                    _name = '{0}-{1}'.format(name_prefix, idx)
                 else:
-                    _session_id = session_id_prefix
+                    _name = name_prefix
                 envs = dict(case[0])
                 clean_cmd = clean if clean else '*'
                 build_cmd = case[1]
                 exec_cmd = case[2]
                 t = loop.create_task(
-                    _run(session, idx, _session_id, envs,
+                    _run(session, idx, _name, envs,
                          clean_cmd, build_cmd, exec_cmd,
                          is_multi=is_multi))
                 tasks.append(t)
@@ -733,8 +734,8 @@ def run(image, files, session_id,                          # base args
 
 @main.command()
 @click.argument('image')
-@click.option('-t', '--session-id', '--client-token', metavar='SESSID',
-              help='Specify a human-readable session ID or name. '
+@click.option('-t', '--name', '--client-token', metavar='NAME',
+              help='Specify a human-readable session name. '
                    'If not set, a random hex string is used.')
 @click.option('-o', '--owner', '--owner-access-key', metavar='ACCESS_KEY',
               help='Set the owner of the target session explicitly.')
@@ -782,7 +783,7 @@ def run(image, files, session_id,                          # base args
 @click.option('-g', '--group', metavar='GROUP_NAME', default=None,
               help='Group name where the session is spawned. '
                    'User should be a member of the group to execute the code.')
-def start(image, session_id, owner,                                 # base args
+def start(image, name, owner,                                 # base args
           type, startup_command, enqueue_only, max_wait, no_reuse,  # job scheduling options
           env,                                            # execution environment
           tag,                                            # extra options
@@ -800,10 +801,10 @@ def start(image, session_id, owner,                                 # base args
     IMAGE: The name (and version/platform tags appended after a colon) of session
            runtime or programming language.
     '''
-    if session_id is None:
-        session_id = token_hex(5)
+    if name is None:
+        name = f'pysdk-{secrets.token_hex(5)}'
     else:
-        session_id = session_id
+        name = name
 
     ######
     envs = _prepare_env_arg(env)
@@ -814,7 +815,7 @@ def start(image, session_id, owner,                                 # base args
         try:
             compute_session = session.ComputeSession.get_or_create(
                 image,
-                client_token=session_id,
+                name=name,
                 type_=type,
                 enqueue_only=enqueue_only,
                 max_wait=max_wait,
@@ -837,14 +838,14 @@ def start(image, session_id, owner,                                 # base args
         else:
             if compute_session.status == 'PENDING':
                 print_info('Session ID {0} is enqueued for scheduling.'
-                           .format(session_id))
+                           .format(name))
             elif compute_session.status == 'RUNNING':
                 if compute_session.created:
                     print_info('Session ID {0} is created and ready.'
-                               .format(session_id))
+                               .format(name))
                 else:
                     print_info('Session ID {0} is already running and ready.'
-                               .format(session_id))
+                               .format(name))
                 if compute_session.service_ports:
                     print_info('This session provides the following app services: ' +
                                ', '.join(sport['name']
@@ -852,20 +853,20 @@ def start(image, session_id, owner,                                 # base args
             elif compute_session.status == 'TERMINATED':
                 print_warn('Session ID {0} is already terminated.\n'
                            'This may be an error in the compute_session image.'
-                           .format(session_id))
+                           .format(name))
             elif compute_session.status == 'TIMEOUT':
                 print_info('Session ID {0} is still on the job queue.'
-                           .format(session_id))
+                           .format(name))
             elif compute_session.status in ('ERROR', 'CANCELLED'):
                 print_fail('Session ID {0} has an error during scheduling/startup or cancelled.'
-                           .format(session_id))
+                           .format(name))
 
 
 @main.command()
 @click.argument('template_id')
-@click.option('-t', '--session-id', '--client-token', metavar='SESSID',
+@click.option('-t', '--name', '--client-token', metavar='NAME',
               default=undefined,
-              help='Specify a human-readable session ID or name. '
+              help='Specify a human-readable session name. '
                    'If not set, a random hex string is used.')
 @click.option('-o', '--owner', '--owner-access-key', metavar='ACCESS_KEY',
               default=undefined,
@@ -930,14 +931,16 @@ def start(image, session_id, owner,                                 # base args
 @click.option('--no-resource', is_flag=True,
               help='If specified, client.py will tell server not to add '
                    'any resource specified at template,')
-def start_template(template_id, session_id, owner,        # base args
-          type_, image, startup_command, enqueue_only, max_wait, no_reuse,  # job scheduling options
-          env,                                            # execution environment
-          tag,                                            # extra options
-          mount, scaling_group, resources, cluster_size,  # resource spec
-          resource_opts,
-          domain, group,                                  # resource grouping
-          no_mount, no_env, no_resource):
+def start_template(
+    template_id, name, owner,        # base args
+    type_, image, startup_command, enqueue_only, max_wait, no_reuse,  # job scheduling options
+    env,                                            # execution environment
+    tag,                                            # extra options
+    mount, scaling_group, resources, cluster_size,  # resource spec
+    resource_opts,
+    domain, group,                                  # resource grouping
+    no_mount, no_env, no_resource,
+):
     '''
     Prepare and start a single compute session without executing codes.
     You may use the created session to execute codes using the "run" command
@@ -949,10 +952,10 @@ def start_template(template_id, session_id, owner,        # base args
     IMAGE: The name (and version/platform tags appended after a colon) of session
            runtime or programming language.
     '''
-    if session_id is undefined:
-        session_id = token_hex(5)
+    if name is undefined:
+        name = f'pysdk-{secrets.token_hex(5)}'
     else:
-        session_id = session_id
+        name = name
 
     if max_wait == -1:
         max_wait = undefined
@@ -976,7 +979,7 @@ def start_template(template_id, session_id, owner,        # base args
             compute_session = session.ComputeSession.create_from_template(
                 template_id,
                 image=image,
-                client_token=session_id,
+                name=name,
                 type_=type_,
                 enqueue_only=enqueue_only,
                 max_wait=max_wait,
@@ -999,14 +1002,14 @@ def start_template(template_id, session_id, owner,        # base args
         else:
             if compute_session.status == 'PENDING':
                 print_info('Session ID {0} is enqueued for scheduling.'
-                           .format(session_id))
+                           .format(name))
             elif compute_session.status == 'RUNNING':
                 if compute_session.created:
                     print_info('Session ID {0} is created and ready.'
-                               .format(session_id))
+                               .format(name))
                 else:
                     print_info('Session ID {0} is already running and ready.'
-                               .format(session_id))
+                               .format(name))
                 if compute_session.service_ports:
                     print_info('This session provides the following app services: ' +
                                ', '.join(sport['name']
@@ -1014,22 +1017,22 @@ def start_template(template_id, session_id, owner,        # base args
             elif compute_session.status == 'TERMINATED':
                 print_warn('Session ID {0} is already terminated.\n'
                            'This may be an error in the compute_session image.'
-                           .format(session_id))
+                           .format(name))
             elif compute_session.status == 'TIMEOUT':
                 print_info('Session ID {0} is still on the job queue.'
-                           .format(session_id))
+                           .format(name))
             elif compute_session.status in ('ERROR', 'CANCELLED'):
                 print_fail('Session ID {0} has an error during scheduling/startup or cancelled.'
-                           .format(session_id))
+                           .format(name))
 
 
 @main.command(aliases=['rm', 'kill'])
-@click.argument('session_id', metavar='SESSID', nargs=-1)
+@click.argument('name', metavar='SESSID', nargs=-1)
 @click.option('-o', '--owner', '--owner-access-key', metavar='ACCESS_KEY',
               help='Specify the owner of the target session explicitly.')
 @click.option('-s', '--stats', is_flag=True,
               help='Show resource usage statistics after termination')
-def terminate(session_id, owner, stats):
+def terminate(name, owner, stats):
     '''
     Terminate the given session.
 
@@ -1038,7 +1041,7 @@ def terminate(session_id, owner, stats):
     print_wait('Terminating the session(s)...')
     with Session() as session:
         has_failure = False
-        for sess in session_id:
+        for sess in name:
             try:
                 compute_session = session.ComputeSession(sess, owner)
                 ret = compute_session.destroy()
@@ -1065,11 +1068,11 @@ def terminate(session_id, owner, stats):
 
 
 @main.command()
-@click.argument('session_id', metavar='NAME')
+@click.argument('session_name', metavar='NAME')
 @click.option('-o', '--owner', '--owner-access-key', 'owner_access_key', metavar='ACCESS_KEY',
               help='Specify the owner of the target session explicitly.')
 @click.pass_context
-def info(ctx, session_id, owner_access_key):
+def info(ctx, session_name, owner_access_key):
     '''
     Show detailed information for a running compute session.
     This is an alias of the "admin session <sess_id>" command.
@@ -1080,10 +1083,10 @@ def info(ctx, session_id, owner_access_key):
 
 
 @main.command()
-@click.argument('session_id', metavar='SESSID')
+@click.argument('name', metavar='SESSID')
 @click.option('-o', '--owner', '--owner-access-key', 'owner_access_key', metavar='ACCESS_KEY',
               help='Specify the owner of the target session explicitly.')
-def events(session_id, owner_access_key):
+def events(name, owner_access_key):
     '''
     Monitor the lifecycle events of a compute session.
 
@@ -1092,7 +1095,7 @@ def events(session_id, owner_access_key):
 
     async def _run_events():
         async with AsyncSession() as session:
-            compute_session = session.ComputeSession(session_id, owner_access_key)
+            compute_session = session.ComputeSession(name, owner_access_key)
             async with compute_session.stream_events() as sse_response:
                 async for ev in sse_response.fetch_events():
                     print(click.style(ev['event'], fg='cyan', bold=True), json.loads(ev['data']))

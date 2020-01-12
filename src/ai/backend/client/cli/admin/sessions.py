@@ -7,20 +7,25 @@ import textwrap
 from . import admin
 from ...helper import is_admin
 from ...session import Session, is_legacy_server
+from ...versioning import get_naming, apply_version_aware_fields
 from ..pretty import print_error, print_fail
 
 
 # Lets say formattable options are:
 format_options = {
-    'id':              ('Session ID', 'sess_id'),
+    'name':            ('Session Name',
+                        lambda api_session: get_naming(api_session.api_version, 'name_gql_field')),
+    'type':            ('Type',
+                        lambda api_session: get_naming(api_session.api_version, 'type_gql_field')),
+    'task_id':         ('Task ID', 'id'),
+    'kernel_id':       ('Kernel ID', 'id'),
     'status':          ('Status', 'status'),
     'status_info':     ('Status Info', 'status_info'),
     'created_at':      ('Created At', 'created_at'),
     'last_updated':    ('Last updated', 'status_changed'),
     'result':          ('Result', 'result'),
+    'owner':           ('Owner', 'access_key'),
     'image':           ('Image', 'image'),
-    'type':            ('Type', 'sess_type'),
-    'task_id':         ('Task/Kernel ID', 'id'),
     'tag':             ('Tag', 'tag'),
     'occupied_slots':  ('Occupied Resource', 'occupied_slots'),
     'used_memory':     ('Used Memory (MiB)', 'mem_cur_bytes'),
@@ -42,7 +47,7 @@ format_options = {
 @click.option('--access-key', type=str, default=None,
               help='Get sessions for a specific access key '
                    '(only works if you are a super-admin)')
-@click.option('--id-only', is_flag=True, help='Display session ids only.')
+@click.option('--name-only', is_flag=True, help='Display session names only.')
 @click.option('--show-tid', is_flag=True, help='Display task/kernel IDs.')
 @click.option('--dead', is_flag=True,
               help='Filter only dead sessions. Ignores --status option.')
@@ -54,21 +59,21 @@ format_options = {
 @click.option('-f', '--format', default=None,  help='Display only specified fields.')
 @click.option('--plain', is_flag=True,
               help='Display the session list without decorative line drawings and the header.')
-def sessions(status, access_key, id_only, show_tid, dead, running, all, detail, plain, format):
+def sessions(status, access_key, name_only, show_tid, dead, running, all, detail, plain, format):
     '''
     List and manage compute sessions.
     '''
-    fields = [
-        ('Session ID', 'sess_id'),
-    ]
+    fields = []
     try:
         with Session() as session:
+            name_key = get_naming(session.api_version, 'name_gql_field')
+            fields.append(format_options['name'])
             if is_admin(session) and not is_legacy_server():
-                fields.append(('Owner', 'access_key'))
+                fields.append(format_options['owner'])
     except Exception as e:
         print_error(e)
         sys.exit(1)
-    if id_only:
+    if name_only:
         pass
     elif format is not None:
         options = format.split(',')
@@ -81,25 +86,25 @@ def sessions(status, access_key, id_only, show_tid, dead, running, all, detail, 
         ]
     else:
         fields.extend([
-            ('Image', 'image'),
-            ('Type', 'sess_type'),
-            ('Status', 'status'),
-            ('Status Info', 'status_info'),
-            ('Last updated', 'status_changed'),
-            ('Result', 'result'),
+            format_options['image'],
+            format_options['type'],
+            format_options['status'],
+            format_options['status_info'],
+            format_options['last_updated'],
+            format_options['result'],
         ])
         if show_tid:
             fields.insert(
                 2,
-                ('Task/Kernel ID', 'id'))
+                format_options['id'])
         if detail:
             fields.extend([
-                ('Tag', 'tag'),
-                ('Created At', 'created_at',),
-                ('Occupied Resource', 'occupied_slots'),
-                ('Used Memory (MiB)', 'mem_cur_bytes'),
-                ('Max Used Memory (MiB)', 'mem_max_bytes'),
-                ('CPU Using (%)', 'cpu_using'),
+                format_options['tag'],
+                format_options['created_at'],
+                format_options['occupied_slots'],
+                format_options['used_memory'],
+                format_options['max_used_memory'],
+                format_options['cpu_using'],
             ])
 
     no_match_name = None
@@ -120,6 +125,7 @@ def sessions(status, access_key, id_only, show_tid, dead, running, all, detail, 
         no_match_name = status.lower()
 
     def execute_paginated_query(limit, offset):
+        nonlocal fields
         q = '''
         query($limit:Int!, $offset:Int!, $ak:String, $status:String) {
           compute_session_list(
@@ -152,6 +158,7 @@ def sessions(status, access_key, id_only, show_tid, dead, running, all, detail, 
         return items
 
     def _generate_paginated_results(interval):
+        nonlocal fields
         offset = 0
         is_first = True
         total_count = -1
@@ -168,8 +175,8 @@ def sessions(status, access_key, id_only, show_tid, dead, running, all, detail, 
             items = result['items']
             items = round_mem(items)
 
-            if id_only:
-                yield '\n'.join([item['sess_id'] for item in items]) + '\n'
+            if name_only:
+                yield '\n'.join([item[name_key] for item in items]) + '\n'
             else:
                 table = tabulate(
                     [item.values() for item in items],
@@ -187,6 +194,7 @@ def sessions(status, access_key, id_only, show_tid, dead, running, all, detail, 
                 break
 
     with Session() as session:
+        fields = apply_version_aware_fields(session, fields)
         paginating_interval = 10
         try:
             if all:
@@ -200,9 +208,9 @@ def sessions(status, access_key, id_only, show_tid, dead, running, all, detail, 
                     return
                 items = result['items']
                 items = round_mem(items)
-                if id_only:
+                if name_only:
                     for item in items:
-                        print(item['sess_id'])
+                        print(item[name_key])
                 else:
                     print(tabulate([item.values() for item in items],
                                     headers=[] if plain else (item[0] for item in fields),
@@ -215,15 +223,16 @@ def sessions(status, access_key, id_only, show_tid, dead, running, all, detail, 
 
 
 @admin.command()
-@click.argument('session_id', metavar='SESSID')
-def session(session_id):
+@click.argument('name', metavar='NAME')
+def session(name):
     '''
     Show detailed information for a running compute session.
 
     SESSID: Session id or its alias.
     '''
     fields = [
-        ('Session ID', 'sess_id'),
+        ('Session Name', lambda api_session: get_naming(api_session.api_version, 'name_gql_field')),
+        ('Session Type', lambda api_session: get_naming(api_session.api_version, 'type_gql_field')),
         ('Role', 'role'),
         ('Image', 'image'),
         ('Tag', 'tag'),
@@ -246,19 +255,22 @@ def session(session_id):
         ('CPU Using (%)', 'cpu_using'),
     ]
     if is_legacy_server():
-        del fields[3]
-    q = 'query($sess_id: String!) {' \
-        '  compute_session(sess_id: $sess_id) { $fields }' \
-        '}'
-    q = q.replace('$fields', ' '.join(item[1] for item in fields))
-    v = {'sess_id': session_id}
+        del fields[4]  # tag
     with Session() as session:
+        fields = apply_version_aware_fields(session, fields)
+        name_key = get_naming(session, 'name_gql_field')
+        q = 'query($name: String!) {' \
+            f'  compute_session({name_key}: $name) {{ $fields }}' \
+            '}'
+        q = q.replace('$fields', ' '.join(item[1] for item in fields))
+        name_key = get_naming(session.api_version, 'name_gql_field')
+        v = {name_key: name}
         try:
             resp = session.Admin.query(q, v)
         except Exception as e:
             print_error(e)
             sys.exit(1)
-        if resp['compute_session']['sess_id'] is None:
+        if resp['compute_session'][name_key] is None:
             print('There is no such running compute session.')
             return
         print('Session detail:\n---------------')

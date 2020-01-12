@@ -1,3 +1,4 @@
+import secrets
 import tempfile
 import textwrap
 import time
@@ -5,7 +6,6 @@ from pathlib import Path
 import pytest
 
 from ai.backend.client.exceptions import BackendAPIError
-from ai.backend.client.compat import token_hex
 from ai.backend.client.session import Session
 
 # module-level marker
@@ -26,7 +26,7 @@ def exec_loop(kernel, mode, code, opts=None, user_inputs=None):
     # takes a little longer time (a few seconds).
     console = []
     num_queries = 0
-    run_id = token_hex(8)
+    run_id = secrets.token_hex(8)
     if user_inputs is None:
         user_inputs = []
     while True:
@@ -94,7 +94,7 @@ def test_kernel_execution_query_mode(py3_kernel):
 
 
 def test_kernel_execution_query_mode_user_input(py3_kernel):
-    name = token_hex(8)
+    name = secrets.token_hex(8)
     code = 'name = input("your name? "); print(f"hello, {name}!")'
     console, n = exec_loop(py3_kernel, 'query', code, None, user_inputs=[name])
     assert 'your name?' in console['stdout']
@@ -105,7 +105,7 @@ def test_kernel_get_or_create_reuse():
     with Session() as sess:
         try:
             # Sessions with same token and same language must be reused.
-            t = token_hex(6)
+            t = secrets.token_hex(6)
             kernel1 = sess.Kernel.get_or_create('python:3.6-ubuntu18.04',
                                                 client_token=t)
             kernel2 = sess.Kernel.get_or_create('python:3.6-ubuntu18.04',
@@ -131,7 +131,7 @@ def test_kernel_execution_batch_mode(py3_kernel):
 
 
 def test_kernel_execution_batch_mode_user_input(py3_kernel):
-    name = token_hex(8)
+    name = secrets.token_hex(8)
     with tempfile.NamedTemporaryFile('w', suffix='.py', dir=Path.cwd()) as f:
         f.write('name = input("your name? "); print(f"hello, {name}!")')
         f.flush()
@@ -147,7 +147,7 @@ def test_kernel_execution_batch_mode_user_input(py3_kernel):
 
 def test_kernel_execution_with_vfolder_mounts():
     with Session() as sess:
-        vfname = 'vftest-' + token_hex(4)
+        vfname = 'vftest-' + secrets.token_hex(4)
         sess.VFolder.create(vfname)
         vfolder = sess.VFolder(vfname)
         try:

@@ -17,11 +17,12 @@ from ..config import DEFAULT_CHUNK_SIZE
 from ..request import Request
 from ..session import AsyncSession
 from ..compat import asyncio_run, asyncio_run_forever
+from ..versioning import get_naming
 
 
 class WSProxy:
     __slots__ = (
-        'api_session', 'session_id',
+        'api_session', 'session_name',
         'app_name', 'protocol',
         'args', 'envs',
         'reader', 'writer',
@@ -29,7 +30,7 @@ class WSProxy:
     )
 
     def __init__(self, api_session: AsyncSession,
-                 session_id: str,
+                 session_name: str,
                  app_name: str,
                  protocol: str,
                  args: MutableMapping[str, Union[None, str, List[str]]],
@@ -37,7 +38,7 @@ class WSProxy:
                  reader: asyncio.StreamReader,
                  writer: asyncio.StreamWriter):
         self.api_session = api_session
-        self.session_id = session_id
+        self.session_name = session_name
         self.app_name = app_name
         self.protocol = protocol
         self.args = args
@@ -47,7 +48,8 @@ class WSProxy:
         self.down_task = None
 
     async def run(self):
-        path = "/stream/session/{0}/{1}proxy".format(self.session_id, self.protocol)
+        prefix = get_naming(self.api_session.api_version, 'path')
+        path = f"/stream/{prefix}/{self.session_name}/{self.protocol}proxy"
         params = {'app': self.app_name}
 
         if len(self.args.keys()) > 0:
@@ -114,13 +116,13 @@ class WSProxy:
 class ProxyRunnerContext:
 
     __slots__ = (
-        'session_id', 'app_name',
+        'session_name', 'app_name',
         'protocol', 'host', 'port',
         'args', 'envs',
         'api_session', 'local_server',
     )
 
-    session_id: str
+    session_name: str
     app_name: str
     protocol: str
     host: str
@@ -131,13 +133,13 @@ class ProxyRunnerContext:
     local_server: Optional[asyncio.AbstractServer]
 
     def __init__(self, host: str, port: int,
-                 session_id: str, app_name: str, *,
+                 session_name: str, app_name: str, *,
                  protocol: str = 'http',
                  args: Sequence[str] = None,
                  envs: Sequence[str] = None) -> None:
         self.host = host
         self.port = port
-        self.session_id = session_id
+        self.session_name = session_name
         self.app_name = app_name
         self.protocol = protocol
 
@@ -173,7 +175,7 @@ class ProxyRunnerContext:
 
     async def handle_connection(self, reader: asyncio.StreamReader,
                                 writer: asyncio.StreamWriter) -> None:
-        p = WSProxy(self.api_session, self.session_id,
+        p = WSProxy(self.api_session, self.session_name,
                     self.app_name, self.protocol,
                     self.args, self.envs,
                     reader, writer)
@@ -192,7 +194,7 @@ class ProxyRunnerContext:
 
         user_url_template = "{protocol}://{host}:{port}"
         try:
-            compute_session = self.api_session.ComputeSession(self.session_id)
+            compute_session = self.api_session.ComputeSession(self.session_name)
             data = await compute_session.stream_app_info(self.app_name)
             if 'url_template' in data.keys():
                 user_url_template = data['url_template']
@@ -210,7 +212,7 @@ class ProxyRunnerContext:
         )
         print_info(
             "A local proxy to the application \"{0}\" ".format(self.app_name) +
-            "provided by the session \"{0}\" ".format(self.session_id) +
+            "provided by the session \"{0}\" ".format(self.session_name) +
             "is available at:\n{0}".format(user_url)
         )
         if self.host == '0.0.0.0':
@@ -228,17 +230,17 @@ class ProxyRunnerContext:
 
 
 @main.command()
-@click.argument('session_id', type=str, metavar='SESSID')
+@click.argument('session_name', type=str, metavar='NAME')
 @click.argument('app', type=str)
 @click.option('-p', '--protocol', type=click.Choice(['http', 'tcp']), default='http',
               help='The application-level protocol to use.')
 @click.option('-b', '--bind', type=str, default='127.0.0.1:8080', metavar='[HOST:]PORT',
               help='The IP/host address and the port number to bind this proxy.')
 @click.option('--arg', type=str, multiple=True, metavar='"--option <value>"',
-                help='Add additional argument when starting service.')
-@click.option('--env', type=str, multiple=True, metavar='"ENVNAME=envvalue"',
-                help='Add additional environment variable when starting service.')
-def app(session_id, app, protocol, bind, arg, env):
+              help='Add additional argument when starting service.')
+@click.option('-e', '--env', type=str, multiple=True, metavar='"ENVNAME=envvalue"',
+              help='Add additional environment variable when starting service.')
+def app(session_name, app, protocol, bind, arg, env):
     """
     Run a local proxy to a service provided by Backend.AI compute sessions.
 
@@ -257,7 +259,7 @@ def app(session_id, app, protocol, bind, arg, env):
         port = int(bind_parts[1])
     proxy_ctx = ProxyRunnerContext(
         host, port,
-        session_id, app,
+        session_name, app,
         protocol=protocol,
         args=arg,
         envs=env,
@@ -267,11 +269,11 @@ def app(session_id, app, protocol, bind, arg, env):
 
 
 @main.command()
-@click.argument('session_id', type=str, metavar='SESSID', nargs=1)
+@click.argument('session_name', type=str, metavar='NAME', nargs=1)
 @click.argument('app_name', type=str, metavar='APP', nargs=-1)
 @click.option('-l', '--list-names', is_flag=True,
               help='Just print all available services.')
-def apps(session_id, app_name, list_names):
+def apps(session_name, app_name, list_names):
     '''
     List available additional arguments and environment variables when starting service.
 
@@ -284,7 +286,7 @@ def apps(session_id, app_name, list_names):
     async def print_arguments():
         apps = []
         async with AsyncSession() as api_session:
-            compute_session = api_session.ComputeSession(session_id)
+            compute_session = api_session.ComputeSession(session_name)
             apps = await compute_session.stream_app_info()
             if len(app_name) > 0:
                 apps = list(filter(lambda x: x['name'] in app_name))

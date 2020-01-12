@@ -1,5 +1,6 @@
 import json
 import os
+import secrets
 import tarfile
 import tempfile
 from typing import (
@@ -7,10 +8,8 @@ from typing import (
     AsyncGenerator,
     Mapping,
     Sequence,
-    Tuple,
 )
 from pathlib import Path
-import uuid
 
 import aiohttp
 from aiohttp import hdrs
@@ -26,10 +25,10 @@ from ..request import (
     SSEResponse,
 )
 from ..utils import undefined, ProgressReportingReader
+from ..versioning import get_naming
 
 __all__ = (
     'ComputeSession',
-    'get_session_api_prefix',
 )
 
 
@@ -43,12 +42,6 @@ def drop(d, dropval):
     return newd
 
 
-def get_session_api_prefix(api_version: Tuple[int, str]) -> str:
-    if api_version[0] <= 4:
-        return 'kernel'
-    return 'session'
-
-
 class ComputeSession:
     '''
     Provides various interactions with compute sessions in Backend.AI.
@@ -58,7 +51,7 @@ class ComputeSession:
     keep the backward compatibility with the naming of this API function class.
 
     For multi-container sessions, all methods take effects to the master container
-    only, except :func:`~Kernel.destroy` and :func:`~Kernel.restart` methods.
+    only, except :func:`~ComputeSession.destroy` and :func:`~ComputeSession.restart` methods.
     So it is the user's responsibility to distribute uploaded files to multiple
     containers using explicit copies or virtual folders which are commonly mounted to
     all containers belonging to the same compute session.
@@ -80,7 +73,7 @@ class ComputeSession:
         cls, task_id: str, *,
         chunk_size: int = 8192
     ) -> AsyncGenerator[bytes, None]:
-        prefix = get_session_api_prefix(cls.session.api_version)
+        prefix = get_naming(cls.session.api_version, 'path')
         rqst = Request(cls.session, 'GET', f'/{prefix}/_/logs', params={
             'taskId': task_id,
         })
@@ -94,7 +87,7 @@ class ComputeSession:
     @api_function
     @classmethod
     async def get_or_create(cls, image: str, *,
-                            client_token: str = None,
+                            name: str = None,
                             type_: str = 'interactive',
                             enqueue_only: bool = False,
                             max_wait: int = 0,
@@ -114,18 +107,23 @@ class ComputeSession:
                             owner_access_key: str = None) -> 'ComputeSession':
         '''
         Get-or-creates a compute session.
-        If *client_token* is ``None``, it creates a new compute session as long as
+        If *name* is ``None``, it creates a new compute session as long as
         the server has enough resources and your API key has remaining quota.
-        If *client_token* is a valid string and there is an existing compute session
-        with the same token and the same *image*, then it returns the :class:`Kernel`
+        If *name* is a valid string and there is an existing compute session
+        with the same token and the same *image*, then it returns the :class:`ComputeSession`
         instance representing the existing session.
 
         :param image: The image name and tag for the compute session.
             Example: ``python:3.6-ubuntu``.
             Check out the full list of available images in your server using (TODO:
             new API).
-        :param client_token: A client-side identifier to seamlessly reuse the compute
-            session already created.
+        :param name: A client-side (user-defined) identifier to distinguish the session among currently
+            running sessions.
+            It may be used to seamlessly reuse the session already created.
+
+            .. versionchanged:: 19.12.0
+
+               Renamed from ``clientSessionToken``.
         :param type_: Either ``"interactive"`` (default) or ``"batch"``.
 
             .. versionadded:: 19.09.0
@@ -141,7 +139,7 @@ class ComputeSession:
 
             .. versionadded:: 19.09.0
         :param no_reuse: Raises an explicit error if a session with the same *image* and
-            the same *client_token* already exists instead of returning the information
+            the same *name* already exists instead of returning the information
             of it.
 
             .. versionadded:: 19.09.0
@@ -159,13 +157,13 @@ class ComputeSession:
         :param owner: An optional access key that owns the created session. (Only
             available to administrators)
 
-        :returns: The :class:`Kernel` instance.
+        :returns: The :class:`ComputeSession` instance.
         '''
-        if client_token:
-            assert 4 <= len(client_token) <= 64, \
+        if name:
+            assert 4 <= len(name) <= 64, \
                    'Client session token should be 4 to 64 characters long.'
         else:
-            client_token = uuid.uuid4().hex
+            name = f'pysdk-{secrets.token_hex(5)}'
         if mounts is None:
             mounts = []
         if mount_map is None:
@@ -181,11 +179,11 @@ class ComputeSession:
             group_name = cls.session.config.group
 
         mounts.extend(cls.session.config.vfolder_mounts)
-        prefix = get_session_api_prefix(cls.session.api_version)
-        rqst = Request(cls.session, 'POST', f'/{prefix}/create')
+        prefix = get_naming(cls.session.api_version, 'path')
+        rqst = Request(cls.session, 'POST', f'/{prefix}')
         params = {
             'tag': tag,
-            'clientSessionToken': client_token,
+            get_naming(cls.session.api_version, 'name_arg'): name,
             'config': {
                 'mounts': mounts,
                 'environ': envs,
@@ -220,7 +218,7 @@ class ComputeSession:
         rqst.set_json(params)
         async with rqst.fetch() as resp:
             data = await resp.json()
-            o = cls(data[f'{prefix}Id'], owner_access_key)  # type: ignore
+            o = cls(name, owner_access_key)  # type: ignore
             o.created = data.get('created', True)     # True is for legacy
             o.status = data.get('status', 'RUNNING')
             o.service_ports = data.get('servicePorts', [])
@@ -231,7 +229,7 @@ class ComputeSession:
     @api_function
     @classmethod
     async def create_from_template(cls, template_id: str, *,
-                                   client_token: str = undefined,
+                                   name: str = undefined,
                                    type_: str = undefined,
                                    enqueue_only: bool = undefined,
                                    max_wait: int = undefined,
@@ -254,10 +252,10 @@ class ComputeSession:
         Get-or-creates a compute session from template.
         All other parameters provided  will be overwritten to template, including
         vfolder mounts (not appended!).
-        If *client_token* is ``None``, it creates a new compute session as long as
+        If *name* is ``None``, it creates a new compute session as long as
         the server has enough resources and your API key has remaining quota.
-        If *client_token* is a valid string and there is an existing compute session
-        with the same token and the same *image*, then it returns the :class:`Kernel`
+        If *name* is a valid string and there is an existing compute session
+        with the same token and the same *image*, then it returns the :class:`ComputeSession`
         instance representing the existing session.
 
         :param template_id: Task template to apply to compute session.
@@ -265,8 +263,13 @@ class ComputeSession:
             Example: ``python:3.6-ubuntu``.
             Check out the full list of available images in your server using (TODO:
             new API).
-        :param client_token: A client-side identifier to seamlessly reuse the compute
-            session already created.
+        :param name: A client-side (user-defined) identifier to distinguish the session among currently
+            running sessions.
+            It may be used to seamlessly reuse the session already created.
+
+            .. versionchanged:: 19.12.0
+
+               Renamed from ``clientSessionToken``.
         :param type_: Either ``"interactive"`` (default) or ``"batch"``.
 
             .. versionadded:: 19.09.0
@@ -282,7 +285,7 @@ class ComputeSession:
 
             .. versionadded:: 19.09.0
         :param no_reuse: Raises an explicit error if a session with the same *image* and
-            the same *client_token* already exists instead of returning the information
+            the same *name* already exists instead of returning the information
             of it.
 
             .. versionadded:: 19.09.0
@@ -300,13 +303,13 @@ class ComputeSession:
         :param owner: An optional access key that owns the created session. (Only
             available to administrators)
 
-        :returns: The :class:`Kernel` instance.
+        :returns: The :class:`ComputeSession` instance.
         '''
-        if client_token:
-            assert 4 <= len(client_token) <= 64, \
+        if name:
+            assert 4 <= len(name) <= 64, \
                    'Client session token should be 4 to 64 characters long.'
         else:
-            client_token = uuid.uuid4().hex
+            name = f'pysdk-{secrets.token_urlsafe(8)}'
 
         if domain_name is None:
             # Even if config.domain is None, it can be guessed in the manager by user information.
@@ -315,7 +318,7 @@ class ComputeSession:
             group_name = cls.session.config.group
         if cls.session.config.vfolder_mounts:
             mounts.extend(cls.session.config.vfolder_mounts)
-        prefix = get_session_api_prefix(cls.session.api_version)
+        prefix = get_naming(cls.session.api_version, 'path')
         rqst = Request(cls.session, 'POST', f'/{prefix}/from-template')
         params = {
             'template_id': template_id,
@@ -323,7 +326,7 @@ class ComputeSession:
             'image': image,
             'domain': domain_name,
             'group': group_name,
-            'clientSessionToken': client_token,
+            get_naming(cls.session.api_version, 'name_arg'): name,
             'bootstrap_script': bootstrap_script,
             'enqueueOnly': enqueue_only,
             'maxWaitSeconds': max_wait,
@@ -345,7 +348,7 @@ class ComputeSession:
         rqst.set_json(params)
         async with rqst.fetch() as resp:
             data = await resp.json()
-            o = cls(data[f'{prefix}Id'], owner_access_key)  # type: ignore
+            o = cls(name, owner_access_key)
             o.created = data.get('created', True)     # True is for legacy
             o.status = data.get('status', 'RUNNING')
             o.service_ports = data.get('servicePorts', [])
@@ -353,8 +356,8 @@ class ComputeSession:
             o.group = group_name
             return o
 
-    def __init__(self, session_id: str, owner_access_key: str = None):
-        self.session_id = session_id
+    def __init__(self, name: str, owner_access_key: str = None):
+        self.name = name
         self.owner_access_key = owner_access_key
 
     @api_function
@@ -367,10 +370,10 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         rqst = Request(
             self.session,
-            'DELETE', f'/{prefix}/{self.session_id}',
+            'DELETE', f'/{prefix}/{self.name}',
             params=params,
         )
         async with rqst.fetch() as resp:
@@ -387,10 +390,10 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         rqst = Request(
             self.session,
-            'PATCH', f'/{prefix}/{self.session_id}',
+            'PATCH', f'/{prefix}/{self.name}',
             params=params,
         )
         async with rqst.fetch():
@@ -406,10 +409,10 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         rqst = Request(
             self.session,
-            'POST', f'/{prefix}/{self.session_id}/interrupt',
+            'POST', f'/{prefix}/{self.name}/interrupt',
             params=params,
         )
         async with rqst.fetch():
@@ -435,10 +438,10 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         rqst = Request(
             self.session,
-            'POST', f'/{prefix}/{self.session_id}/complete',
+            'POST', f'/{prefix}/{self.name}/complete',
             params=params,
         )
         rqst.set_json({
@@ -461,10 +464,10 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         rqst = Request(
             self.session,
-            'GET', f'/{prefix}/{self.session_id}',
+            'GET', f'/{prefix}/{self.name}',
             params=params,
         )
         async with rqst.fetch() as resp:
@@ -478,10 +481,10 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         rqst = Request(
             self.session,
-            'GET', f'/{prefix}/{self.session_id}/logs',
+            'GET', f'/{prefix}/{self.name}/logs',
             params=params,
         )
         async with rqst.fetch() as resp:
@@ -519,13 +522,13 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         if mode in {'query', 'continue', 'input'}:
             assert code is not None, \
                    'The code argument must be a valid string even when empty.'
             rqst = Request(
                 self.session,
-                'POST', f'/{prefix}/{self.session_id}',
+                'POST', f'/{prefix}/{self.name}',
                 params=params,
             )
             rqst.set_json({
@@ -536,7 +539,7 @@ class ComputeSession:
         elif mode == 'batch':
             rqst = Request(
                 self.session,
-                'POST', f'/{prefix}/{self.session_id}',
+                'POST', f'/{prefix}/{self.name}',
                 params=params,
             )
             rqst.set_json({
@@ -553,7 +556,7 @@ class ComputeSession:
         elif mode == 'complete':
             rqst = Request(
                 self.session,
-                'POST', f'/{prefix}/{self.session_id}',
+                'POST', f'/{prefix}/{self.name}',
                 params=params,
             )
             rqst.set_json({
@@ -595,7 +598,7 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         base_path = (
             Path.cwd() if basedir is None
             else Path(basedir).resolve()
@@ -625,7 +628,7 @@ class ComputeSession:
 
             rqst = Request(
                 self.session,
-                'POST', f'/{prefix}/{self.session_id}/upload',
+                'POST', f'/{prefix}/{self.name}/upload',
                 params=params,
             )
             rqst.attach_files(attachments)
@@ -648,10 +651,10 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         rqst = Request(
             self.session,
-            'GET', f'/{prefix}/{self.session_id}/download',
+            'GET', f'/{prefix}/{self.name}/download',
             params=params,
         )
         rqst.set_json({
@@ -700,10 +703,10 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         rqst = Request(
             self.session,
-            'GET', f'/{prefix}/{self.session_id}/files',
+            'GET', f'/{prefix}/{self.name}/files',
             params=params,
         )
         rqst.set_json({
@@ -717,10 +720,10 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         api_rqst = Request(
             self.session,
-            'GET', f'/stream/{prefix}/{self.session_id}/apps',
+            'GET', f'/stream/{prefix}/{self.name}/apps',
             params=params,
         )
         async with api_rqst.fetch() as resp:
@@ -735,11 +738,11 @@ class ComputeSession:
         :returns: a :class:`StreamEvents` object.
         '''
         params = {
-            'sessionId': self.session_id,
+            'sessionId': self.name,
         }
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         request = Request(
             self.session,
             'GET', f'/stream/{prefix}/_/events',
@@ -758,10 +761,10 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         request = Request(
             self.session,
-            'GET', f'/stream/{prefix}/{self.session_id}/pty',
+            'GET', f'/stream/{prefix}/{self.name}/pty',
             params=params,
         )
         return request.connect_websocket(response_cls=StreamPty)
@@ -778,7 +781,7 @@ class ComputeSession:
         params = {}
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
-        prefix = get_session_api_prefix(self.session.api_version)
+        prefix = get_naming(self.session.api_version, 'path')
         opts = {} if opts is None else opts
         if mode == 'query':
             opts = {}
@@ -794,7 +797,7 @@ class ComputeSession:
             raise BackendClientError(msg)
         request = Request(
             self.session,
-            'GET', f'/stream/{prefix}/{self.session_id}/execute',
+            'GET', f'/stream/{prefix}/{self.name}/execute',
             params=params,
         )
 
