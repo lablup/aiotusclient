@@ -7,6 +7,7 @@ from typing import (
 naming_profile = {
     'path': ('kernel', 'session'),
     'name_arg': ('clientSessionToken', 'name'),
+    'event_name_arg': ('sessionId', 'name'),
     'name_gql_field': ('sess_id', 'session_name'),
     'type_gql_field': ('sess_type', 'session_type'),
 }

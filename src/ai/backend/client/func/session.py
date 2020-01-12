@@ -738,7 +738,7 @@ class ComputeSession:
         :returns: a :class:`StreamEvents` object.
         '''
         params = {
-            'sessionId': self.name,
+            get_naming(self.session.api_version, 'event_name_arg'): self.name,
         }
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
