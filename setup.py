@@ -6,7 +6,7 @@ setup_requires = [
     'setuptools>=41.2.0',
 ]
 install_requires = [
-    'backend.ai-cli~=0.1',
+    'backend.ai-cli~=0.2',
     'Click>=7.0',
     'PyYAML~=5.1.2',
     'appdirs~=1.4.3',
