@@ -72,10 +72,13 @@ class BaseSession(metaclass=abc.ABCMeta):
 
     __slots__ = (
         '_config', '_closed', 'aiohttp_session',
-        'Admin', 'Agent', 'AgentWathcer', 'Auth', 'Domain', 'Group', 'ScalingGroup',
-        'Admin', 'Agent', 'AgentWatcher', 'Domain', 'Group', 'ScalingGroup',
-        'Image', 'Kernel', 'KeyPair', 'Manager', 'Resource',
-        'KeypairResourcePolicy', 'User', 'VFolder',
+        'Manager', 'Admin',
+        'Agent', 'AgentWatcher', 'ScalingGroup',
+        'Image', 'Kernel',
+        'Domain', 'Group', 'Auth', 'User', 'KeyPair',
+        'EtcdConfig',
+        'Resource', 'KeypairResourcePolicy',
+        'VFolder',
     )
 
     def __init__(self, *, config: APIConfig = None):
@@ -134,6 +137,7 @@ class Session(BaseSession):
         from .admin import Admin
         from .agent import Agent, AgentWatcher
         from .auth import Auth
+        from .etcd import EtcdConfig
         from .domain import Domain
         from .group import Group
         from .image import Image
@@ -179,6 +183,15 @@ class Session(BaseSession):
         })
         '''
         The :class:`~ai.backend.client.Auth` function proxy
+        bound to this session.
+        '''
+
+        self.EtcdConfig = type('EtcdConfig', (BaseFunction, ), {
+            **EtcdConfig.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.EtcdConfig` function proxy
         bound to this session.
         '''
 
@@ -335,6 +348,7 @@ class AsyncSession(BaseSession):
         from .admin import Admin
         from .agent import Agent, AgentWatcher
         from .auth import Auth
+        from .etcd import EtcdConfig
         from .group import Group
         from .image import Image
         from .kernel import Kernel
@@ -379,6 +393,15 @@ class AsyncSession(BaseSession):
         })
         '''
         The :class:`~ai.backend.client.Auth` function proxy
+        bound to this session.
+        '''
+
+        self.EtcdConfig = type('EtcdConfig', (BaseFunction, ), {
+            **EtcdConfig.__dict__,
+            'session': self,
+        })
+        '''
+        The :class:`~ai.backend.client.EtcdConfig` function proxy
         bound to this session.
         '''
 
