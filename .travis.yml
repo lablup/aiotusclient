@@ -26,7 +26,7 @@ matrix:
 # test stage
 install:
   - pip install -U pip setuptools
-  - pip install -U -r requirements-test.txt
+  - pip install -U -r requirements/test.txt
 script:
   - python -m pytest --cov=ai.backend.client -v -m "not integration"
 after_success:
