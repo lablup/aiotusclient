@@ -1,6 +1,12 @@
 Changes
 =======
 
+19.09.4 (2020-02-10)
+--------------------
+
+* NEW: SDK API (``EtcdConfig``) and CLI command (``backend.ai admin etcd``)
+  to allow querying and updating etcd configurations by admins.
+
 19.09.3 (2019-12-03)
 --------------------
 
