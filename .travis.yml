@@ -20,20 +20,17 @@ env:
   global:
     - BACKEND_CLIENT_CLOUD_TEST=1  # use beta server for integration tests
 
-# test stage
-install:
-  - pip install -U --upgrade-strategy=eager pip setuptools
-  - pip install -U --upgrade-strategy=eager -r requirements-ci.txt
-script:
-  - python -m flake8 ai/backend tests
-  - python -m pytest --cov=ai.backend.client -v -m "not integration"
-after_success:
-  - codecov
-
-# other stages
 jobs:
   include:
     - stage: test
+      install:
+        - pip install -U pip setuptools
+        - pip install -U -r requirements-ci.txt
+      script:
+        - python -m flake8 ai/backend tests
+        - python -m pytest --cov=ai.backend.client -v -m "not integration"
+      after_success:
+        - codecov
     - stage: deploy
       python: "3.7"
       install: skip
