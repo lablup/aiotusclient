@@ -20,12 +20,6 @@ env:
   global:
     - BACKEND_CLIENT_CLOUD_TEST=1  # use beta server for integration tests
 
-matrix:
-  allow_failures:
-    - python: "3.8-dev"
-      os: linux
-  fast_finish: true
-
 # test stage
 install:
   - pip install -U --upgrade-strategy=eager pip setuptools
@@ -39,10 +33,12 @@ after_success:
 # other stages
 jobs:
   include:
+    - stage: test
     - stage: deploy
       python: "3.7"
       install: skip
       script: skip
+      after_success: skip
       deploy:
         on:
           tags: true
@@ -52,6 +48,10 @@ jobs:
         user: "__token__"
         password:
           secure: "pypi-AgEIcHlwaS5vcmcCJDkyM2QzNjkxLTU5MWUtNDc4YS05YWU3LTg0MTUwZjlhZDRjNwACQnsicGVybWlzc2lvbnMiOiB7InByb2plY3RzIjogWyJiYWNrZW5kLWFpLWNsaWVudCJdfSwgInZlcnNpb24iOiAxfQAABiDYwYfQxE_mRlq1N1eBd6qYKViBiAqtlV0p5QVx4_h8iw"
+  allow_failures:
+    - python: "3.8-dev"
+      os: linux
+  fast_finish: true
 
 notifications:
   webhooks:
