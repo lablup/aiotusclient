@@ -3,19 +3,19 @@ from pathlib import Path
 import re
 
 setup_requires = [
-    'setuptools>=41.2.0',
+    'setuptools>=45.2.0',
 ]
 install_requires = [
-    'multidict>=4.5',
+    'multidict~=4.7.4',
     'appdirs~=1.4.3',
-    'aiohttp~=3.6.1',
+    'aiohttp~=3.6.2',
     'async_timeout~=3.0',  # to avoid pip10 resolver issue
-    'attrs>=19.1',       # to avoid pip10 resolver issue
-    'python-dateutil>=2.5',
-    'tabulate>=0.7.7',
-    'tqdm~=4.21',
+    'attrs~=19.3',       # to avoid pip10 resolver issue
+    'python-dateutil~=2.8.1',
+    'tabulate~=0.8.2',
+    'tqdm~=4.42',
     'humanize>=0.5.1',
-    'yarl>=1.1.1',
+    'yarl~=1.4.2',
     'Click>=7.0',
 ]
 build_requires = [
@@ -23,14 +23,14 @@ build_requires = [
     'twine>=1.14.0',
 ]
 test_requires = [
-    'pytest~=5.0.1',
+    'pytest~=5.3',
     'pytest-cov',
     'pytest-mock',
-    'pytest-asyncio>=0.10.0',
-    'aioresponses>=0.4.2',
-    'asynctest>=0.13',
+    'pytest-asyncio~=0.10.0',
+    'aioresponses==0.6.1',
+    'asynctest~=0.13.0',
     'codecov',
-    'flake8>=3.7.8',
+    'flake8>=3.7.9',
 ]
 ci_requires = [
 ] + build_requires + test_requires
@@ -38,12 +38,12 @@ dev_requires = [
     'pytest-sugar>=0.9.1',
 ] + build_requires + test_requires
 docs_requires = [
-    'sphinx~=2.2',
+    'sphinx~=2.4',
     'sphinx-intl>=2.0',
     'sphinx_rtd_theme>=0.4.3',
     'sphinxcontrib-trio~=1.1.0',
     'sphinx-autodoc-typehints~=1.8.0',
-    'pygments~=2.4',
+    'pygments~=2.5',
 ]
 
 
