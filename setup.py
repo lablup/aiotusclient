@@ -3,10 +3,10 @@ from pathlib import Path
 import re
 
 setup_requires = [
-    'setuptools>=41.2.0',
+    'setuptools>=45.2.0',
 ]
 install_requires = [
-    'backend.ai-cli~=0.2',
+    'backend.ai-cli~=0.3',
     'Click>=7.0',
     'PyYAML~=5.1.2',
     'appdirs~=1.4.3',
@@ -14,7 +14,7 @@ install_requires = [
     'async_timeout~=3.0',  # to avoid pip10 resolver issue
     'attrs>=19.3',         # to avoid pip10 resolver issue
     'colorama~=0.4.3',
-    'humanize>=0.5.1',
+    'humanize~=1.0.0',
     'multidict~=4.7.3',
     'python-dateutil>=2.8',
     'tabulate>=0.8.6',
