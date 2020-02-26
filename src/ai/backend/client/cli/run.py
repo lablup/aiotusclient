@@ -1046,6 +1046,9 @@ def terminate(name, owner, stats):
 
     SESSID: session ID or its alias given when creating the session.
     '''
+    if len(name) == 0:
+        print_warn('Specify at least one session ID. Check usage with "-h" option.')
+        sys.exit(1)
     print_wait('Terminating the session(s)...')
     with Session() as session:
         has_failure = False
