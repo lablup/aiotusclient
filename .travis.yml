@@ -33,7 +33,7 @@ after_success:
 jobs:
   fast_finish: true
   include:
-    - stage: test
+    # if the test stage has multiple cases, it will be auto-included.
     - stage: deploy
       python: "3.7"
       install: skip
