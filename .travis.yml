@@ -20,9 +20,6 @@ env:
   global:
     - BACKEND_CLIENT_CLOUD_TEST=1  # use beta server for integration tests
 
-matrix:
-  fast_finish: true
-
 # test stage
 install:
   - pip install -U pip setuptools
@@ -34,7 +31,9 @@ after_success:
 
 # other stages
 jobs:
+  fast_finish: true
   include:
+    - stage: test
     - stage: deploy
       python: "3.7"
       install: skip
@@ -44,8 +43,8 @@ jobs:
           tags: true
         provider: pypi
         distributions: sdist bdist_wheel
-        skip_upload_docs: true
-        user: "__token__"
+        upload_docs: false
+        username: "__token__"
         password:
           secure: "pypi-AgEIcHlwaS5vcmcCJDkyM2QzNjkxLTU5MWUtNDc4YS05YWU3LTg0MTUwZjlhZDRjNwACQnsicGVybWlzc2lvbnMiOiB7InByb2plY3RzIjogWyJiYWNrZW5kLWFpLWNsaWVudCJdfSwgInZlcnNpb24iOiAxfQAABiDYwYfQxE_mRlq1N1eBd6qYKViBiAqtlV0p5QVx4_h8iw"
 
