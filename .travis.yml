@@ -29,7 +29,7 @@ script:
 after_success:
   - codecov
 
-# other stages
+# job matrix
 jobs:
   fast_finish: true
   include:
@@ -47,6 +47,13 @@ jobs:
         username: "__token__"
         password:
           secure: "pypi-AgEIcHlwaS5vcmcCJDkyM2QzNjkxLTU5MWUtNDc4YS05YWU3LTg0MTUwZjlhZDRjNwACQnsicGVybWlzc2lvbnMiOiB7InByb2plY3RzIjogWyJiYWNrZW5kLWFpLWNsaWVudCJdfSwgInZlcnNpb24iOiAxfQAABiDYwYfQxE_mRlq1N1eBd6qYKViBiAqtlV0p5QVx4_h8iw"
+  allow_failures:
+    - python: "3.8"
+      os: linux
+  fast_finish: true
+  # exclude the duplicate default test stage
+  exclude:
+    - python: "3.6"
 
 notifications:
   webhooks:

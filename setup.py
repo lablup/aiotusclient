@@ -15,10 +15,10 @@ install_requires = [
     'attrs>=19.3',         # to avoid pip10 resolver issue
     'colorama~=0.4.3',
     'humanize~=1.0.0',
-    'multidict~=4.7.3',
-    'python-dateutil>=2.8',
-    'tabulate>=0.8.6',
-    'tqdm~=4.41',
+    'multidict~=4.7.4',
+    'python-dateutil~=2.8.1',
+    'tabulate~=0.8.6',
+    'tqdm~=4.42',
     'yarl~=1.4.2',
 ]
 build_requires = [
@@ -30,12 +30,12 @@ test_requires = [
     'pytest-cov',
     'pytest-mock',
     'pytest-asyncio>=0.10.0',
-    'aioresponses==0.6.1',
+    'aioresponses~=0.6.3',
     'asynctest>=0.13; python_version<"3.8"',
     'codecov',
 ]
 lint_requires = [
-    'flake8>=3.7.8',
+    'flake8>=3.7.9',
 ]
 typecheck_requires = [
     'mypy>=0.760',
@@ -44,12 +44,12 @@ dev_requires = [
     'pytest-sugar>=0.9.1',
 ]
 docs_requires = [
-    'sphinx~=2.2',
+    'sphinx~=2.4',
     'sphinx-intl>=2.0',
     'sphinx_rtd_theme>=0.4.3',
     'sphinxcontrib-trio~=1.1.0',
     'sphinx-autodoc-typehints~=1.8.0',
-    'pygments~=2.4',
+    'pygments~=2.5',
 ]
 
 
