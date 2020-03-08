@@ -1,6 +1,12 @@
 Changes
 =======
 
+19.09.5 (2020-03-xx)
+--------------------
+
+* NEW: Add ``backend.ai restart`` command and improve error handling in
+  the ``backend.ai terminate`` command.
+
 19.09.4 (2020-02-10)
 --------------------
 
