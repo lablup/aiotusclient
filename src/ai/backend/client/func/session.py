@@ -363,7 +363,7 @@ class ComputeSession:
         self.owner_access_key = owner_access_key
 
     @api_function
-    async def destroy(self):
+    async def destroy(self, *, forced: bool = False):
         '''
         Destroys the compute session.
         Since the server literally kills the container(s), all ongoing executions are
@@ -373,6 +373,8 @@ class ComputeSession:
         if self.owner_access_key:
             params['owner_access_key'] = self.owner_access_key
         prefix = get_naming(self.session.api_version, 'path')
+        if forced:
+            params['forced'] = 'true'
         rqst = Request(
             self.session,
             'DELETE', f'/{prefix}/{self.name}',

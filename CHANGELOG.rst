@@ -44,6 +44,14 @@ Changes
 * BREAKING CHANGE: Now the client SDK runs on Python 3.6, 3.7, and 3.8 and
   dropped support for Python 3.5.
 
+19.09.6 (2020-03-16)
+--------------------
+
+* NEW: Add ``-f`` / ``--forced`` option to ``backend.ai terminate`` command
+  and add an optional ``forced`` keyword-argument to SDK API (``Kernel.destroy()``). (#89)
+
+* IMPROVE: Prettify the console output for admin CLI commands. (#91)
+
 19.09.5 (2020-03-08)
 --------------------
 

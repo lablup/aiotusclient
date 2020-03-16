@@ -1036,11 +1036,13 @@ def start_template(
 
 @main.command(aliases=['rm', 'kill'])
 @click.argument('session_names', metavar='SESSID', nargs=-1)
+@click.option('-f', '--forced', is_flag=True,
+              help='Force-terminate the errored sessions (only allowed for admins)')
 @click.option('-o', '--owner', '--owner-access-key', metavar='ACCESS_KEY',
               help='Specify the owner of the target session explicitly.')
 @click.option('-s', '--stats', is_flag=True,
               help='Show resource usage statistics after termination')
-def terminate(session_names, owner, stats):
+def terminate(session_names, forced, owner, stats):
     '''
     Terminate the given session.
 
@@ -1055,7 +1057,7 @@ def terminate(session_names, owner, stats):
         for session_name in session_names:
             try:
                 compute_session = session.ComputeSession(session_name, owner)
-                ret = compute_session.destroy()
+                ret = compute_session.destroy(forced=forced)
             except BackendAPIError as e:
                 print_error(e)
                 if e.status == 404:
