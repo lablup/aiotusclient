@@ -1,7 +1,7 @@
 Changes
 =======
 
-19.09.6 (2020-03-xx)
+19.09.6 (2020-03-16)
 --------------------
 
 * NEW: Add ``-f`` / ``--forced`` option to ``backend.ai terminate`` command
