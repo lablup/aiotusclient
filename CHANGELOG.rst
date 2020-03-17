@@ -4,6 +4,8 @@ Changes
 19.12.0b1 (2020-01-11)
 ----------------------
 
+* NEW: dotfiles management API and CLI (#85)
+
 * BREAKING CHANGE: All functional API classes are moved into the
   ``ai.backend.client.func`` sub-package. (#82)
 
@@ -37,6 +39,8 @@ Changes
 * NEW: SDK API (``SessionTemplate``) and CLI command set (``backend.ai sesstpl``)
 
 * NEW: Support for unmanaged vfolders and token-based download API (#77)
+
+* FIX: Refine details of the ``app`` command such as error handling (#90)
 
 19.12.0a1 (2019-11-17)
 ----------------------
