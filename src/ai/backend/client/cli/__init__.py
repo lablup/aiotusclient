@@ -166,4 +166,4 @@ def run_main():
                 # Use the default signal handler to set the exit
                 # code properly for interruption.
                 signal.signal(signal.SIGINT, signal.SIG_DFL)
-                os.kill(0, signal.SIGINT)
+                os.kill(os.getpid(), signal.SIGINT)
