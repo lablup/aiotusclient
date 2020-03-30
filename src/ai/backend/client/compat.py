@@ -55,11 +55,11 @@ def _cancel_all_tasks(loop):
             })
 
 
-def _asyncio_run(coro, *, debug=False):
+def asyncio_run(coro, *, debug=False):
     loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.set_debug(debug)
     try:
-        asyncio.set_event_loop(loop)
-        loop.set_debug(debug)
         return loop.run_until_complete(coro)
     finally:
         try:
@@ -68,13 +68,8 @@ def _asyncio_run(coro, *, debug=False):
                 loop.run_until_complete(loop.shutdown_asyncgens())
         finally:
             loop.stop()
+            loop.close()
             asyncio.set_event_loop(None)
-
-
-if hasattr(asyncio, 'run'):  # Python 3.7+
-    asyncio_run = asyncio.run
-else:
-    asyncio_run = _asyncio_run
 
 
 def asyncio_run_forever(setup_coro, shutdown_coro, *,
@@ -87,17 +82,15 @@ def asyncio_run_forever(setup_coro, shutdown_coro, *,
     async def wait_for_stop():
         loop = current_loop()
         future = loop.create_future()
-        for stop_sig in stop_signals:
-            loop.add_signal_handler(stop_sig, future.set_result, stop_sig)
         try:
-            recv_sig = await future
-        finally:
-            loop.remove_signal_handler(recv_sig)
+            await future
+        except asyncio.CancelledError:
+            pass
 
     loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.set_debug(debug)
     try:
-        asyncio.set_event_loop(loop)
-        loop.set_debug(debug)
         loop.run_until_complete(setup_coro)
         loop.run_until_complete(wait_for_stop())
     finally:
@@ -108,4 +101,5 @@ def asyncio_run_forever(setup_coro, shutdown_coro, *,
                 loop.run_until_complete(loop.shutdown_asyncgens())
         finally:
             loop.stop()
+            loop.close()
             asyncio.set_event_loop(None)
