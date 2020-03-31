@@ -3,7 +3,6 @@ A compatibility module for backported codes from Python 3.6+ standard library.
 '''
 
 import asyncio
-import signal
 
 
 if hasattr(asyncio, 'get_running_loop'):  # Python 3.7+
@@ -49,6 +48,7 @@ def _asyncio_run(coro, *, debug=False):
             if hasattr(loop, 'shutdown_asyncgens'):  # Python 3.6+
                 loop.run_until_complete(loop.shutdown_asyncgens())
         finally:
+            loop.stop()
             loop.close()
             asyncio.set_event_loop(None)
 
@@ -59,8 +59,7 @@ else:
     asyncio_run = _asyncio_run
 
 
-def asyncio_run_forever(server_context, *,
-                        stop_signals={signal.SIGINT}, debug=False):
+def asyncio_run_forever(server_context, *, debug=False):
     '''
     A proposed-but-not-implemented asyncio.run_forever() API based on
     @vxgmichel's idea.
@@ -79,9 +78,6 @@ def asyncio_run_forever(server_context, *,
             except asyncio.CancelledError:
                 pass
 
-    for stop_sig in stop_signals:
-        loop.add_signal_handler(stop_sig, forever.cancel)
-
     try:
         return loop.run_until_complete(_run_forever())
     finally:
@@ -90,5 +86,6 @@ def asyncio_run_forever(server_context, *,
             if hasattr(loop, 'shutdown_asyncgens'):  # Python 3.6+
                 loop.run_until_complete(loop.shutdown_asyncgens())
         finally:
+            loop.stop()
             loop.close()
             asyncio.set_event_loop(None)

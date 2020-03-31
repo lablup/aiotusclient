@@ -48,6 +48,17 @@ Changes
 * BREAKING CHANGE: Now the client SDK runs on Python 3.6, 3.7, and 3.8 and
   dropped support for Python 3.5.
 
+19.09.7 (2020-03-31)
+--------------------
+
+* FIX: Not-implemented-error in ``backend.ai app`` command on Windows, due
+  to manually set event loop UNIX signal handlers. (#93)
+
+* FIX: Now *all* CLI commands set exit codes correctly for interrupts
+  (Ctrl+C on Windows or SIGINT on POSIX systems) so that batch/shell
+  scripts that use ``backend.ai`` commands get interrupted properly.
+  (#93)
+
 19.09.6 (2020-03-16)
 --------------------
 

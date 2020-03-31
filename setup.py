@@ -7,16 +7,16 @@ setup_requires = [
 ]
 install_requires = [
     'backend.ai-cli~=0.3',
-    'Click>=7.0',
-    'PyYAML~=5.1.2',
-    'appdirs~=1.4.3',
     'aiohttp~=3.6.2',
+    'appdirs~=1.4.3',
     'async_timeout~=3.0',  # to avoid pip10 resolver issue
     'attrs>=19.3',         # to avoid pip10 resolver issue
+    'click~=7.1.1',
     'colorama~=0.4.3',
     'humanize~=1.0.0',
     'multidict~=4.7.4',
     'python-dateutil~=2.8.1',
+    'PyYAML~=5.1.2',
     'tabulate~=0.8.6',
     'tqdm~=4.42',
     'yarl~=1.4.2',
@@ -86,6 +86,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Operating System :: POSIX',
         'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Microsoft :: Windows',
         'Environment :: No Input/Output (Daemon)',
         'Topic :: Scientific/Engineering',
         'Topic :: Software Development',

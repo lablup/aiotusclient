@@ -1,9 +1,13 @@
 from pathlib import Path
+import os
+import signal
 import sys
 import warnings
 
 import click
+from click.exceptions import ClickException, Abort
 
+from .. import __version__
 from ..config import APIConfig, set_config
 from ai.backend.cli.extensions import AliasGroup
 
@@ -13,7 +17,7 @@ from ai.backend.cli.extensions import AliasGroup
 @click.option('--skip-sslcert-validation',
               help='Skip SSL certificate validation for all API requests.',
               is_flag=True)
-@click.version_option()
+@click.version_option(version=__version__)
 def main(skip_sslcert_validation):
     """
     Backend.AI command line interface.
@@ -40,7 +44,7 @@ def run_alias():
     sys.argv.insert(1, 'run')
     if help:
         sys.argv.append('--help')
-    main.main(prog_name='backend.ai')
+    run_main()
 
 
 def _attach_command():
@@ -51,3 +55,48 @@ def _attach_command():
 
 
 _attach_command()
+
+
+def run_main():
+    try:
+        _interrupted = False
+        main.main(
+            standalone_mode=False,
+            prog_name='backend.ai',
+        )
+    except KeyboardInterrupt:
+        # For interruptions outside the Click's exception handling block.
+        print("Interrupted!", end="", file=sys.stderr)
+        sys.stderr.flush()
+        _interrupted = True
+    except Abort as e:
+        # Click wraps unhandled KeyboardInterrupt with a plain
+        # sys.exit(1) call and prints "Aborted!" message
+        # (which would look non-sense to users).
+        # This is *NOT* what we want.
+        # Instead of relying on Click, mark the _interrupted
+        # flag to perform our own exit routines.
+        if isinstance(e.__context__, KeyboardInterrupt):
+            print("Interrupted!", end="", file=sys.stderr)
+            sys.stderr.flush()
+            _interrupted = True
+        else:
+            print("Aborted!", end="", file=sys.stderr)
+            sys.stderr.flush()
+            sys.exit(1)
+    except ClickException as e:
+        e.show()
+        sys.exit(e.exit_code)
+    finally:
+        if _interrupted:
+            # Override the exit code when it's interrupted,
+            # referring https://github.com/python/cpython/pull/11862
+            if sys.platform.startswith('win'):
+                # Use STATUS_CONTROL_C_EXIT to notify cmd.exe
+                # for interrupted exit
+                sys.exit(-1073741510)
+            else:
+                # Use the default signal handler to set the exit
+                # code properly for interruption.
+                signal.signal(signal.SIGINT, signal.SIG_DFL)
+                os.kill(os.getpid(), signal.SIGINT)

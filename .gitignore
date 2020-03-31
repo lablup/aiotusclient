@@ -38,3 +38,4 @@ env_*.sh
 .ipynb_checkpoints
 
 .vscode/
+.mypy_cache/

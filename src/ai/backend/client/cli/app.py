@@ -274,8 +274,7 @@ def app(session_name, app, protocol, bind, arg, env):
         args=arg,
         envs=env,
     )
-    stop_signals = {signal.SIGINT, signal.SIGTERM}
-    asyncio_run_forever(proxy_ctx, stop_signals=stop_signals)
+    asyncio_run_forever(proxy_ctx)
     sys.exit(proxy_ctx.exit_code)
 
 
