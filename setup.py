@@ -80,7 +80,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Operating System :: POSIX',
         'Operating System :: MacOS :: MacOS X',
-        'Operating System :: Windows',
+        'Operating System :: Microsoft :: Windows',
         'Environment :: No Input/Output (Daemon)',
         'Topic :: Scientific/Engineering',
         'Topic :: Software Development',
