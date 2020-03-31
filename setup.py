@@ -6,17 +6,17 @@ setup_requires = [
     'setuptools>=45.2.0',
 ]
 install_requires = [
-    'multidict~=4.7.4',
-    'appdirs~=1.4.3',
     'aiohttp~=3.6.2',
+    'appdirs~=1.4.3',
     'async_timeout~=3.0',  # to avoid pip10 resolver issue
     'attrs~=19.3',       # to avoid pip10 resolver issue
+    'click~=7.1.1',
+    'humanize>=0.5.1',
+    'multidict~=4.7.4',
     'python-dateutil~=2.8.1',
     'tabulate~=0.8.2',
     'tqdm~=4.42',
-    'humanize>=0.5.1',
     'yarl~=1.4.2',
-    'Click>=7.0',
 ]
 build_requires = [
     'wheel>=0.33.6',
