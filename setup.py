@@ -6,7 +6,7 @@ setup_requires = [
     'setuptools>=45.2.0',
 ]
 install_requires = [
-    'backend.ai-cli~=0.3',
+    'backend.ai-cli~=0.4.1',
     'aiohttp~=3.6.2',
     'appdirs~=1.4.3',
     'async_timeout~=3.0',  # to avoid pip10 resolver issue
@@ -98,6 +98,7 @@ setup(
     install_requires=install_requires,
     extras_require={
         'dev': dev_requires,
+        'build': build_requires,
         'test': test_requires,
         'lint': lint_requires,
         'typecheck': typecheck_requires,

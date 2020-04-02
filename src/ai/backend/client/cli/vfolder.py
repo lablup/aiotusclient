@@ -6,13 +6,12 @@ import sys
 import click
 from tabulate import tabulate
 
-from ai.backend.cli.extensions import AliasGroup
 from . import main
 from .pretty import print_wait, print_done, print_error, print_fail
 from ..session import Session
 
 
-@main.group(cls=AliasGroup)
+@main.group()
 def vfolder():
     '''Provides virtual folder operations.'''
 
