@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 
 setup_requires = [
-    'setuptools>=45.2.0',
+    'setuptools>=46.1.0',
 ]
 install_requires = [
     'backend.ai-cli~=0.4.1',
@@ -22,11 +22,11 @@ install_requires = [
     'yarl~=1.4.2',
 ]
 build_requires = [
-    'wheel>=0.33.6',
-    'twine>=1.14.0',
+    'wheel>=0.34.2',
+    'twine>=3.1.1',
 ]
 test_requires = [
-    'pytest~=5.3.2',
+    'pytest~=5.4.1',
     'pytest-cov',
     'pytest-mock',
     'pytest-asyncio>=0.10.0',
@@ -38,7 +38,7 @@ lint_requires = [
     'flake8>=3.7.9',
 ]
 typecheck_requires = [
-    'mypy>=0.760',
+    'mypy>=0.770',
 ]
 dev_requires = [
     'pytest-sugar>=0.9.1',
