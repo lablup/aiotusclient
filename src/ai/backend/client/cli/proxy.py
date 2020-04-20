@@ -130,7 +130,7 @@ async def web_handler(request):
             down_resp.headers['Access-Control-Allow-Origin'] = '*'
             await down_resp.prepare(request)
             while True:
-                chunk = await up_resp.aread(8192)
+                chunk = await up_resp.read(8192)
                 if not chunk:
                     break
                 await down_resp.write(chunk)
