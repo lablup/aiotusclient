@@ -23,10 +23,10 @@ build_requires = [
     'twine>=1.14.0',
 ]
 test_requires = [
-    'pytest~=5.3',
+    'pytest~=5.4.1',
     'pytest-cov',
     'pytest-mock',
-    'pytest-asyncio~=0.10.0',
+    'pytest-asyncio~=0.11.0',
     'aioresponses==0.6.1',
     'asynctest~=0.13.0',
     'codecov',
@@ -35,7 +35,7 @@ test_requires = [
 ci_requires = [
 ] + build_requires + test_requires
 dev_requires = [
-    'pytest-sugar>=0.9.1',
+    # 'pytest-sugar>=0.9.1',
 ] + build_requires + test_requires
 docs_requires = [
     'sphinx~=2.4',
