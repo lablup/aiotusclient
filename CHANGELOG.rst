@@ -1,6 +1,11 @@
 Changes
 =======
 
+19.09.8 (2020-04-23)
+--------------------
+
+* NEW(backported): Add ``backend.ai vfolder rename-file`` command (#99)
+
 19.09.7 (2020-03-31)
 --------------------
 
