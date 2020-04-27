@@ -35,6 +35,8 @@ class VFolder(BaseFunction):
         host: str = None,
         unmanaged_path: str = None,
         group: str = None,
+        usage_mode: str = 'general',
+        permission: str = 'rw',
     ):
         rqst = Request(api_session.get(), 'POST', '/folders')
         rqst.set_json({
@@ -42,6 +44,8 @@ class VFolder(BaseFunction):
             'host': host,
             'unmanaged_path': unmanaged_path,
             'group': group,
+            'usage_mode': usage_mode,
+            'permission': permission,
         })
         async with rqst.fetch() as resp:
             return await resp.json()
