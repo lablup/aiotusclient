@@ -181,6 +181,7 @@ class BaseSession(metaclass=abc.ABCMeta):
         'EtcdConfig',
         'Resource', 'KeypairResourcePolicy',
         'VFolder', 'Dotfile',
+        'ServerLog',
     )
 
     aiohttp_session: aiohttp.ClientSession
@@ -215,6 +216,7 @@ class BaseSession(metaclass=abc.ABCMeta):
         from .func.user import User
         from .func.vfolder import VFolder
         from .func.dotfile import Dotfile
+        from .func.server_log import ServerLog
 
         self.System = System
         self.Admin = Admin
@@ -236,6 +238,7 @@ class BaseSession(metaclass=abc.ABCMeta):
         self.SessionTemplate = SessionTemplate
         self.VFolder = VFolder
         self.Dotfile = Dotfile
+        self.ServerLog = ServerLog
 
     @property
     def proxy_mode(self) -> bool:
