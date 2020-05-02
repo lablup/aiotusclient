@@ -1,4 +1,5 @@
-# Changelog
+Changes
+=======
 
 <!--
     You should *NOT* be adding new change log entries to this file, this
@@ -15,7 +16,8 @@
 
 .. towncrier release notes start
 
-## 20.03.0a1 (2020-04-07)
+20.03.0a1 (2020-04-07)
+----------------------
 
 ### Breaking Changes
 * Breaking Changes without explicit PR/issue numbers

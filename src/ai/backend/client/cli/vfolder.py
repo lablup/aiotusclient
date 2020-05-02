@@ -269,7 +269,8 @@ def mkdir(name, path):
 @click.argument('target_path', type=str)
 @click.argument('new_name', type=str)
 def rename_file(name, target_path, new_name):
-    '''Rename a file or a directory in a virtual folder.
+    '''
+    Rename a file or a directory in a virtual folder.
 
     \b
     NAME: Name of a virtual folder.
