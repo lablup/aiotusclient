@@ -21,6 +21,7 @@ install_requires = [
 build_requires = [
     'wheel>=0.33.6',
     'twine>=1.14.0',
+    'towncrier>=19.2.0',
 ]
 test_requires = [
     'pytest~=5.4.1',
