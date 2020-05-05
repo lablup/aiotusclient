@@ -32,7 +32,7 @@ test_requires = [
     'pytest~=5.4.1',
     'pytest-cov',
     'pytest-mock',
-    'pytest-asyncio>=0.11.0',
+    'pytest-asyncio>=0.12.0',
     'aioresponses~=0.6.3',
     'asynctest>=0.13; python_version<"3.8"',
     'codecov',
