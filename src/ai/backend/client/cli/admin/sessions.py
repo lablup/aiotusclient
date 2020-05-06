@@ -1,3 +1,4 @@
+import shutil
 import sys
 
 import click
@@ -8,7 +9,12 @@ from ...helper import is_admin
 from ...session import Session, is_legacy_server
 from ...versioning import get_naming, apply_version_aware_fields
 from ..pretty import print_error, print_fail
-from ..pagination import execute_paginated_query, generate_paginated_results, echo_via_pager
+from ..pagination import (
+    MAX_PAGE_SIZE,
+    execute_paginated_query,
+    generate_paginated_results,
+    echo_via_pager,
+)
 
 
 # Lets say formattable options are:
@@ -166,7 +172,8 @@ def sessions(status, access_key, name_only, show_tid, dead, running, all, detail
     try:
         with Session() as session:
             fields = apply_version_aware_fields(session, fields)
-            page_size = 20
+            # let the page size be same to the terminal height.
+            page_size = min(MAX_PAGE_SIZE, shutil.get_terminal_size((80, 20)).lines)
             if all:
                 echo_via_pager(format_items(generate_paginated_results(
                     session,
@@ -179,6 +186,9 @@ def sessions(status, access_key, name_only, show_tid, dead, running, all, detail
                     page_size=page_size,
                 ), page_size))
             else:
+                # use a reasonably small page size, considering the heights of
+                # table header and shell prompts.
+                page_size = max(10, page_size - 6)
                 result = execute_paginated_query(
                     session,
                     'compute_session_list',

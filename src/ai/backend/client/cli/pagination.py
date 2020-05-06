@@ -10,10 +10,14 @@ from typing import (
     Tuple,
 )
 from typing_extensions import (  # for Python 3.7
+    Final,
     TypedDict,
 )
 
 import click
+
+
+MAX_PAGE_SIZE: Final = 100
 
 
 class PaginatedResult(TypedDict):
@@ -30,6 +34,8 @@ def execute_paginated_query(
     limit: int,
     offset: int,
 ) -> PaginatedResult:
+    if limit > MAX_PAGE_SIZE:
+        raise ValueError(f"The page size cannot exceed {MAX_PAGE_SIZE}")
     query = '''
     query($limit:Int!, $offset:Int!, $var_decls) {
       $root_field(
@@ -62,6 +68,8 @@ def generate_paginated_results(
     *,
     page_size: int,
 ) -> Generator[None, None, Any]:
+    if page_size > MAX_PAGE_SIZE:
+        raise ValueError(f"The page size cannot exceed {MAX_PAGE_SIZE}")
     offset = 0
     is_first = True
     total_count = -1
