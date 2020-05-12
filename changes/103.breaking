@@ -1,0 +1,4 @@
+The phase 2 for API v5 schema updates
+- `Agent.list_with_limit()` is replaced with `Agent.paginated_list()`.
+- Legacy `<ObjectType>.list()` methods are now returns only up to 100 entries.
+  Users must use `<ObjectType>.paginated_list()` for fetching all items with pagination.

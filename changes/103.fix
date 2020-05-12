@@ -1,0 +1,1 @@
+Remove a bogus "bad file descriptor" error when commands exiting via exceptions
