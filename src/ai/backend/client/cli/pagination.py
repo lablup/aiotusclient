@@ -1,96 +1,89 @@
 import shutil
 import sys
-import textwrap
 from typing import (
-    cast,
     Any,
-    Generator,
-    Mapping,
+    Callable,
+    Iterator,
+    List,
+    MutableMapping,
     Sequence,
     Tuple,
 )
-from typing_extensions import (  # for Python 3.7
-    Final,
-    TypedDict,
-)
+from typing_extensions import Literal
 
 import click
+from tabulate import tabulate
+
+from ..pagination import MAX_PAGE_SIZE
 
 
-MAX_PAGE_SIZE: Final = 100
+def get_preferred_page_size() -> int:
+    return min(MAX_PAGE_SIZE, shutil.get_terminal_size((80, 20)).lines)
 
 
-class PaginatedResult(TypedDict):
-    total_count: int
-    items: Sequence[Any]
+_Item = MutableMapping[str, Any]
 
 
-def execute_paginated_query(
-    session,
-    root_field: str,
-    variables: Mapping[str, Tuple[Any, str]],
-    fields: Sequence[str],
+def tabulate_items(
+    items: Iterator[_Item],
+    fields: Sequence[Tuple[str, str]],
     *,
-    limit: int,
-    offset: int,
-) -> PaginatedResult:
-    if limit > MAX_PAGE_SIZE:
-        raise ValueError(f"The page size cannot exceed {MAX_PAGE_SIZE}")
-    query = '''
-    query($limit:Int!, $offset:Int!, $var_decls) {
-      $root_field(
-          limit:$limit, offset:$offset, $var_args) {
-        items { $fields }
-        total_count
-      }
-    }'''
-    query = query.replace('$root_field', root_field)
-    query = query.replace('$fields', ' '.join(item[1] for item in fields))
-    query = query.replace(
-        '$var_decls',
-        ', '.join(f'${key}: {value[1]}'
-                  for key, value in variables.items()),
-    )
-    query = query.replace('$var_args', ', '.join(f'{key}:${key}' for key in variables.keys()))
-    query = textwrap.dedent(query).strip()
-    var_values = {key: value[0] for key, value in variables.items()}
-    var_values['limit'] = limit
-    var_values['offset'] = offset
-    resp = session.Admin.query(query, var_values)
-    return cast(PaginatedResult, resp[root_field])
-
-
-def generate_paginated_results(
-    session,
-    root_field: str,
-    variables: Mapping[str, Any],
-    fields: Sequence[str],
-    *,
-    page_size: int,
-) -> Generator[None, None, Any]:
-    if page_size > MAX_PAGE_SIZE:
-        raise ValueError(f"The page size cannot exceed {MAX_PAGE_SIZE}")
-    offset = 0
+    page_size: int = None,
+    item_formatter: Callable[[_Item], None] = None,
+    tablefmt: Literal['simple', 'plain', 'github'] = 'simple',
+) -> Iterator[str]:
     is_first = True
-    total_count = -1
-    while True:
-        limit = (page_size if is_first else
-                 min(page_size, total_count - offset))
-        result = execute_paginated_query(
-            session, root_field, variables, fields,
-            limit=limit, offset=offset,
+    output_count = 0
+    buffered_items: List[_Item] = []
+
+    # check table header/footer sizes
+    header_height = 0
+    if tablefmt in ('simple', 'github'):
+        header_height = 2
+    assert header_height >= 0
+
+    def _tabulate_buffer() -> Iterator[str]:
+        table = tabulate(
+            [item.values() for item in buffered_items],
+            headers=(
+                [] if tablefmt == 'plain'
+                else [field[0] for field in fields]
+            ),
+            tablefmt=tablefmt,
         )
-        offset += page_size
-        total_count = result['total_count']
-        items = result['items']
-        yield from items
-        is_first = False
-        if offset >= total_count:
-            break
+        table_rows = table.splitlines()
+        if is_first:
+            yield from (row + '\n' for row in table_rows)
+        else:
+            # strip the header for continued page outputs
+            yield from (row + '\n' for row in table_rows[header_height:])
+
+    # If we iterate until the end of items, pausing the terminal output
+    # would not have effects for avoiding unnecessary queries for subsequent pages.
+    # Let's buffer the items and split the formatting per page.
+    if page_size is None:
+        table_height = shutil.get_terminal_size((80, 20)).lines
+    else:
+        table_height = page_size
+    page_size = max(table_height - header_height - 1, 10)
+    for item in items:
+        if item_formatter is not None:
+            item_formatter(item)
+        buffered_items.append(item)
+        output_count += 1
+        if output_count == page_size:
+            yield from _tabulate_buffer()
+            buffered_items.clear()
+            is_first = False
+            output_count = 0
+            page_size = max(table_height - 1, 10)
+    if output_count > 0:
+        yield from _tabulate_buffer()
 
 
 def echo_via_pager(
-    generator,
+    text_generator: Iterator[str],
+    break_callback: Callable[[], None] = None,
 ) -> None:
     """
     A variant of ``click.echo_via_pager()`` which implements our own simplified pagination.
@@ -98,12 +91,12 @@ def echo_via_pager(
     won't continue querying the next results unless continued, avoiding server overloads.
     """
     # TODO: support PageUp & PageDn by buffering the output
-    terminal_size = shutil.get_terminal_size((80, 20))
+    terminal_height = shutil.get_terminal_size((80, 20)).lines
     line_count = 0
-    for text in generator:
+    for text in text_generator:
         line_count += text.count('\n')
         click.echo(text, nl=False)
-        if line_count == terminal_size.lines - 1:
+        if line_count == terminal_height - 1:
             if sys.stdin.isatty() and sys.stdout.isatty():
                 click.echo(':', nl=False)
                 # Pause the terminal so that we don't execute next-page queries indefinitely.
@@ -111,6 +104,8 @@ def echo_via_pager(
                 # to allow user interruption.
                 k = click.getchar(echo=False)
                 if k in ('q', 'Q'):
+                    if break_callback is not None:
+                        break_callback()
                     break
                 click.echo('\r', nl=False)
             line_count = 0

@@ -4,8 +4,14 @@ import click
 from tabulate import tabulate
 
 from . import admin
-from ..pretty import print_error, print_fail
 from ...session import Session
+from ..pretty import print_error, print_fail
+from ..pagination import (
+    get_preferred_page_size,
+    echo_via_pager,
+    tabulate_items,
+)
+from ...exceptions import NoItems
 
 
 @admin.command()
@@ -19,13 +25,14 @@ def user(email):
     fields = [
         ('UUID', 'uuid'),
         ('Username', 'username'),
+        ('Role', 'role'),
         ('Email', 'email'),
         ('Name', 'full_name'),
         ('Need Password Change', 'need_password_change'),
         ('Active?', 'is_active'),
         ('Created At', 'created_at'),
         ('Domain Name', 'domain_name'),
-        ('Role', 'role'),
+        ('Groups', 'groups { id name }'),
     ]
     with Session() as session:
         try:
@@ -39,7 +46,10 @@ def user(email):
             print('There is no such user.')
             sys.exit(1)
         for name, key in fields:
-            if key in resp:
+            if key.startswith('groups '):
+                group_list = [f"{g['name']} ({g['id']})" for g in resp['groups']]
+                rows.append((name, ",\n".join(group_list)))
+            else:
                 rows.append((name, resp[key]))
         print(tabulate(rows, headers=('Field', 'Value')))
 
@@ -47,8 +57,10 @@ def user(email):
 @admin.group(invoke_without_command=True)
 @click.pass_context
 @click.option('--is-active', type=bool, default=None,
-              help='List active or inactive users only.')
-def users(ctx, is_active):
+              help='Filter only active users.')
+@click.option('-g', '--group', type=str, default=None,
+              help='Filter by group ID.')
+def users(ctx, is_active, group) -> None:
     '''
     List and manage users.
     (admin privilege required)
@@ -58,27 +70,38 @@ def users(ctx, is_active):
     fields = [
         ('UUID', 'uuid'),
         ('Username', 'username'),
+        ('Role', 'role'),
         ('Email', 'email'),
         ('Name', 'full_name'),
         ('Need Password Change', 'need_password_change'),
         ('Active?', 'is_active'),
         ('Created At', 'created_at'),
         ('Domain Name', 'domain_name'),
-        ('Role', 'role'),
+        ('Groups', 'groups { id name }'),
     ]
-    with Session() as session:
-        try:
-            resp = session.User.list(is_active=is_active,
-                                     fields=(item[1] for item in fields))
-        except Exception as e:
-            print_error(e)
-            sys.exit(1)
-        if len(resp) < 1:
-            print('There is no user.')
-            return
-        fields = [field for field in fields if field[1] in resp[0]]
-        print(tabulate((item.values() for item in resp),
-                        headers=(item[0] for item in fields)))
+
+    def format_item(item):
+        group_list = [g['name'] for g in item['groups']]
+        item['groups'] = ", ".join(group_list)
+
+    try:
+        with Session() as session:
+            page_size = get_preferred_page_size()
+            try:
+                items = session.User.paginated_list(
+                    is_active, group,
+                    fields=[f[1] for f in fields],
+                    page_size=page_size,
+                )
+                echo_via_pager(
+                    tabulate_items(items, fields,
+                                   item_formatter=format_item)
+                )
+            except NoItems:
+                print("There are no matching users.")
+    except Exception as e:
+        print_error(e)
+        sys.exit(1)
 
 
 @users.command()
