@@ -16,6 +16,40 @@ Changes
 
 .. towncrier release notes start
 
+20.03.0b1 (2020-05-12)
+----------------------
+
+### Breaking Changes
+* The phase 1 for API v5 schema updates ([#97](https://github.com/lablup/backend.ai-client-py/issues/97))
+  - Drop support for Python 3.6
+  - Apply kernel/session naming changes
+* The phase 2 for API v5 schema updates ([#103](https://github.com/lablup/backend.ai-client-py/issues/103))
+  - `Agent.list_with_limit()` is replaced with `Agent.paginated_list()`.
+  - Legacy `<ObjectType>.list()` methods are now returns only up to 100 entries.
+    Users must use `<ObjectType>.paginated_list()` for fetching all items with pagination.
+
+### Features
+* Add usage_mode and permission option in creating vfolder ([#96](https://github.com/lablup/backend.ai-client-py/issues/96))
+* The phase 1 for API v5 schema updates ([#97](https://github.com/lablup/backend.ai-client-py/issues/97))
+  - `admin rescan-images` now have a working progress bar!
+* File rename command for a file/directory inside a virtual folder. ([#99](https://github.com/lablup/backend.ai-client-py/issues/99))
+* Improve console-server support with proxy-mode API sessions ([#100](https://github.com/lablup/backend.ai-client-py/issues/100))
+* Add `backend.ai server-logs` command-set to list server-stored error logs ([#101](https://github.com/lablup/backend.ai-client-py/issues/101))
+* Improve and refactor pagination to avoid excessive server queries and apply to more CLI commands ([#102](https://github.com/lablup/backend.ai-client-py/issues/102))
+* The phase 2 for API v5 schema updates ([#103](https://github.com/lablup/backend.ai-client-py/issues/103))
+  - Session queries now work with the API v5 GraphQL schema and recognizes multi-container sessions
+  - Improve pagination for `admin agents`, `admin sessions`, `admin users`, and `admin keypairs` commands
+  - Add support for async generator API function methods, wrapped as synchronouse plain generators in synchronouse API sessions
+  - Add new filtering options to `admin agents` (scaling groups) and `admin users` (user groups)
+
+### Fixes
+* Remove a bogus "bad file descriptor" error when commands exiting via exceptions ([#103](https://github.com/lablup/backend.ai-client-py/issues/103))
+
+### Miscellaneous
+* The phase 1 for API v5 schema updates ([#97](https://github.com/lablup/backend.ai-client-py/issues/97))
+  - API function classes are now type-checked and interoperable with Python IDEs such as PyCharm, since references to the current active session is rewritten to use `contextvars`.
+
+
 20.03.0a1 (2020-04-07)
 ----------------------
 
