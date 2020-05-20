@@ -163,7 +163,7 @@ def sessions(status, access_key, name_only, dead, running, detail, plain, format
                                        item_formatter=transform_legacy_mem_fields)
                     )
             except NoItems:
-                print("There are no matching users.")
+                print("There are no matching sessions.")
     except Exception as e:
         print_error(e)
         sys.exit(1)
