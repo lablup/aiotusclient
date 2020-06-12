@@ -100,7 +100,7 @@ def alias_image(alias, target):
         if result['ok']:
             print_done(f"An alias has created: {alias} -> {target}")
         else:
-            print_fail(f"Aliasing has failed: {result['msg']}")
+            print_fail("Aliasing has failed: {0}".format(result['msg']))
 
 
 @admin.command()
@@ -116,4 +116,4 @@ def dealias_image(alias):
         if result['ok']:
             print_done(f"The alias has been removed: {alias}")
         else:
-            print_fail(f"Dealiasing has failed: {result['msg']}")
+            print_fail("Dealiasing has failed: {0}".format(result['msg']))

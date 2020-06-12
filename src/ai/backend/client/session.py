@@ -23,7 +23,7 @@ import aiohttp
 from multidict import CIMultiDict
 
 from .config import APIConfig, get_config, parse_api_version
-from .exceptions import APIVersionWarning
+from .exceptions import APIVersionWarning, BackendAPIError
 from .types import Sentinel, sentinel
 
 
@@ -260,7 +260,11 @@ class BaseSession(metaclass=abc.ABCMeta):
     _config: APIConfig
     _proxy_mode: bool
 
-    def __init__(self, *, config: APIConfig = None, proxy_mode: bool = False) -> None:
+    def __init__(
+        self, *,
+        config: APIConfig = None,
+        proxy_mode: bool = False,
+    ) -> None:
         self._closed = False
         self._config = config if config else get_config()
         self._proxy_mode = proxy_mode
@@ -368,7 +372,11 @@ class Session(BaseSession):
         '_worker_thread',
     )
 
-    def __init__(self, *, config: APIConfig = None, proxy_mode: bool = False) -> None:
+    def __init__(
+        self, *,
+        config: APIConfig = None,
+        proxy_mode: bool = False,
+    ) -> None:
         super().__init__(config=config, proxy_mode=proxy_mode)
         self._worker_thread = _SyncWorkerThread()
         self._worker_thread.start()
@@ -415,6 +423,14 @@ class Session(BaseSession):
     def __enter__(self) -> Session:
         assert not self.closed, 'Cannot reuse closed session'
         self.open()
+        if self.config.announcement_handler:
+            try:
+                payload = self.Manager.get_announcement()
+                if payload['enabled']:
+                    self.config.announcement_handler(payload['message'])
+            except BackendAPIError:
+                # The server may be an old one without annoucement API.
+                pass
         return self
 
     def __exit__(self, *exc_info) -> Literal[False]:
@@ -429,7 +445,11 @@ class AsyncSession(BaseSession):
     WebSocket-based APIs and SSE-based APIs returns special response types.
     """
 
-    def __init__(self, *, config: APIConfig = None, proxy_mode: bool = False) -> None:
+    def __init__(
+        self, *,
+        config: APIConfig = None,
+        proxy_mode: bool = False,
+    ) -> None:
         super().__init__(config=config, proxy_mode=proxy_mode)
         ssl = None
         if self._config.skip_sslcert_validation:
@@ -458,6 +478,14 @@ class AsyncSession(BaseSession):
     async def __aenter__(self) -> AsyncSession:
         assert not self.closed, 'Cannot reuse closed session'
         await self.open()
+        if self.config.announcement_handler:
+            try:
+                payload = await self.Manager.get_announcement()
+                if payload['enabled']:
+                    self.config.announcement_handler(payload['message'])
+            except BackendAPIError:
+                # The server may be an old one without annoucement API.
+                pass
         return self
 
     async def __aexit__(self, *exc_info) -> Literal[False]:
