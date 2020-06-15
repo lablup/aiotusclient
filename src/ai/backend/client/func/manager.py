@@ -65,7 +65,7 @@ class Manager(BaseFunction):
         '''
         Get current announcement.
         '''
-        rqst = Request(cls.session, 'GET', '/manager/announcement')
+        rqst = Request(api_session.get(), 'GET', '/manager/announcement')
         async with rqst.fetch() as resp:
             return await resp.json()
 
@@ -78,7 +78,7 @@ class Manager(BaseFunction):
         :param enabled: If set ``False``, delete announcement.
         :param message: Announcement message. Required if ``enabled`` is True.
         '''
-        rqst = Request(cls.session, 'POST', '/manager/announcement')
+        rqst = Request(api_session.get(), 'POST', '/manager/announcement')
         rqst.set_json({
             'enabled': enabled,
             'message': message,

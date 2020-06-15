@@ -17,8 +17,8 @@ def announce(msg: str, only_once: bool = True) -> None:
         return
     local_state_path = Path(appdirs.user_state_dir('backend.ai', 'Lablup'))
     try:
-        with open(local_state_path / 'announcement.json', 'rb') as f:
-            last_state = json.load(f)
+        with open(local_state_path / 'announcement.json', 'rb') as f_current:
+            last_state = json.load(f_current)
     except IOError:
         last_state = {'hash': '', 'dismissed': False}
 
@@ -34,5 +34,5 @@ def announce(msg: str, only_once: bool = True) -> None:
     _printed_announcement = True
 
     last_state['hash'] = msg_hash
-    with open(local_state_path / 'announcement.json', 'w') as f:
-        json.dump(last_state, f)
+    with open(local_state_path / 'announcement.json', 'w') as f_new:
+        json.dump(last_state, f_new)
