@@ -74,7 +74,8 @@ async def test_proxy_web(
     monkeypatch.setenv('BACKEND_ENDPOINT', api_url)
     monkeypatch.setattr(config, '_config', config.APIConfig())
     proxy_app, proxy_port = proxy_app_fixture
-    async with aiohttp.ClientSession() as proxy_client:
+    proxy_timeout = aiohttp.Timeout(connect=1.0)
+    async with aiohttp.ClientSession(timeout=proxy_timeout) as proxy_client:
         proxy_url = 'http://127.0.0.1:{}'.format(proxy_port)
         data = {"test": 1234}
         async with proxy_client.request('POST', proxy_url + '/echo',
@@ -101,13 +102,12 @@ async def test_proxy_web_502(
     monkeypatch.setenv('BACKEND_ENDPOINT', api_url)
     monkeypatch.setattr(config, '_config', config.APIConfig())
     # Skip creation of api_app; let the proxy use a non-existent server.
-    async with aiohttp.ClientSession() as proxy_client:
+    proxy_timeout = aiohttp.Timeout(connect=1.0)
+    async with aiohttp.ClientSession(timeout=proxy_timeout) as proxy_client:
         proxy_app, proxy_port = proxy_app_fixture
         proxy_url = 'http://127.0.0.1:{}'.format(proxy_port)
-        proxy_timeout = aiohttp.Timeout(connect=1.0)
         data = {"test": 1234}
         async with proxy_client.request('POST', proxy_url + '/echo',
-                                        timeout=proxy_timeout,
                                         json=data) as resp:
             assert resp.status == 502
             assert resp.reason == 'Bad Gateway'
@@ -128,7 +128,8 @@ async def test_proxy_websocket(
     monkeypatch.setenv('BACKEND_SECRET_KEY', example_keypair[1])
     monkeypatch.setenv('BACKEND_ENDPOINT', api_url)
     monkeypatch.setattr(config, '_config', config.APIConfig())
-    async with aiohttp.ClientSession() as proxy_client:
+    proxy_timeout = aiohttp.Timeout(connect=1.0)
+    async with aiohttp.ClientSession(timeout=proxy_timeout) as proxy_client:
         proxy_app, proxy_port = proxy_app_fixture
         proxy_url = 'http://127.0.0.1:{}'.format(proxy_port)
         ws = await proxy_client.ws_connect(proxy_url + '/stream/echo')
