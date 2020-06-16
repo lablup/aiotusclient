@@ -74,15 +74,15 @@ async def test_proxy_web(
     monkeypatch.setenv('BACKEND_ENDPOINT', api_url)
     monkeypatch.setattr(config, '_config', config.APIConfig())
     proxy_app, proxy_port = proxy_app_fixture
-    proxy_client = aiohttp.ClientSession()
-    proxy_url = 'http://127.0.0.1:{}'.format(proxy_port)
-    data = {"test": 1234}
-    async with proxy_client.request('POST', proxy_url + '/echo',
-                                    json=data) as resp:
-        assert resp.status == 200
-        assert resp.reason == 'Good'
-        ret = await resp.json()
-        assert ret['test'] == 1234
+    async with aiohttp.ClientSession() as proxy_client:
+        proxy_url = 'http://127.0.0.1:{}'.format(proxy_port)
+        data = {"test": 1234}
+        async with proxy_client.request('POST', proxy_url + '/echo',
+                                        json=data) as resp:
+            assert resp.status == 200
+            assert resp.reason == 'Good'
+            ret = await resp.json()
+            assert ret['test'] == 1234
 
 
 @pytest.mark.xfail(
@@ -101,14 +101,16 @@ async def test_proxy_web_502(
     monkeypatch.setenv('BACKEND_ENDPOINT', api_url)
     monkeypatch.setattr(config, '_config', config.APIConfig())
     # Skip creation of api_app; let the proxy use a non-existent server.
-    proxy_client = aiohttp.ClientSession()
-    proxy_app, proxy_port = proxy_app_fixture
-    proxy_url = 'http://127.0.0.1:{}'.format(proxy_port)
-    data = {"test": 1234}
-    async with proxy_client.request('POST', proxy_url + '/echo',
-                                    json=data) as resp:
-        assert resp.status == 502
-        assert resp.reason == 'Bad Gateway'
+    async with aiohttp.ClientSession() as proxy_client:
+        proxy_app, proxy_port = proxy_app_fixture
+        proxy_url = 'http://127.0.0.1:{}'.format(proxy_port)
+        proxy_timeout = aiohttp.Timeout(connect=1.0)
+        data = {"test": 1234}
+        async with proxy_client.request('POST', proxy_url + '/echo',
+                                        timeout=proxy_timeout,
+                                        json=data) as resp:
+            assert resp.status == 502
+            assert resp.reason == 'Bad Gateway'
 
 
 @pytest.mark.xfail(
@@ -126,16 +128,16 @@ async def test_proxy_websocket(
     monkeypatch.setenv('BACKEND_SECRET_KEY', example_keypair[1])
     monkeypatch.setenv('BACKEND_ENDPOINT', api_url)
     monkeypatch.setattr(config, '_config', config.APIConfig())
-    proxy_client = aiohttp.ClientSession()
-    proxy_app, proxy_port = proxy_app_fixture
-    proxy_url = 'http://127.0.0.1:{}'.format(proxy_port)
-    ws = await proxy_client.ws_connect(proxy_url + '/stream/echo')
-    await ws.send_str('test')
-    assert await ws.receive_str() == 'test'
-    await ws.send_bytes(b'\x00\x00')
-    assert await ws.receive_bytes() == b'\x00\x00'
-    assert recv_queue[0].type == aiohttp.WSMsgType.TEXT
-    assert recv_queue[0].data == 'test'
-    assert recv_queue[1].type == aiohttp.WSMsgType.BINARY
-    assert recv_queue[1].data == b'\x00\x00'
-    await ws.close()
+    async with aiohttp.ClientSession() as proxy_client:
+        proxy_app, proxy_port = proxy_app_fixture
+        proxy_url = 'http://127.0.0.1:{}'.format(proxy_port)
+        ws = await proxy_client.ws_connect(proxy_url + '/stream/echo')
+        await ws.send_str('test')
+        assert await ws.receive_str() == 'test'
+        await ws.send_bytes(b'\x00\x00')
+        assert await ws.receive_bytes() == b'\x00\x00'
+        assert recv_queue[0].type == aiohttp.WSMsgType.TEXT
+        assert recv_queue[0].data == 'test'
+        assert recv_queue[1].type == aiohttp.WSMsgType.BINARY
+        assert recv_queue[1].data == b'\x00\x00'
+        await ws.close()
