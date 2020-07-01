@@ -305,6 +305,8 @@ def _prepare_mount_arg(
               type=click.Choice(['batch', 'interactive']),
               default='interactive',
               help='Either batch or interactive')
+@click.option('--starts-at', metavar='STARTS_AT', type=str, default=None,
+              help='Let session to be started at a specific or relative time.')
 @click.option('--enqueue-only', is_flag=True,
               help='Enqueue the session and return immediately without waiting for its startup.')
 @click.option('--max-wait', metavar='SECONDS', type=int, default=0,
@@ -374,16 +376,16 @@ def _prepare_mount_arg(
                    'User should be a member of the group to execute the code.')
 @click.option('--preopen',  default=None,
               help='Pre-open service ports')
-def run(image, files, name,                                # base args
-        type, enqueue_only, max_wait, no_reuse,            # job scheduling options
-        code, terminal,                                    # query-mode options
-        clean, build, exec, basedir,                       # batch-mode options
-        env,                                               # execution environment
-        rm, stats, tag, quiet,                             # extra options
-        env_range, build_range, exec_range, max_parallel,  # experiment support
-        mount, scaling_group, resources, cluster_size,     # resource spec
+def run(image, files, name,                                 # base args
+        type, starts_at, enqueue_only, max_wait, no_reuse,  # job scheduling options
+        code, terminal,                                     # query-mode options
+        clean, build, exec, basedir,                        # batch-mode options
+        env,                                                # execution environment
+        rm, stats, tag, quiet,                              # extra options
+        env_range, build_range, exec_range, max_parallel,   # experiment support
+        mount, scaling_group, resources, cluster_size,      # resource spec
         resource_opts,
-        domain, group, preopen):                                    # resource grouping
+        domain, group, preopen):                            # resource grouping
     '''
     Run the given code snippet or files in a session.
     Depending on the session ID you give (default is random),
@@ -567,6 +569,7 @@ def run(image, files, name,                                # base args
                 image,
                 name=name,
                 type_=type,
+                starts_at=starts_at,
                 enqueue_only=enqueue_only,
                 max_wait=max_wait,
                 no_reuse=no_reuse,
@@ -763,6 +766,8 @@ def run(image, files, name,                                # base args
               type=click.Choice(['batch', 'interactive']),
               default='interactive',
               help='Either batch or interactive')
+@click.option('--starts-at', metavar='STARTS_AT', type=str, default=None,
+              help='Let session to be started at a specific or relative time.')
 @click.option('-c', '--startup-command', metavar='COMMAND',
               help='Set the command to execute for batch-type sessions.')
 @click.option('--enqueue-only', is_flag=True,
@@ -805,7 +810,7 @@ def run(image, files, name,                                # base args
 @click.option('--preopen',  default=None,
               help='Pre-open service ports')
 def start(image, name, owner,                                 # base args
-          type, startup_command, enqueue_only, max_wait, no_reuse,  # job scheduling options
+          type, starts_at, startup_command, enqueue_only, max_wait, no_reuse,  # job scheduling options
           env,                                            # execution environment
           tag,                                            # extra options
           mount, scaling_group, resources, cluster_size,  # resource spec
@@ -839,6 +844,7 @@ def start(image, name, owner,                                 # base args
                 image,
                 name=name,
                 type_=type,
+                starts_at=starts_at,
                 enqueue_only=enqueue_only,
                 max_wait=max_wait,
                 no_reuse=no_reuse,
@@ -899,6 +905,8 @@ def start(image, name, owner,                                 # base args
               type=click.Choice(['batch', 'interactive', undefined]),  # type: ignore
               default=undefined,
               help='Either batch or interactive')
+@click.option('--starts_at', metavar='STARTS_AT', type=str, default=None,
+              help='Let session to be started at a specific or relative time.')
 @click.option('-i', '--image', default=undefined,
               help='Set compute_session image to run.')
 @click.option('-c', '--startup-command', metavar='COMMAND',
@@ -956,7 +964,7 @@ def start(image, name, owner,                                 # base args
                    'any resource specified at template,')
 def start_template(
     template_id, name, owner,        # base args
-    type_, image, startup_command, enqueue_only, max_wait, no_reuse,  # job scheduling options
+    type_, starts_at, image, startup_command, enqueue_only, max_wait, no_reuse,  # job scheduling options
     env,                                            # execution environment
     tag,                                            # extra options
     mount, scaling_group, resources, cluster_size,  # resource spec
@@ -1004,6 +1012,7 @@ def start_template(
                 image=image,
                 name=name,
                 type_=type_,
+                starts_at=starts_at,
                 enqueue_only=enqueue_only,
                 max_wait=max_wait,
                 no_reuse=no_reuse,
