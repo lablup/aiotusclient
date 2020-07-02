@@ -16,6 +16,19 @@ Changes
 
 .. towncrier release notes start
 
+20.03.0b2 (2020-07-02)
+----------------------
+
+### Features
+* Add `-b`, `--base-dir` option to the `vfolder upload` command and allow use of colon as mount path-mapping separator like docker CLI ([#106](https://github.com/lablup/backend.ai-client-py/issues/106))
+* Add support for announcements, including automatic display of the message when executing a CLI command if available and a new commandset "announcement" to manage the announcement message for superadmins and to dismiss the last shown message for normal users ([#107](https://github.com/lablup/backend.ai-client-py/issues/107))
+* Add starts_at option for creating session. ([#109](https://github.com/lablup/backend.ai-client-py/issues/109))
+* Add the functional SDK and CLI support for the scheduler operation APIs, which allows extra operations such as excluding/including agents from/in scheduling ([#110](https://github.com/lablup/backend.ai-client-py/issues/110))
+
+### Fixes
+* Fix missing handling of `BackendClientError` when fetching announcements during opening sessions ([#108](https://github.com/lablup/backend.ai-client-py/issues/108))
+
+
 20.03.0b1 (2020-05-12)
 ----------------------
 
