@@ -584,7 +584,7 @@ def run(image, files, name,                                 # base args
                 domain_name=domain,
                 group_name=group,
                 scaling_group=scaling_group,
-                bootstrap_script=bootstrap_script.read(),
+                bootstrap_script=bootstrap_script.read() if bootstrap_script is not None else None,
                 tag=tag,
                 preopen_ports=preopen_ports)
         except Exception as e:
@@ -864,7 +864,7 @@ def start(image, name, owner,                                 # base args
                 domain_name=domain,
                 group_name=group,
                 scaling_group=scaling_group,
-                bootstrap_script=bootstrap_script.read(),
+                bootstrap_script=bootstrap_script.read() if bootstrap_script is not None else None,
                 tag=tag,
                 preopen_ports=preopen_ports)
         except Exception as e:
