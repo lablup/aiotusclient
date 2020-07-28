@@ -41,7 +41,6 @@ api_session: ContextVar[BaseSession] = ContextVar('api_session')
 def is_legacy_server() -> bool:
     """
     Determine execution mode.
-
     Legacy mode: <= v4.20181215
     """
     with Session() as session:

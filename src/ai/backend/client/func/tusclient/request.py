@@ -6,12 +6,8 @@ from functools import wraps
 import requests
 import aiohttp
 
-<<<<<<< HEAD
-from .exceptions import TusUploadFailed, TusCommunicationError
-=======
-from tusclient.exceptions import TusUploadFailed, TusCommunicationError
->>>>>>> cd475d801a997628ac6e5c2ab0139e1327cbfd59
 
+from .exceptions import TusUploadFailed, TusCommunicationError
 
 # Catches requests exceptions and throws custom tuspy errors.
 def catch_requests_error(func):
@@ -24,7 +20,6 @@ def catch_requests_error(func):
             raise TusCommunicationError(error)
 
     return _wrapper
-
 
 class BaseTusRequest:
     """
