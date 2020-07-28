@@ -6,10 +6,10 @@ from typing import IO
 import hashlib
 import os
 
-from . import interface
+from .fingerprint_interface import Fingerprint
 
 
-class Fingerprint(interface.Fingerprint):
+class Fingerprint(Fingerprint):
     BLOCK_SIZE = 65536
 
     def get_fingerprint(self, fs: IO):

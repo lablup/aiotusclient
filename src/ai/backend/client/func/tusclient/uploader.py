@@ -6,11 +6,13 @@ from urllib.parse import urljoin
 import requests
 import aiohttp
 
-from tusclient.uploader.baseuploader import BaseUploader
+from .baseuploader import BaseUploader
 
-from tusclient.exceptions import TusUploadFailed, TusCommunicationError
-from tusclient.request import TusRequest, AsyncTusRequest, catch_requests_error
+from .exceptions import TusUploadFailed, TusCommunicationError
+from .request import TusRequest, AsyncTusRequest, catch_requests_error
 
+from ai.backend.client.request import Request
+from ai.backend.client.session import AsyncSession
 
 def _verify_upload(request: TusRequest):
     if request.status_code == 204:
@@ -126,19 +128,23 @@ class AsyncUploader(BaseUploader):
 
         Makes request to tus server to create a new upload url for the required file upload.
         """
-        try:
-            async with aiohttp.ClientSession(loop=self.io_loop) as session:
-                headers = self.get_url_creation_headers()
-                async with session.post(self.client.url, headers=headers) as resp:
-                    url = resp.headers.get("location")
-                    if url is None:
-                        print("response status ", resp.status)
-                        msg = 'Attempt to retrieve create file url with status {}'.format(
-                            resp.status)
-                        raise TusCommunicationError(msg, resp.status, await resp.content.read())
-                    return urljoin(self.client.url, url)
-        except aiohttp.ClientError as error:
-            raise TusCommunicationError(error)
+        async with AsyncSession() as sess:
+            
+            try:
+                async with aiohttp.ClientSession(loop=self.io_loop) as session:
+                    
+                    headers = self.get_url_creation_headers()
+                    
+                    async with session.post(self.client.session_url, headers=headers) as resp:
+                        
+                        url = resp.headers.get("location")
+                        if url is None:
+                            print("response status ", resp.status)
+                            msg = 'Attempt to retrieve create file url with status {}'.format(resp.status)
+                            raise TusCommunicationError(msg, resp.status, await resp.content.read())
+                        return urljoin(self.client.session_url, url)
+            except aiohttp.ClientError as error:
+                raise TusCommunicationError(error)
 
     async def _do_request(self):
         self.request = AsyncTusRequest(self)

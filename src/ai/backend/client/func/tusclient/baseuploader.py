@@ -7,13 +7,14 @@ import hashlib
 
 import requests
 
-from tusclient.exceptions import TusCommunicationError
-from tusclient.request import TusRequest, catch_requests_error
-from tusclient.fingerprint import fingerprint, interface
-from tusclient.storage.interface import Storage
+from .exceptions import TusCommunicationError
+from .request import TusRequest, catch_requests_error
+from .fingerprint import *
+
+from .storage_interface import Storage
 
 if TYPE_CHECKING:
-    from tusclient.client import TusClient
+    from .tusclient.client import TusClient
 
 
 class BaseUploader:
@@ -92,7 +93,7 @@ class BaseUploader:
                  chunk_size: int = MAXSIZE, metadata: Optional[Dict] = None,
                  retries: int = 0, retry_delay: int = 30,
                  store_url=False, url_storage: Optional[Storage] = None,
-                 fingerprinter: Optional[interface.Fingerprint] = None,
+                 fingerprinter: Optional[Fingerprint] = None,
                  upload_checksum=False):
         if file_path is None and file_stream is None:
             raise ValueError(
@@ -112,7 +113,7 @@ class BaseUploader:
         self.metadata = metadata or {}
         self.store_url = store_url
         self.url_storage = url_storage
-        self.fingerprinter = fingerprinter or fingerprint.Fingerprint()
+        self.fingerprinter = fingerprinter or Fingerprint()
         self.offset = 0
         self.url = None
         self.__init_url_and_offset(url)

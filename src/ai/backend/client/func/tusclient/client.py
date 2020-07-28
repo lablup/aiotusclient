@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from tusclient.uploader import Uploader, AsyncUploader
+from .uploader import Uploader, AsyncUploader
 
 
 class TusClient:
@@ -25,6 +25,11 @@ class TusClient:
     def __init__(self, url: str, headers: Optional[Dict[str, str]] = None):
         self.url = url
         self.headers = headers or {}
+        self.session_url = None
+    
+    def set_session_url(self, session_url: str):
+        self.session_url = session_url
+
 
     def set_headers(self, headers: Dict[str, str]):
         """

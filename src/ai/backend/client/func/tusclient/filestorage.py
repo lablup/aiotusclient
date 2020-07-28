@@ -3,7 +3,7 @@ An implementation of <tusclient.storage.interface.Storage>, using a file as stor
 """
 from tinydb import TinyDB, Query
 
-from . import interface
+import storage_interface
 
 
 class FileStorage(interface.Storage):

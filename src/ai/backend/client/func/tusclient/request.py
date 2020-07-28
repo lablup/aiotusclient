@@ -6,7 +6,7 @@ from functools import wraps
 import requests
 import aiohttp
 
-from tusclient.exceptions import TusUploadFailed, TusCommunicationError
+from .exceptions import TusUploadFailed, TusCommunicationError
 
 
 # Catches requests exceptions and throws custom tuspy errors.

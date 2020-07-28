@@ -56,6 +56,7 @@ def generate_signature(
         version,
         body_hash
     )
+    
     sign_bytes = sign_str.encode()
 
     sign_key = hmac.new(secret_key.encode(),
