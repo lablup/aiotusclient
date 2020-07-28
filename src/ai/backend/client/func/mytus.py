@@ -19,19 +19,19 @@ async def request():
 
     async with AsyncSession() as sess:
 
-        headers = {'Host': '127.0.0.1:8081', 'User-Agent': 'Backend.AI Client for Python 20.03.0rc1.dev0', 'X-BackendAI-Domain': 'default', 'X-BackendAI-Version': 'v5.20191215', 
-        'Date': '2020-07-28T01:01:22.205901+00:00', 'Authorization': 'BackendAI signMethod=HMAC-SHA256 \
-        , credential=AKIAIOSFODNN7EXAMPLE:f7520bea59550400b1b67556aeeec22fa40e7f601c2245918a20de0200ce1348', 
-        'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate', 'Content-Length': '396', 'Content-Type': 'multipart/form-data'}
-
-        rqst = Request(sess, "POST", "/folders/{}/create_upload_session".format("mydata1"))
-        request_url = 'http://127.0.0.1:8081/folders/{}/create_upload_session'.format("mydata1")
+        
+        rqst = Request(sess, "POST", "/folders/{}/create_upload_session".format("self.name"))
+        session_url = 'http://127.0.0.1:8081/folders/{}/create_upload_session'.format("mydata1")
+        request_url = 'http://127.0.0.1:8081/folders/{}/create_upload_session'.format("mydata1") # Should be changed, currently not clear directory path for file uploading at server vfolder routes '/_/tus/upload/{session}'
+        
         tus_client = client.TusClient(request_url)
-        tus_client.set_headers(headers)
-        fs = open('/Users/sergey/Documents/workspace/backend.ai_dev/client-py/src/ai/backend/client/helper.py')
+        tus_client.set_session_url(session_url)
+        
+        tus_client.set_headers(rqst.headers)
+        print()
+        fs = open("/Users/sergey/Documents/workspace/backend.ai_dev/client-py/src/ai/backend/client/func/user.py") # example file to upload
         uploader = tus_client.async_uploader(file_stream=fs)
         res = await uploader.upload()
-        print(res)
     
 def main():
     

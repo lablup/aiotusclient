@@ -52,11 +52,9 @@ def drop(d: Mapping[str, Any], value_to_drop: Any) -> Mapping[str, Any]:
 class ComputeSession(BaseFunction):
     """
     Provides various interactions with compute sessions in Backend.AI.
-
     The term 'kernel' is now deprecated and we prefer 'compute sessions'.
     However, for historical reasons and to avoid confusion with client sessions, we
     keep the backward compatibility with the naming of this API function class.
-
     For multi-container sessions, all methods take effects to the master container
     only, except :func:`~ComputeSession.destroy` and :func:`~ComputeSession.restart` methods.
     So it is the user's responsibility to distribute uploaded files to multiple
@@ -64,6 +62,7 @@ class ComputeSession(BaseFunction):
     all containers belonging to the same compute session.
     """
 
+    id: str
     name: str
     owner_access_key: Optional[str]
     created: bool
@@ -84,7 +83,6 @@ class ComputeSession(BaseFunction):
     ) -> AsyncIterator[dict]:
         """
         Fetches the list of users. Domain admins can only get domain users.
-
         :param is_active: Fetches active or inactive users only if not None.
         :param fields: Additional per-user query fields to fetch.
         """
@@ -166,7 +164,6 @@ class ComputeSession(BaseFunction):
         If *name* is a valid string and there is an existing compute session
         with the same token and the same *image*, then it returns the :class:`ComputeSession`
         instance representing the existing session.
-
         :param image: The image name and tag for the compute session.
             Example: ``python:3.6-ubuntu``.
             Check out the full list of available images in your server using (TODO:
@@ -174,28 +171,22 @@ class ComputeSession(BaseFunction):
         :param name: A client-side (user-defined) identifier to distinguish the session among currently
             running sessions.
             It may be used to seamlessly reuse the session already created.
-
             .. versionchanged:: 19.12.0
-
                Renamed from ``clientSessionToken``.
         :param type_: Either ``"interactive"`` (default) or ``"batch"``.
-
             .. versionadded:: 19.09.0
         :param enqueue_only: Just enqueue the session creation request and return immediately,
             without waiting for its startup. (default: ``false`` to preserve the legacy
             behavior)
-
             .. versionadded:: 19.09.0
         :param max_wait: The time to wait for session startup. If the cluster resource
             is being fully utilized, this waiting time can be arbitrarily long due to
             job queueing.  If the timeout reaches, the returned *status* field becomes
             ``"TIMEOUT"``.  Still in this case, the session may start in the future.
-
             .. versionadded:: 19.09.0
         :param no_reuse: Raises an explicit error if a session with the same *image* and
             the same *name* already exists instead of returning the information
             of it.
-
             .. versionadded:: 19.09.0
         :param mounts: The list of vfolder names that belongs to the currrent API
             access key.
@@ -210,7 +201,6 @@ class ComputeSession(BaseFunction):
         :param tag: An optional string to annotate extra information.
         :param owner: An optional access key that owns the created session. (Only
             available to administrators)
-
         :returns: The :class:`ComputeSession` instance.
         """
         if name is not None:
@@ -275,6 +265,7 @@ class ComputeSession(BaseFunction):
         async with rqst.fetch() as resp:
             data = await resp.json()
             o = cls(name, owner_access_key)  # type: ignore
+            o.id = data.get('sessionId', name)
             o.created = data.get('created', True)     # True is for legacy
             o.status = data.get('status', 'RUNNING')
             o.service_ports = data.get('servicePorts', [])
@@ -317,7 +308,6 @@ class ComputeSession(BaseFunction):
         If *name* is a valid string and there is an existing compute session
         with the same token and the same *image*, then it returns the :class:`ComputeSession`
         instance representing the existing session.
-
         :param template_id: Task template to apply to compute session.
         :param image: The image name and tag for the compute session.
             Example: ``python:3.6-ubuntu``.
@@ -326,28 +316,22 @@ class ComputeSession(BaseFunction):
         :param name: A client-side (user-defined) identifier to distinguish the session among currently
             running sessions.
             It may be used to seamlessly reuse the session already created.
-
             .. versionchanged:: 19.12.0
-
                Renamed from ``clientSessionToken``.
         :param type_: Either ``"interactive"`` (default) or ``"batch"``.
-
             .. versionadded:: 19.09.0
         :param enqueue_only: Just enqueue the session creation request and return immediately,
             without waiting for its startup. (default: ``false`` to preserve the legacy
             behavior)
-
             .. versionadded:: 19.09.0
         :param max_wait: The time to wait for session startup. If the cluster resource
             is being fully utilized, this waiting time can be arbitrarily long due to
             job queueing.  If the timeout reaches, the returned *status* field becomes
             ``"TIMEOUT"``.  Still in this case, the session may start in the future.
-
             .. versionadded:: 19.09.0
         :param no_reuse: Raises an explicit error if a session with the same *image* and
             the same *name* already exists instead of returning the information
             of it.
-
             .. versionadded:: 19.09.0
         :param mounts: The list of vfolder names that belongs to the currrent API
             access key.
@@ -362,7 +346,6 @@ class ComputeSession(BaseFunction):
         :param tag: An optional string to annotate extra information.
         :param owner: An optional access key that owns the created session. (Only
             available to administrators)
-
         :returns: The :class:`ComputeSession` instance.
         """
         if name is not undefined:
@@ -490,14 +473,11 @@ class ComputeSession(BaseFunction):
         Gets the auto-completion candidates from the given code string,
         as if a user has pressed the tab key just after the code in
         IDEs.
-
         Depending on the language of the compute session, this feature
         may not be supported.  Unsupported sessions returns an empty list.
-
         :param code: An (incomplete) code text.
         :param opts: Additional information about the current cursor position,
             such as row, col, line and the remainder text.
-
         :returns: An ordered list of strings.
         """
         opts = {} if opts is None else opts
@@ -564,10 +544,8 @@ class ComputeSession(BaseFunction):
         """
         Executes a code snippet directly in the compute session or sends a set of
         build/clean/execute commands to the compute session.
-
         For more details about using this API, please refer :doc:`the official API
         documentation <user-api/intro>`.
-
         :param run_id: A unique identifier for a particular run loop.  In the
             first call, it may be ``None`` so that the server auto-assigns one.
             Subsequent calls must use the returned ``runId`` value to request
@@ -581,7 +559,6 @@ class ComputeSession(BaseFunction):
             batch mode to specify build/clean/execution commands.
             See :ref:`the API object reference <batch-execution-query-object>`
             for details.
-
         :returns: :ref:`An execution result object <execution-result-object>`
         """
         opts = opts if opts is not None else {}
@@ -647,12 +624,10 @@ class ComputeSession(BaseFunction):
         Uploads the given list of files to the compute session.
         You may refer them in the batch-mode execution or from the code
         executed in the server afterwards.
-
         :param files: The list of file paths in the client-side.
             If the paths include directories, the location of them in the compute
             session is calculated from the relative path to *basedir* and all
             intermediate parent directories are automatically created if not exists.
-
             For example, if a file path is ``/home/user/test/data.txt`` (or
             ``test/data.txt``) where *basedir* is ``/home/user`` (or the current
             working directory is ``/home/user``), the uploaded file is located at
@@ -707,7 +682,6 @@ class ComputeSession(BaseFunction):
                        show_progress: bool = False):
         """
         Downloads the given list of files from the compute session.
-
         :param files: The list of file paths in the compute session.
             If they are relative paths, the path is calculated from
             ``/home/work`` in the compute session container.
@@ -763,7 +737,6 @@ class ComputeSession(BaseFunction):
         """
         Gets the list of files in the given path inside the compute session
         container.
-
         :param path: The directory path in the compute session.
         """
         params = {}
@@ -800,7 +773,6 @@ class ComputeSession(BaseFunction):
         """
         Opens the stream of the kernel lifecycle events.
         Only the master kernel of each session is monitored.
-
         :returns: a :class:`StreamEvents` object.
         """
         params = {
@@ -823,7 +795,6 @@ class ComputeSession(BaseFunction):
         """
         Opens a pseudo-terminal of the kernel (if supported) streamed via
         websockets.
-
         :returns: a :class:`StreamPty` object.
         """
         params = {}

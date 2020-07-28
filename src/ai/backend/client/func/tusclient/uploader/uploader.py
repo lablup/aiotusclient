@@ -129,14 +129,14 @@ class AsyncUploader(BaseUploader):
         try:
             async with aiohttp.ClientSession(loop=self.io_loop) as session:
                 headers = self.get_url_creation_headers()
-                async with session.post(self.client.url, headers=headers) as resp:
+                async with session.post(self.client.session_url, headers=headers) as resp:
                     url = resp.headers.get("location")
                     if url is None:
                         print("response status ", resp.status)
                         msg = 'Attempt to retrieve create file url with status {}'.format(
                             resp.status)
                         raise TusCommunicationError(msg, resp.status, await resp.content.read())
-                    return urljoin(self.client.url, url)
+                    return urljoin(self.client.session_url, url)
         except aiohttp.ClientError as error:
             raise TusCommunicationError(error)
 
