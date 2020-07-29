@@ -187,7 +187,7 @@ class VFolder(BaseFunction):
             
             rqst.attach_files(attachments)
             
-            rqst = Request(sess, "POST", "/folders/{}/create_upload_session".format("self.name"))
+            
             session_url = 'http://127.0.0.1:8081/folders/{}/create_upload_session'.format("mydata1")
             
             
