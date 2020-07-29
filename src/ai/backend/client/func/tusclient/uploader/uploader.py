@@ -126,18 +126,22 @@ class AsyncUploader(BaseUploader):
 
         Makes request to tus server to create a new upload url for the required file upload.
         """
+        # Need to reformat function to fit the backend.ai server response
         try:
             async with aiohttp.ClientSession(loop=self.io_loop) as session:
                 headers = self.get_url_creation_headers()
-                async with session.post(self.client.session_url, headers=headers) as resp:
+                params = {'path': "'http://127.0.0.1:8081/folders/mydata1/create_upload_session'", 'size': 1024}
+                async with session.post(self.client.session_url, params=params, data={"row":"http://127.0.0.1:8081/folders/mydata1/create_upload_session"}, headers=headers) as resp:
                     print("headers ", headers)
-                    url = resp.headers.get("location")
+                    #url = resp.headers.get("location")
+                    url = jwt_token = await resp.json()
+                    print("Response token ", jwt_token)
                     if url is None:
                         print("response status ", resp.status)
                         msg = 'Attempt to retrieve create file url with status {}'.format(
                             resp.status)
                         raise TusCommunicationError(msg, resp.status, await resp.content.read())
-                    return urljoin(self.client.session_url, url)
+                    return str(jwt_token)  #urljoin(self.client.session_url, url)
         except aiohttp.ClientError as error:
             raise TusCommunicationError(error)
 

@@ -24,7 +24,7 @@ async def request():
 
         
 
-        rqst = Request(sess, "POST", "/folders/{}/create_upload_session".format("self.name"))
+        rqst = Request(sess, "POST", "/folders/{}/create_upload_session".format("mydata1"))
         
         date = datetime.now(tzutc())
 
@@ -34,7 +34,7 @@ async def request():
             version=rqst.api_version,
             endpoint=rqst.config.endpoint,
             date=date,
-            rel_url='/folders/{}/create_upload_session'.format("mydata1"),
+            rel_url="/folders/mydata1/create_upload_session?path='http://127.0.0.1:8081/folders/mydata1/create_upload_session'&size=1024",
             content_type=rqst.content_type,
             access_key=sess.config.access_key,
             secret_key=sess.config.secret_key,
@@ -43,8 +43,10 @@ async def request():
         
         rqst.headers["Date"] = date.isoformat()
         rqst.headers["content-type"] = "multipart/form-data"
-        rqst.headers.update(hdrs)
 
+
+        rqst.headers.update(hdrs)
+        print(rqst.path)
 
         session_url = 'http://127.0.0.1:8081/folders/{}/create_upload_session'.format("mydata1")
         request_url = 'http://127.0.0.1:8081/folders/{}/create_upload_session'.format("mydata1") # Should be changed, currently not clear directory path for file uploading at server vfolder routes '/_/tus/upload/{session}'

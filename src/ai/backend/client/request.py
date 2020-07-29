@@ -313,6 +313,7 @@ class Request:
             full_url = self._build_url()
             if not self.config.is_anonymous and not force_anonymous:
                 self._sign(full_url.relative())
+            print(self.headers)
             return self.session.aiohttp_session.request(
                 self.method,
                 str(full_url),

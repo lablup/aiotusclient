@@ -22,7 +22,7 @@ from ..auth import generate_signature
 from datetime import datetime
 from dateutil.tz import tzutc
 
-from .tusclient import client
+#from .tusclient import client
 
 __all__ = (
     'VFolder',
@@ -148,6 +148,7 @@ class VFolder(BaseFunction):
             rqst = Request(api_session.get(),
                            'POST', '/folders/{}/upload'.format(self.name))
             rqst.attach_files(attachments)
+            print(rqst.__dir__())
             async with rqst.fetch() as resp:
                 return await resp.text()
             
