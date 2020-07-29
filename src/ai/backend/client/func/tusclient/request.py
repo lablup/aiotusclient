@@ -46,7 +46,7 @@ class BaseTusRequest:
 
         self._request_headers = {
             'upload-offset': str(uploader.offset),
-            'Content-Type': 'application/offset+octet-stream'
+            'Content-Type': "multipart/form-data" #'application/offset+octet-stream'
         }
         self._request_headers.update(uploader.get_headers())
         self._content_length = uploader.get_request_length()

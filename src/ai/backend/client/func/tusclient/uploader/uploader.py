@@ -130,6 +130,7 @@ class AsyncUploader(BaseUploader):
             async with aiohttp.ClientSession(loop=self.io_loop) as session:
                 headers = self.get_url_creation_headers()
                 async with session.post(self.client.session_url, headers=headers) as resp:
+                    print("headers ", headers)
                     url = resp.headers.get("location")
                     if url is None:
                         print("response status ", resp.status)
