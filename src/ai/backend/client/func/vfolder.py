@@ -183,8 +183,7 @@ class VFolder(BaseFunction):
             rqst.content_type = "text/plain"
             date = datetime.now(tzutc())
             rqst.date = date
-            rqst._sign("/folders/{}/create_upload_session?path={} \
-                        &size={}".format(self.name,
+            rqst._sign("/folders/{}/create_upload_session?path={}&size={}".format(self.name,
                        params['path'],
                        int(params['size'])))
             rqst.headers["Date"] = date.isoformat()
