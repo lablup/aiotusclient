@@ -22,13 +22,14 @@ class TusClient:
         - headers (Optiional[dict])
     """
 
-    def __init__(self, url: str, headers: Optional[Dict[str, str]] = None):
-        self.url = url
+    def __init__(self, session_create_url: str, session_upload_url: str,
+                 headers: Optional[Dict[str, str]] = None, 
+                 params: Optional[Dict[str, str]] = None):
+        self.url = session_create_url
+        self.session_create_url = session_create_url
+        self.session_upload_url = session_upload_url
         self.headers = headers or {}
-        self.session_url = ""
-    
-    def set_session_url(self, session_url: str):
-        self.session_url = session_url
+        self.params = params or {}
 
     def set_headers(self, headers: Dict[str, str]):
         """

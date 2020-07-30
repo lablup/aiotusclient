@@ -11,12 +11,10 @@ from .baseuploader import BaseUploader
 from .exceptions import TusUploadFailed, TusCommunicationError
 from .request import TusRequest, AsyncTusRequest, catch_requests_error
 
-from ai.backend.client.request import Request
-from ai.backend.client.session import AsyncSession
 
 def _verify_upload(request: TusRequest):
     if request.status_code == 204:
-        return True 
+        return True
     else:
         raise TusUploadFailed('', request.status_code,
                               request.response_content)
@@ -27,12 +25,14 @@ class Uploader(BaseUploader):
         """
         Perform file upload.
 
-        Performs continous upload of chunks of the file. The size uploaded at each cycle is
+        Performs continous upload of chunks of the file. The size uploaded at
+        each cycle is
         the value of the attribute 'chunk_size'.
 
         :Args:
             - stop_at (Optional[int]):
-                Determines at what offset value the upload should stop. If not specified this
+                Determines at what offset value the upload should stop. 
+                If not specified this
                 defaults to the file size.
         """
         self.stop_at = stop_at or self.get_file_size()
@@ -56,7 +56,8 @@ class Uploader(BaseUploader):
         """
         Return upload url.
 
-        Makes request to tus server to create a new upload url for the required file upload.
+        Makes request to tus server to create a new upload url for the
+        required file upload.
         """
         resp = requests.post(
             self.client.url, headers=self.get_url_creation_headers())
@@ -91,7 +92,9 @@ class Uploader(BaseUploader):
 
 
 class AsyncUploader(BaseUploader):
-    def __init__(self, *args, io_loop: Optional[asyncio.AbstractEventLoop] = None, **kwargs):
+    def __init__(self, *args,
+                 io_loop: Optional[asyncio.AbstractEventLoop] = None,
+                 **kwargs):
         self.io_loop = io_loop
         super().__init__(*args, **kwargs)
 
@@ -126,25 +129,31 @@ class AsyncUploader(BaseUploader):
         """
         Return upload url.
 
-        Makes request to tus server to create a new upload url for the required file upload.
+        Makes request to tus server to create a new upload url for the
+        required file upload.
         """
-        async with AsyncSession() as sess:
-            
-            try:
-                async with aiohttp.ClientSession(loop=self.io_loop) as session:
-                    
-                    headers = self.get_url_creation_headers()
-                    
-                    async with session.post(self.client.session_url, headers=headers) as resp:
-                        
-                        url = resp.headers.get("location")
-                        if url is None:
-                            print("response status ", resp.status)
-                            msg = 'Attempt to retrieve create file url with status {}'.format(resp.status)
-                            raise TusCommunicationError(msg, resp.status, await resp.content.read())
-                        return urljoin(self.client.session_url, url)
-            except aiohttp.ClientError as error:
-                raise TusCommunicationError(error)
+        try:
+            async with aiohttp.ClientSession(loop=self.io_loop) as session:
+                
+                headers = self.get_url_creation_headers()
+                params = self.client.params
+                params['size'] = int(params['size'])
+                async with session.post(self.client.session_create_url,  
+                                        headers=headers, 
+                                        params=params) as resp:
+                    url = jwt_token = await resp.json()
+                    jwt_token = jwt_token['token']
+                    url = self.client.session_upload_url + jwt_token
+                    if url is None:
+                        msg = 'Attempt to retrieve create file url with \
+                                status {}'.format(resp.status)
+                        raise TusCommunicationError(msg,
+                                                    resp.status,
+                                                    await resp.content.read()
+                                                    )
+                    return url
+        except aiohttp.ClientError as error:
+            raise TusCommunicationError(error)
 
     async def _do_request(self):
         self.request = AsyncTusRequest(self)

@@ -17,12 +17,10 @@ from ..request import Request, AttachedFile
 from ..session import api_session
 from ..utils import ProgressReportingReader
 
-from ..auth import generate_signature
-
 from datetime import datetime
 from dateutil.tz import tzutc
 
-#from .tusclient import client
+from .tusclient import client
 
 __all__ = (
     'VFolder',
@@ -148,59 +146,56 @@ class VFolder(BaseFunction):
             rqst = Request(api_session.get(),
                            'POST', '/folders/{}/upload'.format(self.name))
             rqst.attach_files(attachments)
-            print(rqst.__dir__())
             async with rqst.fetch() as resp:
                 return await resp.text()
-            
-            
+
     @api_function
-    async def upload_tus(self, files: Sequence[Union[str, Path]],
-                     basedir: Union[str, Path] = None,
-                     show_progress: bool = False):
-        base_path = (Path.cwd() if basedir is None
-                     else Path(basedir).resolve())
+    async def tus(self, files: Sequence[Union[str, Path]],
+                  basedir: Union[str, Path] = None,
+                  show_progress: bool = False):
+
+        base_file_path = (Path.cwd() if basedir is None
+                          else Path(basedir).resolve())
+
         files = [Path(file).resolve() for file in files]
         total_size = 0
         for file_path in files:
             total_size += Path(file_path).stat().st_size
-        tqdm_obj = tqdm(desc='Uploading files',
-                        unit='bytes', unit_scale=True,
-                        total=total_size,
-                        disable=not show_progress)
-        with tqdm_obj:
-            attachments = []
-            for file_path in files:
-                try:
-                    attachments.append(AttachedFile(
-                        str(Path(file_path).relative_to(base_path)),
-                        ProgressReportingReader(str(file_path),
-                                                tqdm_instance=tqdm_obj),
-                        'application/octet-stream',
-                    ))
-                except ValueError:
-                    msg = 'File "{0}" is outside of the base directory "{1}".' \
-                          .format(file_path, base_path)
-                    raise ValueError(msg) from None
 
+        session = api_session.get()
+        config = session.config
+        base_url = config.endpoint
+        session_create_url = base_url / 'folders/{}/create_upload_session' \
+                                        .format(self.name)
+        session_upload_url = base_url / "folders/_/tus/upload/"
+
+        for file_path in files:
+            file_size = Path(file_path).stat().st_size
+            params = {'path': "{}".format(Path(file_path).name),
+                      'size': file_size}
             rqst = Request(api_session.get(),
-                           'POST', '/folders/{}/create_upload_session'.format(self.name))
-            
-            
-            rqst.attach_files(attachments)
-            
-            
-            session_url = 'http://127.0.0.1:8081/folders/{}/create_upload_session'.format("mydata1")
-            
-            
-            tus_client = client.TusClient()
-            tus_client = tus_client.set_session_url(session_url)
-            
-            tus_client.set_headers(rqst.headers)
-            
-            fs = open(str(Path(file_path).relative_to(base_path)))
-            uploader = tus_client.async_uploader(file_stream=fs)
-            res = await uploader.upload()
+                           'POST',
+                           '/folders/{}/create_upload_session'.format(
+                                                                      self.name
+                                                                     ),
+                                                                     params=params)
 
+            rqst.content_type = "text/plain"
+            date = datetime.now(tzutc())
+            rqst.date = date
+            rqst._sign("/folders/{}/create_upload_session?path={} \
+                        &size={}".format(self.name,
+                       params['path'],
+                       int(params['size'])))
+            rqst.headers["Date"] = date.isoformat()
+            rqst.headers["content-type"] = "text/plain"
+
+            tus_client = client.TusClient(str(session_create_url),
+                                          str(session_upload_url),
+                                          rqst.headers, params)
+            fs = open(str(Path(file_path).relative_to(base_file_path)))
+            uploader = tus_client.async_uploader(file_stream=fs)
+            await uploader.upload()
 
     @api_function
     async def mkdir(self, path: Union[str, Path]):

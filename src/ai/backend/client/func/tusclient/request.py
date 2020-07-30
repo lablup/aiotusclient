@@ -10,6 +10,7 @@ import aiohttp
 from .exceptions import TusUploadFailed, TusCommunicationError
 
 # Catches requests exceptions and throws custom tuspy errors.
+
 def catch_requests_error(func):
     """Deocrator to catch requests exceptions"""
     @wraps(func)
@@ -20,6 +21,7 @@ def catch_requests_error(func):
             raise TusCommunicationError(error)
 
     return _wrapper
+
 
 class BaseTusRequest:
     """
@@ -46,7 +48,7 @@ class BaseTusRequest:
 
         self._request_headers = {
             'upload-offset': str(uploader.offset),
-            'Content-Type': "multipart/form-data" #'application/offset+octet-stream'
+            'Content-Type': 'application/offset+octet-stream'
         }
         self._request_headers.update(uploader.get_headers())
         self._content_length = uploader.get_request_length()

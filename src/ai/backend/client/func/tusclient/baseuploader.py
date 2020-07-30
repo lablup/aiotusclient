@@ -14,7 +14,7 @@ from .fingerprint import *
 from .storage_interface import Storage
 
 if TYPE_CHECKING:
-    from .tusclient.client import TusClient
+    from .client import TusClient
 
 
 class BaseUploader:
