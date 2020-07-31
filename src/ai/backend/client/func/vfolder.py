@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import (
     Union,
     Sequence, List,
-    cast,
+    cast, Mapping, Union
 )
 
 import aiohttp
@@ -19,6 +19,7 @@ from ..utils import ProgressReportingReader
 
 from datetime import datetime
 from dateutil.tz import tzutc
+from yarl import URL
 
 from .tusclient import client
 
@@ -171,24 +172,23 @@ class VFolder(BaseFunction):
 
         for file_path in files:
             file_size = Path(file_path).stat().st_size
-            params = {'path': "{}".format(Path(file_path).name),
-                      'size': file_size}
+            params: Mapping = {'path': "{}".format(Path(file_path).name), 'size': int(file_size)}
             rqst = Request(api_session.get(),
                            'POST',
-                           '/folders/{}/create_upload_session'.format(
-                                                                      self.name
-                                                                     ),
-                                                                     params=params)
+                           '/folders/{}/create_upload_session'
+                           .format(self.name), params=params)
 
             rqst.content_type = "text/plain"
             date = datetime.now(tzutc())
             rqst.date = date
-            rqst._sign("/folders/{}/create_upload_session?path={}&size={}".format(self.name,
-                       params['path'],
-                       int(params['size'])))
+            rqst._sign(URL("/folders/{}/create_upload_session?path={}&size={}" \
+                       .format(self.name,
+                               params['path'],
+                               params['size'])))
             rqst.headers["Date"] = date.isoformat()
             rqst.headers["content-type"] = "text/plain"
 
+            params = {'path': "{}".format(Path(file_path).name), 'size': int(file_size)}
             tus_client = client.TusClient(str(session_create_url),
                                           str(session_upload_url),
                                           rqst.headers, params)

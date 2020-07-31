@@ -1,6 +1,7 @@
 from typing import Dict, Optional
 
 from .uploader import Uploader, AsyncUploader
+from multidict import CIMultiDict
 
 
 class TusClient:
@@ -23,12 +24,12 @@ class TusClient:
     """
 
     def __init__(self, session_create_url: str, session_upload_url: str,
-                 headers: Optional[Dict[str, str]] = None, 
-                 params: Optional[Dict[str, str]] = None):
+                 headers: Optional[CIMultiDict[str]], 
+                 params: Optional[Dict[str, object]] = None):
         self.url = session_create_url
         self.session_create_url = session_create_url
         self.session_upload_url = session_upload_url
-        self.headers = headers or {}
+        self.headers = headers
         self.params = params or {}
 
     def set_headers(self, headers: Dict[str, str]):
@@ -42,7 +43,7 @@ class TusClient:
             - headers (dict):
                 key, value pairs of the headers to be set. This argument is required.
         """
-        self.headers.update(headers)
+        # self.headers.update(headers)
 
     def uploader(self, *args, **kwargs) -> Uploader:
         """

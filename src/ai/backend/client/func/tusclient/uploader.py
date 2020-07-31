@@ -134,7 +134,6 @@ class AsyncUploader(BaseUploader):
         """
         try:
             async with aiohttp.ClientSession(loop=self.io_loop) as session:
-                
                 headers = self.get_url_creation_headers()
                 params = self.client.params
                 params['size'] = int(params['size'])
