@@ -9,9 +9,9 @@ import requests
 
 from .exceptions import TusCommunicationError
 from .request import TusRequest, catch_requests_error
-from .fingerprint import *
+# from .fingerprint import *
 
-from .storage_interface import Storage
+# from .storage_interface import Storage
 
 if TYPE_CHECKING:
     from .client import TusClient
@@ -59,7 +59,8 @@ class BaseUploader:
             Determines whether or not url should be stored, and uploads should be resumed.
         - url_storage (<tusclient.storage.interface.Storage>):
             An implementation of <tusclient.storage.interface.Storage> which is an API for URL storage.
-            This value must be set if store_url is set to true. A ready to use implementation exists atbe used out of the box. But you can
+            This value must be set if store_url is set to true. A ready to use 
+            implementation exists atbe used out of the box. But you can
             implement your own custom storage API and pass an instace of it as value.
         - fingerprinter (<tusclient.fingerprint.interface.Fingerprint>):
             An implementation of <tusclient.fingerprint.interface.Fingerprint> which is an API to generate
@@ -92,9 +93,7 @@ class BaseUploader:
                  url: Optional[str] = None, client: Optional['TusClient'] = None,
                  chunk_size: int = MAXSIZE, metadata: Optional[Dict] = None,
                  retries: int = 10, retry_delay: int = 300,
-                 store_url=False, url_storage: Optional[Storage] = None,
-                 fingerprinter: Optional[Fingerprint] = None,
-                 upload_checksum=False):
+                 store_url=False, upload_checksum=False):
         if file_path is None and file_stream is None:
             raise ValueError(
                 "Either 'file_path' or 'file_stream' cannot be None.")
@@ -112,8 +111,8 @@ class BaseUploader:
         self.client = client
         self.metadata = metadata or {}
         self.store_url = store_url
-        self.url_storage = url_storage
-        self.fingerprinter = fingerprinter or Fingerprint()
+        #self.url_storage = url_storage
+        #self.fingerprinter = fingerprinter or Fingerprint()
         self.offset = 0
         self.url = ""
         self.__init_url_and_offset(url)

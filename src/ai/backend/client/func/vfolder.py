@@ -1,14 +1,17 @@
 from pathlib import Path
 from typing import (
-    Union,
     Sequence, List,
     cast, Mapping, Union
 )
+
+from dateutil.tz import tzutc
+from datetime import datetime
 
 import aiohttp
 from aiohttp import hdrs
 from tqdm import tqdm
 
+from yarl import URL
 from .base import api_function, BaseFunction
 from ..compat import current_loop
 from ..config import DEFAULT_CHUNK_SIZE
@@ -17,9 +20,9 @@ from ..request import Request, AttachedFile
 from ..session import api_session
 from ..utils import ProgressReportingReader
 
-from datetime import datetime
-from dateutil.tz import tzutc
-from yarl import URL
+
+
+
 
 from .tusclient import client
 
@@ -181,7 +184,7 @@ class VFolder(BaseFunction):
             rqst.content_type = "text/plain"
             date = datetime.now(tzutc())
             rqst.date = date
-            rqst._sign(URL("/folders/{}/create_upload_session?path={}&size={}" \
+            rqst._sign(URL("/folders/{}/create_upload_session?path={}&size={}"
                        .format(self.name,
                                params['path'],
                                params['size'])))

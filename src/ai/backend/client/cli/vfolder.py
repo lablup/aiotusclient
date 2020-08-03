@@ -197,6 +197,7 @@ def upload(name, filenames, base_dir):
             print_error(e)
             sys.exit(1)
 
+
 @vfolder.command()
 @click.argument('name', type=str)
 @click.argument('filenames', type=Path, nargs=-1)
