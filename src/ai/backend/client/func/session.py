@@ -869,4 +869,3 @@ class StreamPty(WebSocketResponse):
         await self.ws.send_str(json.dumps({
             'type': 'restart',
         }))
-

@@ -9,7 +9,8 @@ __all__ = (
 
 class Auth(BaseFunction):
     """
-    Provides the function interface for login session management and authorization.
+    Provides the function interface for login session management and
+    authorization.
     """
 
     @api_function

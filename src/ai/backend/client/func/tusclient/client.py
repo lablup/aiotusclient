@@ -3,19 +3,20 @@ from multidict import CIMultiDict
 from .uploader import Uploader, AsyncUploader
 
 
-
 class TusClient:
     """
     Object representation of Tus client.
 
     :Attributes:
         - url (str):
-            represents the tus server's create extension url. On instantiation this argument
-            must be passed to the constructor.
+            represents the tus server's create extension url. On instantiation
+            this argument must be passed to the constructor.
         - headers (dict):
-            This can be used to set the server specific headers. These headers would be sent
-            along with every request made by the cleint to the server. This may be used to set
-            authentication headers. These headers should not include headers required by tus
+            This can be used to set the server specific headers. These headers
+            would be sent along with every request made by the cleint to the
+            server. This may be used to set
+            authentication headers.
+            These headers should not include headers required by tus
             protocol. If not set this defaults to an empty dictionary.
 
     :Constructor Args:

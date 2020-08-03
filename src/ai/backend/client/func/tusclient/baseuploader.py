@@ -8,7 +8,7 @@ import hashlib
 import requests
 
 from .exceptions import TusCommunicationError
-from .request import TusRequest, catch_requests_error
+from .request import catch_requests_error
 # from .fingerprint import *
 
 # from .storage_interface import Storage
@@ -23,50 +23,69 @@ class BaseUploader:
 
     :Attributes:
         - file_path (str):
-            This is the path(absolute/relative) to the file that is intended for upload
+            This is the path(absolute/relative) to the file that is intended
+            for upload
             to the tus server. On instantiation this attribute is required.
         - file_stream (file):
-            As an alternative to the `file_path`, an instance of the file to be uploaded
-            can be passed to the constructor as `file_stream`. Do note that either the
+            As an alternative to the `file_path`, an instance of the
+            file
+            to be uploaded
+            can be passed to the constructor as `file_stream`. Do note that
+            either the
             `file_stream` or the `file_path` must be passed on instantiation.
         -  url (str):
-            If the upload url for the file is known, it can be passed to the constructor.
+            If the upload url for the file is known, it can be passed to the
+            constructor.
             This may happen when you resume an upload.
         - client (<tusclient.client.TusClient>):
-            An instance of `tusclient.client.TusClient`. This would tell the uploader instance
-            what client it is operating with. Although this argument is optional, it is only
+            An instance of `tusclient.client.TusClient`. This would tell the
+            uploader instance
+            what client it is operating with. Although this argument is
+            optional, it is only
             optional if the 'url' argument is specified.
         - chunk_size (int):
-            This tells the uploader what chunk size(in bytes) should be uploaded when the
-            method `upload_chunk` is called. This defaults to the maximum possible integer if not
+            This tells the uploader what chunk size(in bytes) should be
+            uploaded when the method `upload_chunk` is called.
+            This defaults to the maximum possible integer if not
             specified.
         - metadata (dict):
-            A dictionary containing the upload-metadata. This would be encoded internally
+            A dictionary containing the upload-metadata. This would be encoded
+            internally
             by the method `encode_metadata` to conform with the tus protocol.
         - offset (int):
-            The offset value of the upload indicates the current position of the file upload.
+            The offset value of the upload indicates the current position of
+            the file upload.
         - stop_at (int):
             At what offset value the upload should stop.
         - request (<tusclient.request.TusRequest>):
             A http Request instance of the last chunk uploaded.
         - retries (int):
-            The number of attempts the uploader should make in the case of a failed upload.
+            The number of attempts the uploader should make in the case of a
+            failed upload.
             If not specified, it defaults to 0.
         - retry_delay (int):
-            How long (in seconds) the uploader should wait before retrying a failed upload attempt.
+            How long (in seconds) the uploader should wait before retrying a
+            failed upload attempt.
             If not specified, it defaults to 30.
         - store_url (bool):
-            Determines whether or not url should be stored, and uploads should be resumed.
+            Determines whether or not url should be stored, and uploads should be
+            resumed.
         - url_storage (<tusclient.storage.interface.Storage>):
-            An implementation of <tusclient.storage.interface.Storage> which is an API for URL storage.
-            This value must be set if store_url is set to true. A ready to use 
+            An implementation of <tusclient.storage.interface.Storage> which is
+            an API for URL storage.
+            This value must be set if store_url is set to true. A ready to use
             implementation exists atbe used out of the box. But you can
-            implement your own custom storage API and pass an instace of it as value.
+            implement your own custom storage API and pass an instace of it as
+            value.
         - fingerprinter (<tusclient.fingerprint.interface.Fingerprint>):
-            An implementation of <tusclient.fingerprint.interface.Fingerprint> which is an API to generate
-            a unique fingerprint for the uploaded file. This is used for url storage when resumability is enabled.
-            if store_url is set to true, the default fingerprint module (<tusclient.fingerprint.fingerprint.Fingerprint>)
-            would be used. But you can set your own custom fingerprint module by passing it to the constructor.
+            An implementation of <tusclient.fingerprint.interface.Fingerprint>
+            which is an API to generate
+            a unique fingerprint for the uploaded file. This is used for url
+            storage when resumability is enabled.
+            if store_url is set to true, the default fingerprint module
+            (<tusclient.fingerprint.fingerprint.Fingerprint>)
+            would be used. But you can set your own custom fingerprint module by
+            passing it to the constructor.
         - upload_checksum (bool):
             Whether or not to supply the Upload-Checksum header along with each
             chunk. Defaults to False.
@@ -82,15 +101,18 @@ class BaseUploader:
         - retry_delay (Optional[int])
         - store_url (Optional[bool])
         - url_storage (Optinal [<tusclient.storage.interface.Storage>])
-        - fingerprinter (Optional [<tusclient.fingerprint.interface.Fingerprint>])
+        - fingerprinter (Optional [<tusclient.fingerprint.interface
+        .Fingerprint>])
         - upload_checksum (Optional[bool])
     """
     DEFAULT_HEADERS = {"Tus-Resumable": "1.0.0"}
     DEFAULT_CHUNK_SIZE = MAXSIZE
     CHECKSUM_ALGORITHM_PAIR = ("sha1", hashlib.sha1, )
 
-    def __init__(self, file_path: Optional[str] = None, file_stream: Optional[IO] = None,
-                 url: Optional[str] = None, client: Optional['TusClient'] = None,
+    def __init__(self, file_path: Optional[str] = None,
+                 file_stream: Optional[IO] = None,
+                 url: Optional[str] = None,
+                 client: Optional['TusClient'] = None,
                  chunk_size: int = MAXSIZE, metadata: Optional[Dict] = None,
                  retries: int = 10, retry_delay: int = 300,
                  store_url=False, upload_checksum=False):
@@ -101,22 +123,18 @@ class BaseUploader:
         if url is None and client is None:
             raise ValueError("Either 'url' or 'client' cannot be None.")
 
-        if store_url and url_storage is None:
-            raise ValueError(
-                "Please specify a storage instance to enable resumablility.")
-
         self.file_path = file_path
         self.file_stream = file_stream
         self.stop_at = self.get_file_size()
         self.client = client
         self.metadata = metadata or {}
         self.store_url = store_url
-        #self.url_storage = url_storage
-        #self.fingerprinter = fingerprinter or Fingerprint()
+        # self.url_storage = url_storage
+        # self.fingerprinter = fingerprinter or Fingerprint()
         self.offset = 0
         self.url = ""
         self.__init_url_and_offset(url)
-        self.chunk_size = 1048576 # bytes, 1mb
+        self.chunk_size = 1048576  # bytes, 1mb
         self.retries = retries
         self.request = None
         self._retried = 0
@@ -148,7 +166,8 @@ class BaseUploader:
 
     @property
     def checksum_algorithm_name(self):
-        """The name of the checksum algorithm to be used for the Upload-Checksum
+        """The name of the checksum algorithm to be used for the
+        Upload-Checksum
         extension.
         """
         return self.__checksum_algorithm_name
@@ -158,7 +177,8 @@ class BaseUploader:
         """
         Return offset from tus server.
 
-        This is different from the instance attribute 'offset' because this makes an
+        This is different from the instance attribute 'offset' because this
+        makes an
         http request to the tus server to retrieve the offset.
         """
         resp = requests.head(self.url, headers=self.get_headers())
@@ -190,26 +210,17 @@ class BaseUploader:
     def __init_url_and_offset(self, url: Optional[str] = None):
         """
         Return the tus upload url.
-
-        If resumability is enabled, this would try to get the url from storage if available,
-        otherwise it would request a new upload url from the tus server.
+        If resumability is enabled, this would try to get the url from storage
+        if available, otherwise it would request a new upload url from the tus server.
         """
         if url:
             self.set_url(url)
-
-        if self.store_url and self.url_storage:
-            key = self.fingerprinter.get_fingerprint(self.get_file_stream())
-            self.set_url(self.url_storage.get_item(key))
-
         if self.url:
             self.offset = self.get_offset()
 
     def set_url(self, url: str):
         """Set the upload URL"""
         self.url = url
-        if self.store_url and self.url_storage:
-            key = self.fingerprinter.get_fingerprint(self.get_file_stream())
-            self.url_storage.set_item(key, url)
 
     def get_request_length(self):
         """

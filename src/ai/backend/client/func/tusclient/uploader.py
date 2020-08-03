@@ -1,17 +1,16 @@
 from typing import Optional
-import time
 import asyncio
 from urllib.parse import urljoin
-
+import time
 import requests
 import aiohttp
-
+from tqdm import tqdm
 from .baseuploader import BaseUploader
 
 from .exceptions import TusUploadFailed, TusCommunicationError
 from .request import TusRequest, AsyncTusRequest, catch_requests_error
-import time
-from tqdm import tqdm
+
+
 def _verify_upload(request: TusRequest):
     if request.status_code == 204:
         return True
@@ -92,7 +91,6 @@ class Uploader(BaseUploader):
             raise error
 
 
-
 class AsyncUploader(BaseUploader):
     def __init__(self, *args,
                  io_loop: Optional[asyncio.AbstractEventLoop] = None,
@@ -113,18 +111,14 @@ class AsyncUploader(BaseUploader):
                 defaults to the file size.
         """
         self.stop_at = stop_at or self.get_file_size()
-        
         no_chunks = self.get_file_size() // self.chunk_size
-        
         print("File size: ", self.get_file_size(), "bytes; Total number of chunks: ", no_chunks)
-        
         with tqdm(total=no_chunks) as pbar:
-
             while self.offset < self.stop_at:
                 await self.upload_chunk()
                 pbar.update(1)
                 await asyncio.sleep(1)
-    
+
     async def upload_chunk(self):
         """
         Upload chunk of file.

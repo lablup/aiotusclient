@@ -4,8 +4,9 @@ from typing import (
     cast, Mapping, Union
 )
 
-from dateutil.tz import tzutc
 from datetime import datetime
+from dateutil.tz import tzutc
+
 
 import aiohttp
 from aiohttp import hdrs
@@ -19,10 +20,6 @@ from ..exceptions import BackendAPIError
 from ..request import Request, AttachedFile
 from ..session import api_session
 from ..utils import ProgressReportingReader
-
-
-
-
 
 from .tusclient import client
 
@@ -191,12 +188,13 @@ class VFolder(BaseFunction):
             rqst.headers["Date"] = date.isoformat()
             rqst.headers["content-type"] = "text/plain"
 
-            params = {'path': "{}".format(Path(file_path).name), 'size': int(file_size)}
+            params = {'path': "{}".format(Path(file_path).name),
+                      'size': int(file_size)}
             tus_client = client.TusClient(str(session_create_url),
                                           str(session_upload_url),
                                           rqst.headers, params)
-            fs = open(str(Path(file_path).relative_to(base_file_path)))
-            uploader = tus_client.async_uploader(file_stream=fs)
+            input_file = open(str(Path(file_path).relative_to(base_file_path)))
+            uploader = tus_client.async_uploader(file_stream=input_file)
             await uploader.upload()
 
     @api_function
