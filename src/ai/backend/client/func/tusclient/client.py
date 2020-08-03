@@ -5,7 +5,7 @@ from .uploader import Uploader, AsyncUploader
 
 class TusClient:
     """
-    Object representation of Tus client.
+    Object representation of Tus client for the Backend.AI.
 
     :Attributes:
         - url (str):
