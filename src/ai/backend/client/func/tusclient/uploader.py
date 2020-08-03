@@ -10,8 +10,8 @@ from .baseuploader import BaseUploader
 
 from .exceptions import TusUploadFailed, TusCommunicationError
 from .request import TusRequest, AsyncTusRequest, catch_requests_error
-
-
+import time
+from tqdm import tqdm
 def _verify_upload(request: TusRequest):
     if request.status_code == 204:
         return True
@@ -31,7 +31,7 @@ class Uploader(BaseUploader):
 
         :Args:
             - stop_at (Optional[int]):
-                Determines at what offset value the upload should stop. 
+                Determines at what offset value the upload should stop.
                 If not specified this
                 defaults to the file size.
         """
@@ -77,6 +77,7 @@ class Uploader(BaseUploader):
             self._retry_or_cry(error)
 
     def _retry_or_cry(self, error):
+        print("Retry error ", error)
         if self.retries > self._retried:
             time.sleep(self.retry_delay)
 
@@ -89,6 +90,7 @@ class Uploader(BaseUploader):
                 self._do_request()
         else:
             raise error
+
 
 
 class AsyncUploader(BaseUploader):
@@ -111,9 +113,18 @@ class AsyncUploader(BaseUploader):
                 defaults to the file size.
         """
         self.stop_at = stop_at or self.get_file_size()
-        while self.offset < self.stop_at:
-            await self.upload_chunk()
+        
+        no_chunks = self.get_file_size() // self.chunk_size
+        
+        print("File size: ", self.get_file_size(), "bytes; Total number of chunks: ", no_chunks)
+        
+        with tqdm(total=no_chunks) as pbar:
 
+            while self.offset < self.stop_at:
+                await self.upload_chunk()
+                pbar.update(1)
+                await asyncio.sleep(1)
+    
     async def upload_chunk(self):
         """
         Upload chunk of file.
@@ -137,8 +148,8 @@ class AsyncUploader(BaseUploader):
                 headers = self.get_url_creation_headers()
                 params = self.client.params
                 params['size'] = int(params['size'])
-                async with session.post(self.client.session_create_url,  
-                                        headers=headers, 
+                async with session.post(self.client.session_create_url,
+                                        headers=headers,
                                         params=params) as resp:
                     url = jwt_token = await resp.json()
                     jwt_token = jwt_token['token']
@@ -163,6 +174,8 @@ class AsyncUploader(BaseUploader):
             await self._retry_or_cry(error)
 
     async def _retry_or_cry(self, error):
+        print("Error ", error)
+        print("Retries ", self.retries, self._retried)
         if self.retries > self._retried:
             await asyncio.sleep(self.retry_delay, loop=self.io_loop)
 
@@ -174,4 +187,5 @@ class AsyncUploader(BaseUploader):
             else:
                 await self._do_request()
         else:
+            print("Error ", error)
             raise error

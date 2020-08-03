@@ -91,7 +91,7 @@ class BaseUploader:
     def __init__(self, file_path: Optional[str] = None, file_stream: Optional[IO] = None,
                  url: Optional[str] = None, client: Optional['TusClient'] = None,
                  chunk_size: int = MAXSIZE, metadata: Optional[Dict] = None,
-                 retries: int = 0, retry_delay: int = 30,
+                 retries: int = 10, retry_delay: int = 300,
                  store_url=False, url_storage: Optional[Storage] = None,
                  fingerprinter: Optional[Fingerprint] = None,
                  upload_checksum=False):
@@ -115,9 +115,9 @@ class BaseUploader:
         self.url_storage = url_storage
         self.fingerprinter = fingerprinter or Fingerprint()
         self.offset = 0
-        self.url = None
+        self.url = ""
         self.__init_url_and_offset(url)
-        self.chunk_size = chunk_size
+        self.chunk_size = 1048576 # bytes, 1mb
         self.retries = retries
         self.request = None
         self._retried = 0
@@ -143,7 +143,7 @@ class BaseUploader:
 
     @property
     def checksum_algorithm(self):
-        """The checksum algorithm to be used for the Upload-Checksum extension. 
+        """The checksum algorithm to be used for the Upload-Checksum extension.
         """
         return self.__checksum_algorithm
 

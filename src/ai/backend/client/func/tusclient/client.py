@@ -1,7 +1,7 @@
 from typing import Dict, Optional
-
-from .uploader import Uploader, AsyncUploader
 from multidict import CIMultiDict
+from .uploader import Uploader, AsyncUploader
+
 
 
 class TusClient:
@@ -24,7 +24,7 @@ class TusClient:
     """
 
     def __init__(self, session_create_url: str, session_upload_url: str,
-                 headers: Optional[CIMultiDict[str]], 
+                 headers: Optional[CIMultiDict[str]],
                  params: Optional[Dict[str, object]] = None):
         self.url = session_create_url
         self.session_create_url = session_create_url

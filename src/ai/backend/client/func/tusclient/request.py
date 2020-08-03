@@ -11,6 +11,7 @@ from .exceptions import TusUploadFailed, TusCommunicationError
 
 # Catches requests exceptions and throws custom tuspy errors.
 
+
 def catch_requests_error(func):
     """Deocrator to catch requests exceptions"""
     @wraps(func)
