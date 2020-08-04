@@ -97,7 +97,7 @@ class AsyncTusRequest(BaseTusRequest):
         """
         Perform actual request.
         """
-        
+
         chunk = self.file.read(self._content_length)
         self.add_checksum(chunk)
         try:
