@@ -137,14 +137,19 @@ class AsyncUploader(BaseUploader):
         Makes request to tus server to create a new upload url for the
         required file upload.
         """
+        status = None
         try:
             async with aiohttp.ClientSession(loop=self.io_loop) as session:
                 headers = self.get_url_creation_headers()
                 params = self.client.params
                 params['size'] = int(params['size'])
+                headers['method'] = 'POST'
+
                 async with session.post(self.client.session_create_url,
                                         headers=headers,
                                         params=params) as resp:
+                    status = resp.status
+
                     url = jwt_token = await resp.json()
                     jwt_token = jwt_token['token']
                     url = self.client.session_upload_url + jwt_token
@@ -157,6 +162,7 @@ class AsyncUploader(BaseUploader):
                                                     )
                     return url
         except aiohttp.ClientError as error:
+            print("Status ", error, status)
             raise TusCommunicationError(error)
 
     async def _do_request(self):
