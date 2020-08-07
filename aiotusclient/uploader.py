@@ -118,7 +118,8 @@ class AsyncUploader(BaseUploader):
             while self.offset < self.stop_at:
                 await self.upload_chunk()
                 pbar.update(1)
-
+        return ''
+        
     async def upload_chunk(self):
         """
         Upload chunk of file.
