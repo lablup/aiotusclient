@@ -25,6 +25,3 @@ jobs:
           echo "::add-matcher::.github/workflows/mypy-matcher.json"
         fi
         python -m mypy --no-color-output aiotusclient
-
-
-
