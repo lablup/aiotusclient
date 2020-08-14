@@ -97,6 +97,7 @@ class AsyncUploader(BaseUploader):
                  **kwargs):
         self.io_loop = io_loop
         super().__init__(*args, **kwargs)
+        self.jwt_token = None
 
     async def upload(self, stop_at: Optional[int] = None):
         """
@@ -118,8 +119,7 @@ class AsyncUploader(BaseUploader):
             while self.offset < self.stop_at:
                 await self.upload_chunk()
                 pbar.update(1)
-        return 1
-
+        return self.jwt_token
 
     async def upload_chunk(self):
         """
@@ -146,13 +146,14 @@ class AsyncUploader(BaseUploader):
                 params = self.client.params
                 params['size'] = int(params['size'])
                 headers['method'] = 'POST'
-                               
+
                 async with session.post(self.client.session_create_url,
                                         headers=headers,
                                         params=params) as resp:
                     status = resp.status
+
                     url = jwt_token = await resp.json()
-                    jwt_token = jwt_token['token']
+                    self.jwt_token = jwt_token = jwt_token['token']
                     url = self.client.session_upload_url + jwt_token
                     if url is None:
                         msg = 'Attempt to retrieve create file url with \
