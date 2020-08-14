@@ -112,14 +112,15 @@ class AsyncUploader(BaseUploader):
         """
         self.stop_at = stop_at or self.get_file_size()
         no_chunks = self.get_file_size() // self.chunk_size
-        print("File size: ", self.get_file_size() // 1024, "kB; Total number of chunks: ", no_chunks)
+        print("File size: ", self.get_file_size(), "bytes; Total number of chunks: ", no_chunks)
 
         with tqdm(total=no_chunks) as pbar:
             while self.offset < self.stop_at:
                 await self.upload_chunk()
                 pbar.update(1)
-        return ''
-        
+        return 1
+
+
     async def upload_chunk(self):
         """
         Upload chunk of file.
@@ -145,12 +146,11 @@ class AsyncUploader(BaseUploader):
                 params = self.client.params
                 params['size'] = int(params['size'])
                 headers['method'] = 'POST'
-
+                               
                 async with session.post(self.client.session_create_url,
                                         headers=headers,
                                         params=params) as resp:
                     status = resp.status
-
                     url = jwt_token = await resp.json()
                     jwt_token = jwt_token['token']
                     url = self.client.session_upload_url + jwt_token
