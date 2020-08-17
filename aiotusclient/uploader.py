@@ -108,12 +108,15 @@ class AsyncUploader(BaseUploader):
                 defaults to the file size.
         """
         self.stop_at = stop_at or self.get_file_size()
-        no_chunks = self.get_file_size() // self.chunk_size
-        print("File size:", self.get_file_size() // 1024, "Kb; Total number of chunks:", no_chunks)
-        with tqdm(total=no_chunks) as pbar:
+        with tqdm(
+            total=self.get_file_size(),
+            unit='bytes',
+            unit_scale=True,
+            unit_divisor=1024,
+        ) as pbar:
             while self.offset < self.stop_at:
                 await self.upload_chunk()
-                pbar.update(1)
+                pbar.update(self.chunk_size)
 
     async def upload_chunk(self):
         """
