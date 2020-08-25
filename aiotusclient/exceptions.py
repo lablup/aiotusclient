@@ -27,6 +27,12 @@ class TusCommunicationError(Exception):
         self.status_code = status_code
         self.response_content = response_content
 
+    def __str__(self) -> str:
+        return f"TusCommunicationError({self.status_code}, {self.response_content!r})"
+
+    def __repr__(self) -> str:
+        return f"TusCommunicationError({self.status_code}, {self.response_content!r})"
+
 
 class TusUploadFailed(TusCommunicationError):
     """Should be raised when an attempted upload fails"""

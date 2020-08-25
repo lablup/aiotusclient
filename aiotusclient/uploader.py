@@ -1,12 +1,12 @@
-from typing import Optional
 import asyncio
 from urllib.parse import urljoin
 import time
-import requests
-import aiohttp
-from tqdm import tqdm
-from .baseuploader import BaseUploader
+from typing import Optional
 
+import requests
+from tqdm import tqdm
+
+from .baseuploader import BaseUploader
 from .exceptions import TusUploadFailed, TusCommunicationError
 from .request import TusRequest, AsyncTusRequest, catch_requests_error
 
@@ -92,12 +92,8 @@ class Uploader(BaseUploader):
 
 
 class AsyncUploader(BaseUploader):
-    def __init__(self, *args,
-                 io_loop: Optional[asyncio.AbstractEventLoop] = None,
-                 **kwargs):
-        self.io_loop = io_loop
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.jwt_token = None
 
     async def upload(self, stop_at: Optional[int] = None):
         """
@@ -112,60 +108,22 @@ class AsyncUploader(BaseUploader):
                 defaults to the file size.
         """
         self.stop_at = stop_at or self.get_file_size()
-        no_chunks = self.get_file_size() // self.chunk_size
-        print("File size: ", self.get_file_size() // 1024, " Kb; Total number of chunks: ", no_chunks)
-
-        with tqdm(total=no_chunks) as pbar:
+        with tqdm(
+            total=self.get_file_size(),
+            unit='bytes',
+            unit_scale=True,
+            unit_divisor=1024,
+        ) as pbar:
             while self.offset < self.stop_at:
                 await self.upload_chunk()
-                pbar.update(1)
-        return self.jwt_token
+                pbar.update(self.chunk_size)
 
     async def upload_chunk(self):
         """
         Upload chunk of file.
         """
-        self._retried = 0
-        if not self.url:
-            self.set_url(await self.create_url())
-            self.offset = 0
         await self._do_request()
         self.offset = int(self.request.response_headers.get('upload-offset'))
-
-    async def create_url(self):
-        """
-        Return upload url.
-
-        Makes request to tus server to create a new upload url for the
-        required file upload.
-        """
-        status = None
-        try:
-            async with aiohttp.ClientSession(loop=self.io_loop) as session:
-                headers = self.get_url_creation_headers()
-                params = self.client.params
-                params['size'] = int(params['size'])
-                headers['method'] = 'POST'
-
-                async with session.post(self.client.session_create_url,
-                                        headers=headers,
-                                        params=params) as resp:
-                    status = resp.status
-
-                    url = jwt_token = await resp.json()
-                    self.jwt_token = jwt_token = jwt_token['token']
-                    url = self.client.session_upload_url + jwt_token
-                    if url is None:
-                        msg = 'Attempt to retrieve create file url with \
-                                status {}'.format(resp.status)
-                        raise TusCommunicationError(msg,
-                                                    resp.status,
-                                                    await resp.content.read()
-                                                    )
-                    return url
-        except aiohttp.ClientError as error:
-            print("Status ", error, status)
-            raise TusCommunicationError(error)
 
     async def _do_request(self):
         self.request = AsyncTusRequest(self)
@@ -179,8 +137,7 @@ class AsyncUploader(BaseUploader):
         print("Error ", error)
         print("Retries ", self.retries, self._retried)
         if self.retries > self._retried:
-            await asyncio.sleep(self.retry_delay, loop=self.io_loop)
-
+            await asyncio.sleep(self.retry_delay)
             self._retried += 1
             try:
                 self.offset = self.get_offset()

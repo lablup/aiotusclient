@@ -1,9 +1,14 @@
-from typing import Optional, IO, Dict, TYPE_CHECKING
+from base64 import b64encode
+import hashlib
 import os
 import re
-from base64 import b64encode
 from sys import maxsize as MAXSIZE
-import hashlib
+from typing import (
+    Dict,
+    IO,
+    Optional,
+    TYPE_CHECKING,
+)
 
 import requests
 
@@ -132,7 +137,7 @@ class BaseUploader:
         # self.url_storage = url_storage
         # self.fingerprinter = fingerprinter or Fingerprint()
         self.offset = 0
-        self.url = ""
+        self.url = url
         self.__init_url_and_offset(url)
         self.chunk_size = 1048576  # bytes, 1mb
         self.retries = retries
@@ -174,6 +179,7 @@ class BaseUploader:
 
     @catch_requests_error
     def get_offset(self):
+        # TODO: make this method async using aiohttp
         """
         Return offset from tus server.
 

@@ -1,11 +1,10 @@
-from typing import Optional
-import base64
 import asyncio
+import base64
 from functools import wraps
+from typing import Optional
 
-import requests
 import aiohttp
-
+import requests
 
 from .exceptions import TusUploadFailed, TusCommunicationError
 
