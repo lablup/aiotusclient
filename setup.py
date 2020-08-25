@@ -6,8 +6,8 @@ setup_requires = [
 ]
 
 install_requires = [
-    'aiohttp~=3.6.2',
-    'tqdm~=4.42'
+    'aiohttp>=3.6.2',
+    'tqdm>=4.42'
 ]
 
 setup(
@@ -16,15 +16,15 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.0.0',
-    description='Backend.AI aiotusclient for Python',
+    version='0.1.0',
+    description='tus.io-compatible upload client library for Python asyncio',
     url='https://github.com/lablup/aiotusclient',
     author='Lablup Inc.',
     author_email='sergey@lablup.com',
     license='MIT',
     packages=['aiotusclient'],
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
         'Intended Audience :: Developers',
         'Programming Language :: Python',
@@ -38,8 +38,7 @@ setup(
         'Topic :: Scientific/Engineering',
         'Topic :: Software Development',
     ],
-
     python_requires='>=3.8',
     setup_requires=setup_requires,
-    install_requires=install_requires
+    install_requires=install_requires,
 )
