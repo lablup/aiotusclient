@@ -1,9 +1,14 @@
-from typing import Optional, IO, Dict, TYPE_CHECKING
+from base64 import b64encode
+import hashlib
 import os
 import re
-from base64 import b64encode
 from sys import maxsize as MAXSIZE
-import hashlib
+from typing import (
+    Dict,
+    IO,
+    Optional,
+    TYPE_CHECKING,
+)
 
 import requests
 

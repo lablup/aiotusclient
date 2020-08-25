@@ -1,12 +1,12 @@
-from typing import Optional
 import asyncio
 from urllib.parse import urljoin
 import time
-import requests
-import aiohttp
-from tqdm import tqdm
-from .baseuploader import BaseUploader
+from typing import Optional
 
+import requests
+from tqdm import tqdm
+
+from .baseuploader import BaseUploader
 from .exceptions import TusUploadFailed, TusCommunicationError
 from .request import TusRequest, AsyncTusRequest, catch_requests_error
 
