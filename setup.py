@@ -1,5 +1,7 @@
-from setuptools import setup, find_namespace_packages
-from typing import List
+from setuptools import setup
+from pathlib import Path
+import re
+
 
 setup_requires = [
     'setuptools>=46.1.0',
@@ -10,13 +12,16 @@ install_requires = [
     'tqdm>=4.42'
 ]
 
+
+def get_version():
+    src = (Path(__file__).parent / 'aiotusclient' / '__init__.py').read_text()
+    m = re.search(r"""^__version__\s*=\s*(["'])([^'"]+)\1$""", src)
+    return m.group(2)
+
+
 setup(
     name='aiotusclient',
-
-    # Versions should comply with PEP440.  For a discussion on single-sourcing
-    # the version across setup.py and the project code, see
-    # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.0',
+    version=get_version(),
     description='tus.io-compatible upload client library for Python asyncio',
     url='https://github.com/lablup/aiotusclient',
     author='Lablup Inc.',
