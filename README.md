@@ -1,13 +1,16 @@
-# Backend.AI aiotusclient
-Backend.AI aiotusclient is an tus client to communicate with tus server to manage vfolders used in Backend.AI client and other projects.
+# tus.io uploader for Python asyncio
+aiotusclient is a fork of tus-py-client rewritten for Python asyncio and aiohttp.
+It is used to communicate with storage proxies that handle large transfers for vfolder uploads and downloads.
+
 
 ## Package Structure
-* `ai.backend.aiotusclient`
+* `aiotusclient`
   - `client`: The client instance class which communicates between Backend.AI Manager
   - `baseuploader and uploader`
     - Responsible for chunking the file and asynchronously uploading to tus server
   - `request`
     - Handles the uploading request
+
 
 ## Installation
 
@@ -39,4 +42,3 @@ tus_client = client.TusClient(session_create_url, session_upload_url, rqst.heade
 
 ### Reference
 This library was forked from [tus-py-client](https://github.com/tus/tus-py-client) and customized in order to facilitate asynchronous communication with our TUS server.
-
