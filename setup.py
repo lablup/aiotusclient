@@ -65,4 +65,10 @@ setup(
     python_requires='>=3.8',
     setup_requires=setup_requires,
     install_requires=install_requires,
+    extras_require={
+        'build': build_requires,
+        'test': test_requires,
+        'lint': lint_requires,
+        'typecheck': typecheck_requires,
+    },
 )
