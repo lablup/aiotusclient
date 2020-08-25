@@ -4,12 +4,31 @@ import re
 
 
 setup_requires = [
-    'setuptools>=46.1.0',
+    'setuptools>=49.6.0',
 ]
 
 install_requires = [
     'aiohttp>=3.6.2',
     'tqdm>=4.42'
+]
+build_requires = [
+    'wheel>=0.35.1',
+    'twine>=3.1.1',
+    'towncrier>=19.2.0',
+]
+test_requires = [
+    'pytest~=6.0.1',
+    'pytest-cov',
+    'pytest-mock',
+    'pytest-asyncio>=0.14.0',
+    'aioresponses~=0.6.3',
+    'codecov',
+]
+lint_requires = [
+    'flake8>=3.8.1',
+]
+typecheck_requires = [
+    'mypy>=0.782',
 ]
 
 
