@@ -17,12 +17,10 @@ os:
 
 # test stage
 install:
-  - pip install -U pip setuptools
+  - pip install -U pip setuptools wheel
   - pip install -U -r requirements/test.txt
 script:
-  - python -m pytest --cov=ai.backend.client -v -m "not integration"
-after_success:
-  - codecov
+  - python -m pytest
 
 # job matrix
 jobs:
