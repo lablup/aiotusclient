@@ -29,7 +29,8 @@ jobs:
   fast_finish: true
   include:
     # if the test stage has multiple cases, it will be auto-included.
-    - stage: deploy
+    - stage: Test
+    - stage: Deploy
       python: "3.8"
       install: skip
       script: skip
