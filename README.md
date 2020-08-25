@@ -6,7 +6,7 @@ It is used to communicate with storage proxies that handle large transfers for v
 ## Package Structure
 * `aiotusclient`
   - `client`: The client instance class which communicates between Backend.AI Manager
-  - `baseuploader and uploader`
+  - `baseuploader` and `uploader`
     - Responsible for chunking the file and asynchronously uploading to tus server
   - `request`
     - Handles the uploading request
