@@ -42,3 +42,6 @@ jobs:
         username: "__token__"
         password:
           secure: "yoqmY5WxkPZGc5OIi5G6mfBI+HtNXCKKumwykOAccNsNbgf/0uarxRj/GsZLjIxAFjrTHYAz2g90s4mg+Z6j0/j3Khu3fukluJwSt6OzHS9Xrh1Lnq7E+3MqRg3rwcqk3/mEpBnMzQCgwGFp36ybSE3sqiBkEiROsJ9uXRsgWnEvwHjCfCdr8JJ1XrKLvP6NdxVHqGE0HIN3stRiy60JLxVGbzDv6QRovOklO4b2qKFIiNHUiqIr1PnpHoODJR9pn0E14/t7Zd/QkIV6wM9u4VeiByEQKsG9jWCupMrjBV8baQZaXScd4YrL9VmnCvPgcd75dZhBRiydzdzaXrzCMQriR1qQlnuUDVxbsVXS9ZQlFSJMFJlrWNPYSLp1/aeg+Prhi+AZcmwHG+w9FjaYLOLnIXDW+1hmWOB+Y0BKk7RHkq2c2H1Y8+dv0VX4qsGvWbE+6fgDOTPWVcjMyfs25Dt8Jd9DgrfCa234SNa+CTvj0UVJK8xrGPzS+L+5P+InBGp5DDAphNeDX6YoOBxGUElfpFeOtAWHD0EzrD/stVsD9hPEZEzDgLmXUXdSObZcAhkOc9d9beBzXXCQNb9rjZSE1Dy4tdRc6G6jLTm6FICkZFRhcLmMovzS3selB6RACfzcSSsxq+JkHTNnxqUeVCow5QygW09HHfgjS8k/Qaw="
+  exclude:
+    # exclude the (redundant) default job
+    - python: "3.7"
