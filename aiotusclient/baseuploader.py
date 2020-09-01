@@ -2,7 +2,6 @@ from base64 import b64encode
 import hashlib
 import os
 import re
-from sys import maxsize as MAXSIZE
 from typing import (
     Dict,
     IO,
@@ -51,8 +50,7 @@ class BaseUploader:
         - chunk_size (int):
             This tells the uploader what chunk size(in bytes) should be
             uploaded when the method `upload_chunk` is called.
-            This defaults to the maximum possible integer if not
-            specified.
+            This defaults to 1 MiB if not specified.
         - metadata (dict):
             A dictionary containing the upload-metadata. This would be encoded
             internally
@@ -111,14 +109,15 @@ class BaseUploader:
         - upload_checksum (Optional[bool])
     """
     DEFAULT_HEADERS = {"Tus-Resumable": "1.0.0"}
-    DEFAULT_CHUNK_SIZE = MAXSIZE
+    DEFAULT_CHUNK_SIZE = 1048576
     CHECKSUM_ALGORITHM_PAIR = ("sha1", hashlib.sha1, )
 
     def __init__(self, file_path: Optional[str] = None,
                  file_stream: Optional[IO] = None,
                  url: Optional[str] = None,
                  client: Optional['TusClient'] = None,
-                 chunk_size: int = MAXSIZE, metadata: Optional[Dict] = None,
+                 chunk_size: int = DEFAULT_CHUNK_SIZE,
+                 metadata: Optional[Dict] = None,
                  retries: int = 10, retry_delay: int = 300,
                  store_url=False, upload_checksum=False):
         if file_path is None and file_stream is None:
@@ -138,7 +137,7 @@ class BaseUploader:
         # self.fingerprinter = fingerprinter or Fingerprint()
         self.offset = 0
         self.url = url
-        self.chunk_size = 1048576  # bytes, 1mb
+        self.chunk_size = chunk_size
         self.retries = retries
         self.request = None
         self._retried = 0
