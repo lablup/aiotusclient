@@ -5,10 +5,10 @@ from tqdm import tqdm
 
 from .baseuploader import BaseUploader
 from .exceptions import TusUploadFailed, TusCommunicationError
-from .request import TusRequest, AsyncTusRequest
+from .request import AsyncTusRequest
 
 
-def _verify_upload(request: TusRequest):
+def _verify_upload(request: AsyncTusRequest):
     if request.status_code == 204:
         return True
     else:

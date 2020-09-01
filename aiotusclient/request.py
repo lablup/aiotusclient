@@ -1,26 +1,10 @@
 import asyncio
 import base64
-from functools import wraps
 from typing import Optional
 
 import aiohttp
-import requests
 
-from .exceptions import TusUploadFailed, TusCommunicationError
-
-# Catches requests exceptions and throws custom tuspy errors.
-
-
-def catch_requests_error(func):
-    """Deocrator to catch requests exceptions"""
-    @wraps(func)
-    def _wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except requests.exceptions.RequestException as error:
-            raise TusCommunicationError(error)
-
-    return _wrapper
+from .exceptions import TusUploadFailed
 
 
 class BaseTusRequest:
@@ -65,25 +49,6 @@ class BaseTusRequest:
                         self._checksum_algorithm(chunk).digest()
                     ).decode('ascii'),
                 ))
-
-
-class TusRequest(BaseTusRequest):
-    """Class to handle async Tus upload requests"""
-    def perform(self):
-        """
-        Perform actual request.
-        """
-        try:
-            chunk = self.file.read(self._content_length)
-            self.add_checksum(chunk)
-            resp = requests.patch(self._url, data=chunk,
-                                  headers=self._request_headers)
-            self.status_code = resp.status_code
-            self.response_content = resp.content
-            self.response_headers = {
-                k.lower(): v for k, v in resp.headers.items()}
-        except requests.exceptions.RequestException as error:
-            raise TusUploadFailed(error)
 
 
 class AsyncTusRequest(BaseTusRequest):
