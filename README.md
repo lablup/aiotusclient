@@ -15,7 +15,7 @@ It is used to communicate with storage proxies that handle large transfers for v
 ## Installation
 
 ### Prequisites
-* Python 3.8 or higher with [pyenv](https://github.com/pyenv/pyenv)
+* Python 3.7 or higher with [pyenv](https://github.com/pyenv/pyenv)
 and [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv) (optional but recommneded)
 
 ### Installation Process
