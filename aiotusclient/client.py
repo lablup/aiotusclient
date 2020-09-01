@@ -1,6 +1,6 @@
 from typing import Dict
 
-from .uploader import Uploader, AsyncUploader
+from .uploader import AsyncUploader
 
 
 class TusClient:
@@ -22,19 +22,6 @@ class TusClient:
 
     def __init__(self, headers: Dict[str, str] = None):
         self.headers = headers if headers else {}
-
-    def uploader(self, *args, **kwargs) -> Uploader:
-        """
-        Return uploader instance pointing at current client instance.
-
-        Return uplaoder instance with which you can control the upload of a specific
-        file. The current instance of the tus client is passed to the uploader on creation.
-
-        :Args:
-            see tusclient.uploader.Uploader for required and optional arguments.
-        """
-        kwargs['client'] = self
-        return Uploader(*args, **kwargs)
 
     def async_uploader(self, *args, **kwargs) -> AsyncUploader:
         kwargs['client'] = self

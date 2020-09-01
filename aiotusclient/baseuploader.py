@@ -2,7 +2,6 @@ from base64 import b64encode
 import hashlib
 import os
 import re
-from sys import maxsize as MAXSIZE
 from typing import (
     Dict,
     IO,
@@ -10,10 +9,10 @@ from typing import (
     TYPE_CHECKING,
 )
 
-import requests
+import aiohttp
 
 from .exceptions import TusCommunicationError
-from .request import catch_requests_error
+
 # from .fingerprint import *
 
 # from .storage_interface import Storage
@@ -51,8 +50,7 @@ class BaseUploader:
         - chunk_size (int):
             This tells the uploader what chunk size(in bytes) should be
             uploaded when the method `upload_chunk` is called.
-            This defaults to the maximum possible integer if not
-            specified.
+            This defaults to 1 MiB if not specified.
         - metadata (dict):
             A dictionary containing the upload-metadata. This would be encoded
             internally
@@ -111,14 +109,15 @@ class BaseUploader:
         - upload_checksum (Optional[bool])
     """
     DEFAULT_HEADERS = {"Tus-Resumable": "1.0.0"}
-    DEFAULT_CHUNK_SIZE = MAXSIZE
+    DEFAULT_CHUNK_SIZE = 1048576
     CHECKSUM_ALGORITHM_PAIR = ("sha1", hashlib.sha1, )
 
     def __init__(self, file_path: Optional[str] = None,
                  file_stream: Optional[IO] = None,
                  url: Optional[str] = None,
                  client: Optional['TusClient'] = None,
-                 chunk_size: int = MAXSIZE, metadata: Optional[Dict] = None,
+                 chunk_size: int = DEFAULT_CHUNK_SIZE,
+                 metadata: Optional[Dict] = None,
                  retries: int = 10, retry_delay: int = 300,
                  store_url=False, upload_checksum=False):
         if file_path is None and file_stream is None:
@@ -138,8 +137,7 @@ class BaseUploader:
         # self.fingerprinter = fingerprinter or Fingerprint()
         self.offset = 0
         self.url = url
-        self.__init_url_and_offset(url)
-        self.chunk_size = 1048576  # bytes, 1mb
+        self.chunk_size = chunk_size
         self.retries = retries
         self.request = None
         self._retried = 0
@@ -147,6 +145,10 @@ class BaseUploader:
         self.upload_checksum = upload_checksum
         self.__checksum_algorithm_name, self.__checksum_algorithm = \
             self.CHECKSUM_ALGORITHM_PAIR
+        self.response_content = ""
+
+    async def _init(self, url: Optional[str] = None):
+        await self.__init_url_and_offset(url)
 
     def get_headers(self):
         """
@@ -177,9 +179,8 @@ class BaseUploader:
         """
         return self.__checksum_algorithm_name
 
-    @catch_requests_error
-    def get_offset(self):
-        # TODO: make this method async using aiohttp
+    async def get_offset(self):
+
         """
         Return offset from tus server.
 
@@ -187,13 +188,26 @@ class BaseUploader:
         makes an
         http request to the tus server to retrieve the offset.
         """
-        resp = requests.head(self.url, headers=self.get_headers())
-        offset = resp.headers.get('upload-offset')
-        if offset is None:
-            msg = 'Attempt to retrieve offset fails with status {}'.format(
-                resp.status_code)
-            raise TusCommunicationError(msg, resp.status_code, resp.content)
-        return int(offset)
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.head(self.url, headers=self.get_headers()) as resp:
+
+                    status_code = resp.status
+                    response_headers = await resp.response_headers
+                    response_headers = {k.lower(): v for k, v in response_headers.item()}
+
+                    self.response_content = await resp.content.text()
+
+                    self.offset = int(response_headers['upload-offset'])
+                    if self.offset is None:
+                        msg = 'Attempt to retrieve offset fails with status {}'.format(
+                            resp.status)
+                        raise TusCommunicationError(msg, status_code, self.response_content)
+        except aiohttp.ClientError as error:
+            raise TusCommunicationError(msg, status_code, error)
+
+        return int(self.offset)
 
     def encode_metadata(self):
         """
@@ -213,7 +227,7 @@ class BaseUploader:
                 key_str, b64encode(value_bytes).decode('ascii')))
         return encoded_list
 
-    def __init_url_and_offset(self, url: Optional[str] = None):
+    async def __init_url_and_offset(self, url: Optional[str] = None):
         """
         Return the tus upload url.
         If resumability is enabled, this would try to get the url from storage
@@ -222,7 +236,7 @@ class BaseUploader:
         if url:
             self.set_url(url)
         if self.url:
-            self.offset = self.get_offset()
+            self.offset = await self.get_offset()
 
     def set_url(self, url: str):
         """Set the upload URL"""
