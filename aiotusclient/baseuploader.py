@@ -118,7 +118,7 @@ class BaseUploader:
                  client: Optional['TusClient'] = None,
                  chunk_size: int = DEFAULT_CHUNK_SIZE,
                  metadata: Optional[Dict] = None,
-                 retries: int = 10, retry_delay: int = 300,
+                 retries: int = 0, retry_delay: int = 0,
                  store_url=False, upload_checksum=False):
         if file_path is None and file_stream is None:
             raise ValueError(
@@ -188,14 +188,18 @@ class BaseUploader:
         makes an
         http request to the tus server to retrieve the offset.
         """
+        msg = ""
+        status_code = None
 
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.head(self.url, headers=self.get_headers()) as resp:
+                async with session.head(self.url, headers=self.get_headers()) as resp:             
 
                     status_code = resp.status
-                    response_headers = await resp.response_headers
+                    response_headers = await resp.headers
+                    print("Response headers ", response_headers)
                     response_headers = {k.lower(): v for k, v in response_headers.item()}
+
 
                     self.response_content = await resp.content.text()
 
