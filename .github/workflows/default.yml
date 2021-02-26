@@ -155,14 +155,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
-      - name: Cache pip packages
-      uses: actions/cache@v2
-      with:
-        path: ~/.cache/pip
-        key: test-pytest-${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          test-pytest-${{ runner.os }}-pip-${{ matrix.python-version }}
-          test-pytest-${{ runner.os }}-pip-
       - name: Install dependencies
         env:
           REQUIREMENTS_FILE: build
