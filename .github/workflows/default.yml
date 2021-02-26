@@ -146,7 +146,6 @@ jobs:
         python -m mypy --no-color-output aiotusclient/
   deploy-to-pypi:
       needs: [lint-black, typecheck-mypy]
-      if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
       runs-on: ubuntu-latest
       steps:
       - uses: actions/checkout@v2
