@@ -61,8 +61,6 @@ jobs:
           export GHBRANCH="${GITHUB_HEAD_REF#refs/heads/}"
         else
           export GHBRANCH="${GITHUB_REF#refs/heads/}"
-        if [ $? -eq 0 ]; then
-          sed -i "s%\(backend.ai-common\)@master%\1@${GHBRANCH}%" requirements/lint.txt
         fi
         set -e
         python -m pip install -U -r requirements/lint.txt
@@ -135,12 +133,6 @@ jobs:
           export GHBRANCH="${GITHUB_REF#refs/heads/}"
         fi
         echo "HEAD: ${GHBRANCH} (${GITHUB_REF}, ${GITHUB_HEAD_REF})"
-        # Use the same branch (if exists) for the backend.ai-common installation
-        set +e
-        git ls-remote --heads 'https://github.com/lablup/backend.ai-common' | grep -q "refs/heads/${GHBRANCH}"
-        if [ $? -eq 0 ]; then
-          sed -i "s%\(backend.ai-common\)@master%\1@${GHBRANCH}%" requirements/typecheck.txt
-        fi
         set -e
         python -m pip install -U -r requirements/typecheck.txt
     - name: Type check with mypy
