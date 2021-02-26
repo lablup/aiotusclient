@@ -23,8 +23,6 @@ class TusClient:
     def __init__(self, headers: Dict[str, str] = None):
         self.headers = headers if headers else {}
 
-        
-
     def async_uploader(self, *args, **kwargs) -> AsyncUploader:
         kwargs["client"] = self
         return AsyncUploader(*args, **kwargs)
