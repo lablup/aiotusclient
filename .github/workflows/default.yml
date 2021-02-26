@@ -44,7 +44,7 @@ jobs:
         else
           echo "::add-matcher::.github/workflows/black-matcher.json"
         fi
-        python -m black --check src/ai/backend tests
+        python -m black --check aiotusclient/
   lint-flake8:
 
     runs-on: ubuntu-latest
