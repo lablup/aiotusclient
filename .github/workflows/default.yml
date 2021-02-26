@@ -27,6 +27,7 @@ jobs:
           export GHBRANCH="${GITHUB_HEAD_REF#refs/heads/}"
         else
           export GHBRANCH="${GITHUB_REF#refs/heads/}"
+        fi
         set -e
         python -m pip install -U -r requirements/lint.txt
     - name: Lint with black
