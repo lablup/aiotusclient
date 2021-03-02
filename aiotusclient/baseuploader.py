@@ -1,13 +1,8 @@
-from base64 import b64encode
 import hashlib
 import os
 import re
-from typing import (
-    Dict,
-    IO,
-    Optional,
-    TYPE_CHECKING,
-)
+from base64 import b64encode
+from typing import IO, TYPE_CHECKING, Dict, Optional
 
 import aiohttp
 
@@ -108,21 +103,29 @@ class BaseUploader:
         .Fingerprint>])
         - upload_checksum (Optional[bool])
     """
+
     DEFAULT_HEADERS = {"Tus-Resumable": "1.0.0"}
     DEFAULT_CHUNK_SIZE = 1048576
-    CHECKSUM_ALGORITHM_PAIR = ("sha1", hashlib.sha1, )
+    CHECKSUM_ALGORITHM_PAIR = (
+        "sha1",
+        hashlib.sha1,
+    )
 
-    def __init__(self, file_path: Optional[str] = None,
-                 file_stream: Optional[IO] = None,
-                 url: Optional[str] = None,
-                 client: Optional['TusClient'] = None,
-                 chunk_size: int = DEFAULT_CHUNK_SIZE,
-                 metadata: Optional[Dict] = None,
-                 retries: int = 10, retry_delay: int = 300,
-                 store_url=False, upload_checksum=False):
+    def __init__(
+        self,
+        file_path: Optional[str] = None,
+        file_stream: Optional[IO] = None,
+        url: Optional[str] = None,
+        client: Optional["TusClient"] = None,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        metadata: Optional[Dict] = None,
+        retries: int = 10,
+        retry_delay: int = 300,
+        store_url=False,
+        upload_checksum=False,
+    ):
         if file_path is None and file_stream is None:
-            raise ValueError(
-                "Either 'file_path' or 'file_stream' cannot be None.")
+            raise ValueError("Either 'file_path' or 'file_stream' cannot be None.")
 
         if url is None and client is None:
             raise ValueError("Either 'url' or 'client' cannot be None.")
@@ -143,8 +146,10 @@ class BaseUploader:
         self._retried = 0
         self.retry_delay = retry_delay
         self.upload_checksum = upload_checksum
-        self.__checksum_algorithm_name, self.__checksum_algorithm = \
-            self.CHECKSUM_ALGORITHM_PAIR
+        (
+            self.__checksum_algorithm_name,
+            self.__checksum_algorithm,
+        ) = self.CHECKSUM_ALGORITHM_PAIR
         self.response_content = ""
 
     async def _init(self, url: Optional[str] = None):
@@ -155,20 +160,19 @@ class BaseUploader:
         Return headers of the uploader instance. This would include the headers of the
         client instance.
         """
-        client_headers = getattr(self.client, 'headers', {})
+        client_headers = getattr(self.client, "headers", {})
         return dict(self.DEFAULT_HEADERS, **client_headers)
 
     def get_url_creation_headers(self):
         """Return headers required to create upload url"""
         headers = self.get_headers()
-        headers['upload-length'] = str(self.get_file_size())
-        headers['upload-metadata'] = ','.join(self.encode_metadata())
+        headers["upload-length"] = str(self.get_file_size())
+        headers["upload-metadata"] = ",".join(self.encode_metadata())
         return headers
 
     @property
     def checksum_algorithm(self):
-        """The checksum algorithm to be used for the Upload-Checksum extension.
-        """
+        """The checksum algorithm to be used for the Upload-Checksum extension."""
         return self.__checksum_algorithm
 
     @property
@@ -197,13 +201,18 @@ class BaseUploader:
 
                     status_code = resp.status
                     response_headers = resp.headers
-                    response_headers = {k.lower(): v for k, v in response_headers.item()}
+                    response_headers = {
+                        k.lower(): v for k, v in response_headers.item()
+                    }
                     self.response_content = await resp.content.text()
-                    self.offset = int(response_headers['upload-offset'])
+                    self.offset = int(response_headers["upload-offset"])
                     if self.offset is None:
-                        msg = 'Attempt to retrieve offset fails with status {}'.format(
-                            resp.status)
-                        raise TusCommunicationError(msg, status_code, self.response_content)
+                        msg = "Attempt to retrieve offset fails with status {}".format(
+                            resp.status
+                        )
+                        raise TusCommunicationError(
+                            msg, status_code, self.response_content
+                        )
         except aiohttp.ClientError as error:
             raise TusCommunicationError(msg, status_code, error)
 
@@ -218,13 +227,14 @@ class BaseUploader:
             key_str = str(key)  # dict keys may be of any object type.
 
             # confirm that the key does not contain unwanted characters.
-            if re.search(r'^$|[\s,]+', key_str):
+            if re.search(r"^$|[\s,]+", key_str):
                 msg = 'Upload-metadata key "{}" cannot be empty nor contain spaces or commas.'
                 raise ValueError(msg.format(key_str))
 
-            value_bytes = value.encode('latin-1')
-            encoded_list.append('{} {}'.format(
-                key_str, b64encode(value_bytes).decode('ascii')))
+            value_bytes = value.encode("latin-1")
+            encoded_list.append(
+                "{} {}".format(key_str, b64encode(value_bytes).decode("ascii"))
+            )
         return encoded_list
 
     async def __init_url_and_offset(self, url: Optional[str] = None):
@@ -257,7 +267,7 @@ class BaseUploader:
             self.file_stream.seek(0)
             return self.file_stream
         elif os.path.isfile(self.file_path):
-            return open(self.file_path, 'rb')
+            return open(self.file_path, "rb")
         else:
             raise ValueError("invalid file {}".format(self.file_path))
 

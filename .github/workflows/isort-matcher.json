@@ -1,0 +1,14 @@
+{
+    "problemMatcher": [
+        {
+            "owner": "isort",
+            "pattern": [
+                {
+                    "regexp": "^ERROR: ([^ ]+) (.*)$",
+                    "file": 1,
+                    "message": 2
+                }
+            ]
+        }
+    ]
+}

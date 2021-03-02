@@ -4,7 +4,7 @@ from typing import Optional
 from tqdm import tqdm
 
 from .baseuploader import BaseUploader
-from .exceptions import TusUploadFailed, TusCommunicationError
+from .exceptions import TusCommunicationError, TusUploadFailed
 from .request import AsyncTusRequest
 
 
@@ -12,8 +12,7 @@ def _verify_upload(request: AsyncTusRequest):
     if request.status_code == 204:
         return True
     else:
-        raise TusUploadFailed('', request.status_code,
-                              request.response_content)
+        raise TusUploadFailed("", request.status_code, request.response_content)
 
 
 class AsyncUploader(BaseUploader):
@@ -34,9 +33,9 @@ class AsyncUploader(BaseUploader):
         """
         self.stop_at = stop_at or self.get_file_size()
 
-        with tqdm(total=self.get_file_size(),
-                  unit='bytes', unit_scale=True,
-                  unit_divisor=1024) as pbar:
+        with tqdm(
+            total=self.get_file_size(), unit="bytes", unit_scale=True, unit_divisor=1024
+        ) as pbar:
 
             while self.offset < self.stop_at:
                 await self.upload_chunk()
@@ -47,7 +46,7 @@ class AsyncUploader(BaseUploader):
         Upload chunk of file.
         """
         await self._do_request()
-        self.offset = int(self.request.response_headers.get('upload-offset'))
+        self.offset = int(self.request.response_headers.get("upload-offset"))
 
     async def _do_request(self):
         self.request = AsyncTusRequest(self)
