@@ -7,6 +7,7 @@ from typing import IO, TYPE_CHECKING, Dict, Optional
 import aiohttp
 
 from .exceptions import TusCommunicationError
+from .progress_reporter import BaseProgressReporter, TqdmProgressReporter
 
 # from .fingerprint import *
 
@@ -87,6 +88,11 @@ class BaseUploader:
         - upload_checksum (bool):
             Whether or not to supply the Upload-Checksum header along with each
             chunk. Defaults to False.
+        - prgs_reporter (<tusclient.progress_reporter.BaseProgressReporter>):
+            An instance to report the progress of the upload. It defaults to
+            <tusclient.progress_reporter.TqdmProgressReporter>, which reports
+            progress to cli through tqdm.
+
 
     :Constructor Args:
         - file_path (str)
@@ -102,6 +108,7 @@ class BaseUploader:
         - fingerprinter (Optional [<tusclient.fingerprint.interface
         .Fingerprint>])
         - upload_checksum (Optional[bool])
+        - prgs_reporter (<tusclient.progress_reporter.BaseProgressReporter>)
     """
 
     DEFAULT_HEADERS = {"Tus-Resumable": "1.0.0"}
@@ -123,6 +130,7 @@ class BaseUploader:
         retry_delay: int = 300,
         store_url=False,
         upload_checksum=False,
+        prgs_reporter: BaseProgressReporter = TqdmProgressReporter(),
     ):
         if file_path is None and file_stream is None:
             raise ValueError("Either 'file_path' or 'file_stream' cannot be None.")
@@ -151,6 +159,7 @@ class BaseUploader:
             self.__checksum_algorithm,
         ) = self.CHECKSUM_ALGORITHM_PAIR
         self.response_content = ""
+        self.prgs_reporter = prgs_reporter
 
     async def _init(self, url: Optional[str] = None):
         await self.__init_url_and_offset(url)

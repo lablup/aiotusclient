@@ -1,8 +1,6 @@
 import asyncio
 from typing import Optional
 
-from tqdm import tqdm
-
 from .baseuploader import BaseUploader
 from .exceptions import TusCommunicationError, TusUploadFailed
 from .request import AsyncTusRequest
@@ -33,9 +31,10 @@ class AsyncUploader(BaseUploader):
         """
         self.stop_at = stop_at or self.get_file_size()
 
-        with tqdm(
-            total=self.get_file_size(), unit="bytes", unit_scale=True, unit_divisor=1024
-        ) as pbar:
+        with self.prgs_reporter as pbar:
+            pbar.set_attr(
+                total=self.get_file_size(), unit="bytes", unit_scale=True, unit_divisor=1024
+            )
 
             while self.offset < self.stop_at:
                 await self.upload_chunk()
