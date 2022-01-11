@@ -33,7 +33,7 @@ class AsyncUploader(BaseUploader):
 
         with self.prgs_reporter as pbar:
             pbar.set_attr(
-                total=self.get_file_size(), unit="bytes", unit_scale=True, unit_divisor=1024
+                total=self.get_file_size(), unit="bytes", unit_scale=True, unit_divisor=1024,
             )
 
             while self.offset < self.stop_at:
