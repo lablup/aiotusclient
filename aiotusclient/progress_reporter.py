@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Union
+from typing import Optional, Union
 
 from tqdm import tqdm
 
@@ -23,7 +23,9 @@ class BaseProgressReporter(metaclass=ABCMeta):
 
 
 class TqdmProgressReporter(BaseProgressReporter):
-    def __init__(self, tqdm_inst: tqdm = tqdm()) -> None:
+    def __init__(self, tqdm_inst: Optional[tqdm] = None) -> None:
+        if tqdm_inst is None:
+            self._tqdm_inst = tqdm()
         self._tqdm_inst = tqdm_inst
 
     def update(self, prgs: Union[float, int]) -> None:
