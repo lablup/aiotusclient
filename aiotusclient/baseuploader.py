@@ -130,7 +130,7 @@ class BaseUploader:
         retry_delay: int = 300,
         store_url=False,
         upload_checksum=False,
-        prgs_reporter: BaseProgressReporter = TqdmProgressReporter(),
+        prgs_reporter: Optional[BaseProgressReporter] = None,
     ):
         if file_path is None and file_stream is None:
             raise ValueError("Either 'file_path' or 'file_stream' cannot be None.")
@@ -159,6 +159,8 @@ class BaseUploader:
             self.__checksum_algorithm,
         ) = self.CHECKSUM_ALGORITHM_PAIR
         self.response_content = ""
+        if prgs_reporter is None:
+            prgs_reporter = TqdmProgressReporter()
         self.prgs_reporter = prgs_reporter
 
     async def _init(self, url: Optional[str] = None):
