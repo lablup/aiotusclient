@@ -2,7 +2,11 @@ import asyncio
 from typing import Optional
 
 from .baseuploader import BaseUploader
-from .exceptions import TusCommunicationError, TusUploadFailed
+from .exceptions import (
+    TusCertificateError,
+    TusCommunicationError,
+    TusUploadFailed,
+)
 from .request import AsyncTusRequest
 
 
@@ -59,6 +63,8 @@ class AsyncUploader(BaseUploader):
             await self._retry_or_cry(error)
 
     async def _retry_or_cry(self, error):
+        if isinstance(error, TusCertificateError):
+            raise error
         print("Error ", error)
         print("Retries ", self.retries, self._retried)
         if self.retries > self._retried:

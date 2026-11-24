@@ -6,7 +6,7 @@ from typing import IO, TYPE_CHECKING, Dict, Optional
 
 import aiohttp
 
-from .exceptions import TusCommunicationError
+from .exceptions import TusCertificateError, TusCommunicationError
 from .progress_reporter import BaseProgressReporter, TqdmProgressReporter
 
 # from .fingerprint import *
@@ -61,7 +61,7 @@ class BaseUploader:
         - retries (int):
             The number of attempts the uploader should make in the case of a
             failed upload.
-            If not specified, it defaults to 0.
+            If not specified, it defaults to 10.
         - retry_delay (int):
             How long (in seconds) the uploader should wait before retrying a
             failed upload attempt.
@@ -127,7 +127,7 @@ class BaseUploader:
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         metadata: Optional[Dict] = None,
         retries: int = 10,
-        retry_delay: int = 300,
+        retry_delay: int = 30,
         store_url=False,
         upload_checksum=False,
         prgs_reporter: Optional[BaseProgressReporter] = None,
@@ -210,23 +210,22 @@ class BaseUploader:
                 async with session.head(self.url, headers=self.get_headers()) as resp:
 
                     status_code = resp.status
-                    response_headers = resp.headers
-                    response_headers = {
-                        k.lower(): v for k, v in response_headers.item()
-                    }
-                    self.response_content = await resp.content.text()
-                    self.offset = int(response_headers["upload-offset"])
-                    if self.offset is None:
+                    self.response_content = await resp.text()
+                    offset = resp.headers.get("upload-offset")
+                    if offset is None:
                         msg = "Attempt to retrieve offset fails with status {}".format(
                             resp.status
                         )
                         raise TusCommunicationError(
                             msg, status_code, self.response_content
                         )
+                    self.offset = int(offset)
+        except aiohttp.ClientConnectorCertificateError as error:
+            raise TusCertificateError(error) from error
         except aiohttp.ClientError as error:
             raise TusCommunicationError(msg, status_code, error)
 
-        return int(self.offset)
+        return self.offset
 
     def encode_metadata(self):
         """

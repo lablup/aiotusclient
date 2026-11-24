@@ -4,7 +4,7 @@ from typing import Optional
 
 import aiohttp
 
-from .exceptions import TusUploadFailed
+from .exceptions import TusCertificateError, TusUploadFailed
 
 
 class BaseTusRequest:
@@ -78,5 +78,7 @@ class AsyncTusRequest(BaseTusRequest):
                         k.lower(): v for k, v in resp.headers.items()
                     }
                     self.response_content = await resp.content.read()
+        except aiohttp.ClientConnectorCertificateError as error:
+            raise TusCertificateError(error) from error
         except aiohttp.ClientError as error:
             raise TusUploadFailed(error)

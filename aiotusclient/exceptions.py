@@ -39,3 +39,7 @@ class TusCommunicationError(Exception):
 
 class TusUploadFailed(TusCommunicationError):
     """Should be raised when an attempted upload fails"""
+
+
+class TusCertificateError(TusUploadFailed):
+    """Should be raised when the TLS certificate of the tus server cannot be verified"""
