@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from .uploader import AsyncUploader
 
@@ -20,7 +20,7 @@ class TusClient:
         - headers (Optiional[dict])
     """
 
-    def __init__(self, headers: Dict[str, str] = None):
+    def __init__(self, headers: Optional[Dict[str, str]] = None):
         self.headers = headers if headers else {}
 
     def async_uploader(self, *args, **kwargs) -> AsyncUploader:

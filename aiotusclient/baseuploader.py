@@ -195,7 +195,6 @@ class BaseUploader:
         return self.__checksum_algorithm_name
 
     async def get_offset(self):
-
         """
         Return offset from tus server.
 
