@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   lint-black:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v2
@@ -14,7 +14,7 @@ jobs:
       with:
         python-version: 3.8
     - name: Cache pip packages
-      uses: actions/cache@v2
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-lint-${{ hashFiles('setup.cfg') }}
@@ -40,7 +40,7 @@ jobs:
         python -m black --check aiotusclient/
   lint-flake8:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v2
@@ -49,7 +49,7 @@ jobs:
       with:
         python-version: 3.8
     - name: Cache pip packages
-      uses: actions/cache@v2
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-lint-${{ hashFiles('setup.cfg') }}
@@ -75,7 +75,7 @@ jobs:
         python -m flake8 aiotusclient/
   lint-isort:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v2
@@ -84,7 +84,7 @@ jobs:
       with:
         python-version: 3.8
     - name: Cache pip packages
-      uses: actions/cache@v2
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-lint-${{ hashFiles('setup.cfg') }}
@@ -110,7 +110,7 @@ jobs:
         python -m isort --check-only aiotusclient/
   typecheck-mypy:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v2
@@ -119,7 +119,7 @@ jobs:
       with:
         python-version: 3.8
     - name: Cache pip packages
-      uses: actions/cache@v2
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-typecheck-${{ hashFiles('setup.cfg') }}
@@ -148,7 +148,7 @@ jobs:
   deploy-to-pypi:
       needs: [lint-black, lint-flake8, lint-isort, typecheck-mypy]
       if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-24.04
       steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -156,7 +156,7 @@ jobs:
         with:
           python-version: 3.8
       - name: Cache pip packages
-        uses: actions/cache@v2
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: test-pytest-${{ runner.os }}-pip-deploy-${{ matrix.python-version }}-${{ hashFiles('setup.cfg') }}
