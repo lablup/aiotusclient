@@ -61,7 +61,7 @@ class BaseUploader:
         - retries (int):
             The number of attempts the uploader should make in the case of a
             failed upload.
-            If not specified, it defaults to 10.
+            If not specified, it defaults to 0.
         - retry_delay (int):
             How long (in seconds) the uploader should wait before retrying a
             failed upload attempt.
@@ -127,7 +127,7 @@ class BaseUploader:
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         metadata: Optional[Dict] = None,
         retries: int = 10,
-        retry_delay: int = 30,
+        retry_delay: int = 300,
         store_url=False,
         upload_checksum=False,
         prgs_reporter: Optional[BaseProgressReporter] = None,
